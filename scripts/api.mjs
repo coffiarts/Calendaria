@@ -277,6 +277,99 @@ export const CalendariaAPI = {
     return calendar.progressNight();
   },
 
+  /**
+   * Get time until next sunrise.
+   * @returns {Object|null} Time delta {hours, minutes, seconds} or null
+   * @example
+   * const until = CALENDARIA.api.getTimeUntilSunrise();
+   * if (until) console.log(`${until.hours}h ${until.minutes}m until sunrise`);
+   */
+  getTimeUntilSunrise() {
+    const calendar = CalendarManager.getActiveCalendar();
+    if (!calendar || typeof calendar.sunrise !== 'function') return null;
+
+    const sunrise = calendar.sunrise();
+    if (sunrise === null) return null;
+
+    return this.#getTimeUntilThreshold(sunrise);
+  },
+
+  /**
+   * Get time until next sunset.
+   * @returns {Object|null} Time delta {hours, minutes, seconds} or null
+   * @example
+   * const until = CALENDARIA.api.getTimeUntilSunset();
+   * if (until) console.log(`${until.hours}h ${until.minutes}m until sunset`);
+   */
+  getTimeUntilSunset() {
+    const calendar = CalendarManager.getActiveCalendar();
+    if (!calendar || typeof calendar.sunset !== 'function') return null;
+
+    const sunset = calendar.sunset();
+    if (sunset === null) return null;
+
+    return this.#getTimeUntilThreshold(sunset);
+  },
+
+  /**
+   * Get time until next midnight.
+   * @returns {Object|null} Time delta {hours, minutes, seconds} or null
+   * @example
+   * const until = CALENDARIA.api.getTimeUntilMidnight();
+   * if (until) console.log(`${until.hours}h ${until.minutes}m until midnight`);
+   */
+  getTimeUntilMidnight() {
+    const calendar = CalendarManager.getActiveCalendar();
+    if (!calendar) return null;
+
+    return this.#getTimeUntilThreshold(0); // Midnight is at hour 0
+  },
+
+  /**
+   * Get time until next midday.
+   * @returns {Object|null} Time delta {hours, minutes, seconds} or null
+   * @example
+   * const until = CALENDARIA.api.getTimeUntilMidday();
+   * if (until) console.log(`${until.hours}h ${until.minutes}m until midday`);
+   */
+  getTimeUntilMidday() {
+    const calendar = CalendarManager.getActiveCalendar();
+    if (!calendar) return null;
+
+    return this.#getTimeUntilThreshold(12); // Midday is at hour 12
+  },
+
+  /**
+   * Calculate time until a specific hour threshold.
+   *
+   * @param {number} targetHour - Target hour (0-23)
+   * @returns {Object} Time delta {hours, minutes, seconds}
+   * @private
+   */
+  #getTimeUntilThreshold(targetHour) {
+    const components = game.time.components;
+    const currentHour = components.hour + components.minute / 60 + components.second / 3600;
+
+    let hoursUntil;
+
+    // Calculate hours until target
+    if (currentHour < targetHour) {
+      // Target is later today
+      hoursUntil = targetHour - currentHour;
+    } else {
+      // Target is tomorrow
+      hoursUntil = (24 - currentHour) + targetHour;
+    }
+
+    // Convert to hours, minutes, seconds
+    const hours = Math.floor(hoursUntil);
+    const remainingMinutes = (hoursUntil - hours) * 60;
+    const minutes = Math.floor(remainingMinutes);
+    const seconds = Math.floor((remainingMinutes - minutes) * 60);
+
+    return { hours, minutes, seconds };
+  },
+
   /* -------------------------------------------- */
   /*  Festivals & Special Days                    */
   /* -------------------------------------------- */

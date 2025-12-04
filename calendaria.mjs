@@ -15,6 +15,7 @@ import { TEMPLATES, JOURNAL_TYPES, SHEET_IDS } from './scripts/constants.mjs';
 import CalendarManager from './scripts/calendar/calendar-manager.mjs';
 import CalendariaCalendar from './scripts/calendar/data/calendaria-calendar.mjs';
 import NoteManager from './scripts/notes/note-manager.mjs';
+import TimeTracker from './scripts/time/time-tracker.mjs';
 import { CalendarApplication } from './scripts/applications/calendar-application.mjs';
 import { CalendarNoteDataModel } from './scripts/sheets/calendar-note-data-model.mjs';
 import { CalendarNoteSheet } from './scripts/sheets/calendar-note-sheet.mjs';
@@ -54,6 +55,9 @@ Hooks.once('ready', async () => {
 
   // Initialize notes system
   await NoteManager.initialize();
+
+  // Initialize time tracking
+  TimeTracker.initialize();
 
   log(3, 'Calendaria ready.');
 });

@@ -195,7 +195,19 @@ export const HOOKS = {
   NOTE_UPDATED: 'calendaria.noteUpdated',
 
   /** @type {string} Fired when a calendar note is deleted */
-  NOTE_DELETED: 'calendaria.noteDeleted'
+  NOTE_DELETED: 'calendaria.noteDeleted',
+
+  /** @type {string} Fired when sunrise occurs */
+  SUNRISE: 'calendaria.sunrise',
+
+  /** @type {string} Fired when sunset occurs */
+  SUNSET: 'calendaria.sunset',
+
+  /** @type {string} Fired when midnight passes */
+  MIDNIGHT: 'calendaria.midnight',
+
+  /** @type {string} Fired when midday passes */
+  MIDDAY: 'calendaria.midday'
 };
 
 /**
