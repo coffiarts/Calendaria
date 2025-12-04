@@ -6,8 +6,9 @@
  * @author Tyler
  */
 
-import { MODULE, SETTINGS } from '../constants.mjs';
+import { MODULE, SETTINGS, SYSTEM } from '../constants.mjs';
 import { log } from './logger.mjs';
+import CalendarManager from '../calendar/calendar-manager.mjs';
 
 /**
  * Socket manager for handling multiplayer synchronization.
@@ -58,24 +59,70 @@ export class CalendariaSocket {
 
     switch (type) {
       case this.TYPES.CLOCK_UPDATE:
-        // TODO: TimeKeeper.handleRemoteUpdate(data);
-        log(2, 'CLOCK_UPDATE handler not yet implemented');
+        // TODO: Requires TimeKeeper implementation
+        log(2, 'CLOCK_UPDATE handler deferred - TimeKeeper not yet implemented');
         break;
+
       case this.TYPES.DATE_CHANGE:
-        // TODO: Handle remote date changes
-        log(2, 'DATE_CHANGE handler not yet implemented');
+        this.#handleDateChange(data);
         break;
+
       case this.TYPES.NOTE_UPDATE:
-        // TODO: NoteManager.handleRemoteUpdate(data);
-        log(2, 'NOTE_UPDATE handler not yet implemented');
+        // TODO: Requires NoteManager implementation
+        log(2, 'NOTE_UPDATE handler deferred - NoteManager not yet implemented');
         break;
+
       case this.TYPES.CALENDAR_SWITCH:
-        // TODO: CalendarManager.handleRemoteSwitch(data);
-        log(2, 'CALENDAR_SWITCH handler not yet implemented');
+        this.#handleCalendarSwitch(data);
         break;
+
       default:
         log(1, `Unknown socket message type: ${type}`);
     }
+  }
+
+  /* -------------------------------------------- */
+  /*  Message Handlers                            */
+  /* -------------------------------------------- */
+
+  /**
+   * Handle remote calendar switch messages.
+   * Updates the local calendar registry to match the remote switch.
+   * @private
+   *
+   * @param {Object} data - The calendar switch data
+   * @param {string} data.calendarId - The ID of the calendar to switch to
+   */
+  static #handleCalendarSwitch(data) {
+    const { calendarId } = data;
+    if (!calendarId) {
+      log(2, 'Invalid calendar switch data - missing calendarId');
+      return;
+    }
+
+    log(3, `Handling remote calendar switch to: ${calendarId}`);
+    CalendarManager.handleRemoteSwitch(calendarId);
+  }
+
+  /**
+   * Handle remote date/time change messages.
+   * Re-renders the calendar HUD to reflect the new time.
+   * @private
+   *
+   * @param {Object} data - The date change data
+   * @param {number} data.worldTime - The new world time
+   * @param {number} data.delta - The time delta
+   */
+  static #handleDateChange(data) {
+    log(3, 'Handling remote date change', data);
+
+    // Re-render the calendar HUD if it exists (dnd5e only)
+    if (SYSTEM.isDnd5e && dnd5e.ui.calendar) {
+      dnd5e.ui.calendar.render();
+    }
+
+    // Emit hook for other systems to respond
+    Hooks.callAll('calendaria.remoteDateChange', data);
   }
 
   /**

@@ -221,6 +221,35 @@ export default class CalendarManager {
   }
 
   /**
+   * Handle a remote calendar switch from another client.
+   * Updates the local registry without triggering additional socket messages.
+   *
+   * @param {string} id  Calendar ID to switch to
+   */
+  static handleRemoteSwitch(id) {
+    if (!CalendarRegistry.has(id)) {
+      log(2, `Cannot handle remote switch: calendar ${id} not found`);
+      return;
+    }
+
+    log(3, `Handling remote calendar switch to: ${id}`);
+
+    // Update local registry
+    CalendarRegistry.setActive(id);
+
+    // Notify user
+    const calendar = CalendarRegistry.get(id);
+    const calendarName = calendar?.name || id;
+    ui.notifications.info(`Calendar switched to ${calendarName} by GM`);
+
+    // Emit hook
+    Hooks.callAll('calendaria.remoteCalendarSwitch', id, calendar);
+
+    // Re-render calendar HUD if available
+    if (SYSTEM.isDnd5e && dnd5e?.ui?.calendar) dnd5e.ui.calendar.render();
+  }
+
+  /**
    * Add a new calendar.
    * @param {string} id  Calendar ID
    * @param {object} definition  Calendar definition
