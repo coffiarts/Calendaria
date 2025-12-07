@@ -8,6 +8,7 @@
 
 import { MODULE, SETTINGS, TEMPLATES, SYSTEM } from '../constants.mjs';
 import { log } from '../utils/logger.mjs';
+import { CalendarApplication } from './calendar-application.mjs';
 
 /**
  * Determine base class - extends dnd5e CalendarHUD when available, otherwise stub.
@@ -49,6 +50,9 @@ export class CalendariaHUD extends BaseClass {
 
     // Add right-click handler for time rotation
     this.#enableTimeRotation();
+
+    // Inject the Open Calendar button
+    this.#injectOpenCalendarButton();
   }
 
   /* -------------------------------------------- */
@@ -161,6 +165,37 @@ export class CalendariaHUD extends BaseClass {
       event.preventDefault();
       event.stopPropagation();
       this.#openTimeRotationDial(event);
+    });
+  }
+
+  /* -------------------------------------------- */
+
+  /**
+   * Inject the Open Calendar button into the startButtons menu.
+   */
+  #injectOpenCalendarButton() {
+    const startButtons = this.element.querySelector('[data-application-part="startButtons"]');
+    if (!startButtons) return;
+
+    // Check if already injected
+    if (startButtons.querySelector('[data-action="openCalendar"]')) return;
+
+    // Create button element
+    const label = game.i18n.localize('CALENDARIA.HUD.OpenCalendar');
+    const li = document.createElement('li');
+    li.className = 'calendar-button';
+    li.innerHTML = `
+      <button type="button" data-action="openCalendar" data-tooltip="${label}" aria-label="${label}" data-tooltip-direction="LEFT">
+        <i class="fas fa-calendar-plus"></i>
+      </button>
+    `;
+
+    // Insert as first child
+    startButtons.insertBefore(li, startButtons.firstChild);
+
+    // Add click handler
+    li.querySelector('button').addEventListener('click', () => {
+      new CalendarApplication().render(true);
     });
   }
 
