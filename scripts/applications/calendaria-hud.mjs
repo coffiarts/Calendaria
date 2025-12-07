@@ -328,6 +328,55 @@ export class CalendariaHUD extends BaseClass {
   /* -------------------------------------------- */
 
   /**
+   * Parse flexible time input string into hours and minutes.
+   * Supports: "3p", "3pm", "3:30pm", "15:00", "3:30 PM", "15", etc.
+   * @param {string} input - The time input string
+   * @returns {{hours: number, minutes: number}|null} Parsed time or null if invalid
+   */
+  #parseTimeInput(input) {
+    if (!input) return null;
+
+    const str = input.trim().toLowerCase();
+    if (!str) return null;
+
+    // Check for AM/PM indicator
+    const isPM = /p/.test(str);
+    const isAM = /a/.test(str);
+
+    // Remove AM/PM suffixes and clean up
+    const cleaned = str.replace(/[ap]\.?m?\.?/gi, '').trim();
+
+    let hours = 0;
+    let minutes = 0;
+
+    // Try HH:MM format
+    if (cleaned.includes(':')) {
+      const [h, m] = cleaned.split(':').map((s) => parseInt(s, 10));
+      if (isNaN(h)) return null;
+      hours = h;
+      minutes = isNaN(m) ? 0 : m;
+    } else {
+      // Just a number (hours only)
+      const h = parseInt(cleaned, 10);
+      if (isNaN(h)) return null;
+      hours = h;
+      minutes = 0;
+    }
+
+    // Apply AM/PM conversion
+    if (isPM && hours < 12) hours += 12;
+    else if (isAM && hours === 12) hours = 0;
+
+    // Validate ranges
+    if (hours < 0 || hours > 23) return null;
+    if (minutes < 0 || minutes > 59) return null;
+
+    return { hours, minutes };
+  }
+
+  /* -------------------------------------------- */
+
+  /**
    * Convert time to angle in degrees
    * @param {number} hours - Hours (0-23)
    * @param {number} minutes - Minutes (0-59)
@@ -373,10 +422,12 @@ export class CalendariaHUD extends BaseClass {
 
     if (!handleContainer || !sky || !sunContainer) return;
 
-    // Update time display
+    // Update time display (only if input not focused)
     const time = this.#angleToTime(angle);
     const timeDisplay = dial.querySelector('.dial-time');
-    if (timeDisplay) timeDisplay.textContent = this.#formatTime(time.hours, time.minutes);
+    if (timeDisplay && document.activeElement !== timeDisplay) {
+      timeDisplay.value = this.#formatTime(time.hours, time.minutes);
+    }
 
     // Normalize angle to 0-360
     const normalizedAngle = ((angle % 360) + 360) % 360;
@@ -508,11 +559,54 @@ export class CalendariaHUD extends BaseClass {
       dial.remove();
     };
 
+    // Time input handlers
+    const timeInput = dial.querySelector('.dial-time');
+    const applyTimeFromInput = async () => {
+      const parsed = this.#parseTimeInput(timeInput.value);
+      if (parsed) {
+        // Update dial state
+        this._dialState.currentHours = parsed.hours;
+        this._dialState.currentMinutes = parsed.minutes;
+
+        // Update dial rotation to match
+        const newAngle = this.#timeToAngle(parsed.hours, parsed.minutes);
+        this.#updateDialRotation(dial, newAngle);
+
+        // Apply the time change
+        await this.#applyTimeChange();
+      } else {
+        // Reset to current state if invalid
+        timeInput.value = this.#formatTime(this._dialState.currentHours, this._dialState.currentMinutes);
+      }
+    };
+
+    const onTimeInputKeydown = (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        timeInput.blur();
+      } else if (event.key === 'Escape') {
+        // Reset and blur without applying
+        timeInput.value = this.#formatTime(this._dialState.currentHours, this._dialState.currentMinutes);
+        timeInput.blur();
+      }
+    };
+
+    const onTimeInputBlur = async () => {
+      await applyTimeFromInput();
+    };
+
+    const onTimeInputFocus = () => {
+      timeInput.select();
+    };
+
     // Add event listeners - only handle can start dragging
     handle.addEventListener('mousedown', onMouseDown);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mouseup', onMouseUp);
     backdrop.addEventListener('click', onBackdropClick);
+    timeInput.addEventListener('keydown', onTimeInputKeydown);
+    timeInput.addEventListener('blur', onTimeInputBlur);
+    timeInput.addEventListener('focus', onTimeInputFocus);
 
     // Store cleanup function
     dial._cleanup = () => {

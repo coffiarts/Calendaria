@@ -212,8 +212,6 @@
     left: 50%;
     transform: translate(-50%, -50%);
     text-align: center;
-    pointer-events: none;
-    user-select: none;
   }
 
   .dial-time {
@@ -223,6 +221,17 @@
     text-shadow: 0 0 10px rgb(255 100 0 / 80%);
     font-family: 'Modesto Condensed', 'Palatino Linotype', serif;
     line-height: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    text-align: center;
+    width: 6ch;
+    padding: 0;
+    cursor: text;
+
+    &:focus {
+      text-shadow: 0 0 15px rgb(255 100 0);
+    }
   }
 }
 
