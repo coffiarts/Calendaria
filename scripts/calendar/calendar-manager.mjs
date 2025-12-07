@@ -160,6 +160,16 @@ export default class CalendarManager {
       CalendarRegistry.setActive(firstId);
       log(3, `Set default active calendar: ${firstId}`);
     }
+
+    // Sync game.time.calendar with our active calendar
+    // 5e may have already set this during init, so we override it
+    const activeCalendar = CalendarRegistry.getActive();
+    if (activeCalendar) {
+      CONFIG.time.worldCalendarConfig = activeCalendar.toObject();
+      CONFIG.time.worldCalendarClass = CalendariaCalendar;
+      game.time.initializeCalendar();
+      log(3, `Synced game.time.calendar to: ${activeCalendar.name}`);
+    }
   }
 
   /**
