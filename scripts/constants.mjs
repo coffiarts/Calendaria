@@ -74,7 +74,10 @@ export const SETTINGS = {
   CUSTOM_CALENDARS: 'customCalendars',
 
   /** @type {string} Whether the calendar HUD position is locked */
-  POSITION_LOCKED: 'positionLocked'
+  POSITION_LOCKED: 'positionLocked',
+
+  /** @type {string} User-created custom note categories */
+  CUSTOM_CATEGORIES: 'customCategories'
 };
 
 /**

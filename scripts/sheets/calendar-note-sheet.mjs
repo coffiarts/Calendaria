@@ -10,17 +10,19 @@ const { HandlebarsApplicationMixin } = foundry.applications.api;
 
 import { log } from '../utils/logger.mjs';
 import CalendarManager from '../calendar/calendar-manager.mjs';
+import { getAllCategories, addCustomCategory, deleteCustomCategory, isCustomCategory } from '../notes/note-data.mjs';
 
 export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applications.sheets.journal.JournalEntryPageSheet) {
   static DEFAULT_OPTIONS = {
     classes: ['calendaria', 'calendar-note-sheet'],
-    position: { width: 900, height: 700 },
+    position: { width: 650, height: 850 },
     actions: {
       selectIcon: this._onSelectIcon,
       selectDate: this._onSelectDate,
       saveAndClose: this._onSaveAndClose,
       reset: this._onReset,
-      deleteNote: this._onDeleteNote
+      deleteNote: this._onDeleteNote,
+      addCategory: this._onAddCategory
     },
     form: {
       closeOnSubmit: false
@@ -46,6 +48,57 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
         event.preventDefault();
         this.constructor._switchIconMode(event, iconPicker);
       });
+    }
+
+    // Add contextmenu listener for category tags (to delete custom categories)
+    // Use event delegation on the container since tags are rendered dynamically
+    const categoriesContainer = htmlElement.querySelector('.categories-container');
+    if (categoriesContainer) {
+      categoriesContainer.addEventListener('contextmenu', (event) => {
+        log(3, 'Categories contextmenu event', event.target, event.target.className);
+
+        // Try multiple possible selectors for the tag element
+        const tag = event.target.closest('.tag');
+        if (!tag) {
+          log(3, 'No tag found in event path');
+          return;
+        }
+
+        // Foundry multi-select uses data-key for the tag value
+        const categoryId = tag.dataset.key;
+        log(3, 'Tag found', tag, 'categoryId:', categoryId);
+
+        if (!categoryId || !isCustomCategory(categoryId)) {
+          log(3, 'Not a custom category or no categoryId');
+          return;
+        }
+
+        event.preventDefault();
+        this.#showDeleteCategoryMenu(event, categoryId, tag.textContent.trim());
+      });
+    }
+  }
+
+  /**
+   * Show context menu to delete a custom category.
+   * @param {MouseEvent} event - The context menu event
+   * @param {string} categoryId - The category ID
+   * @param {string} categoryLabel - The category label for display
+   */
+  async #showDeleteCategoryMenu(event, categoryId, categoryLabel) {
+    const confirmed = await foundry.applications.api.DialogV2.confirm({
+      window: { title: 'Delete Category' },
+      content: `<p>Delete custom category "${categoryLabel}"?</p><p class="hint">This will remove it from the list but won't affect notes already using it.</p>`,
+      rejectClose: false,
+      modal: true
+    });
+
+    if (confirmed) {
+      const deleted = await deleteCustomCategory(categoryId);
+      if (deleted) {
+        ui.notifications.info(`Category "${categoryLabel}" deleted`);
+        this.render();
+      }
     }
   }
 
@@ -140,6 +193,14 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
       { value: 'monthly', label: 'Monthly', selected: this.document.system.repeat === 'monthly' },
       { value: 'yearly', label: 'Yearly', selected: this.document.system.repeat === 'yearly' }
     ];
+
+    // Prepare category options with selected state
+    const selectedCategories = this.document.system.categories || [];
+    context.categoryOptions = getAllCategories().map((cat) => ({
+      ...cat,
+      selected: selectedCategories.includes(cat.id)
+    }));
+
     return context;
   }
 
@@ -621,6 +682,17 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
     const repeatSelect = form.querySelector('select[name="system.repeat"]');
     if (repeatSelect) repeatSelect.value = 'never';
 
+    // Reset categories (multi-select)
+    const multiSelect = form.querySelector('multi-select[name="system.categories"]');
+    if (multiSelect) {
+      multiSelect.querySelectorAll('option').forEach((opt) => (opt.selected = false));
+      multiSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // Reset custom category input
+    const newCategoryInput = form.querySelector('.new-category-input');
+    if (newCategoryInput) newCategoryInput.value = '';
+
     // Reset ProseMirror editor
     const proseMirror = form.querySelector('prose-mirror#note-content');
     if (proseMirror) {
@@ -630,5 +702,33 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
       const editorContent = proseMirror.querySelector('.ProseMirror');
       if (editorContent) editorContent.innerHTML = '<p></p>';
     }
+  }
+
+  /**
+   * Handle add custom category button click
+   * @param {PointerEvent} event - The originating click event
+   * @param {HTMLElement} target - The capturing HTML element
+   */
+  static async _onAddCategory(event, target) {
+    const form = target.closest('form');
+    const input = form?.querySelector('.new-category-input');
+    const label = input?.value?.trim();
+
+    if (!label) {
+      ui.notifications.warn('Please enter a category name');
+      return;
+    }
+
+    // Add the custom category
+    const newCategory = await addCustomCategory(label);
+
+    // Clear the input
+    input.value = '';
+
+    // Re-render the sheet to show the new category
+    this.render();
+
+    // Notify success
+    ui.notifications.info(`Category "${newCategory.label}" added`);
   }
 }

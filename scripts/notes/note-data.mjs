@@ -6,6 +6,7 @@
  * @author Tyler
  */
 
+import { MODULE, SETTINGS } from '../constants.mjs';
 import { isValidDate } from './utils/date-utils.mjs';
 
 /**
@@ -181,11 +182,81 @@ export function getPredefinedCategories() {
 }
 
 /**
+ * Get custom categories from world settings.
+ * @returns {object[]}  Array of custom category definitions
+ */
+export function getCustomCategories() {
+  return game.settings.get(MODULE.ID, SETTINGS.CUSTOM_CATEGORIES) || [];
+}
+
+/**
+ * Get all categories (predefined + custom).
+ * @returns {object[]}  Merged array of category definitions
+ */
+export function getAllCategories() {
+  const predefined = getPredefinedCategories();
+  const custom = getCustomCategories();
+  return [...predefined, ...custom];
+}
+
+/**
+ * Add a custom category to world settings.
+ * @param {string} label  Category label
+ * @param {string} [color]  Hex color (defaults to gray)
+ * @param {string} [icon]  FontAwesome icon class (defaults to fa-tag)
+ * @returns {Promise<object>}  The created category
+ */
+export async function addCustomCategory(label, color = '#868e96', icon = 'fa-tag') {
+  const id = label.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
+  // Check if category already exists
+  const existing = getAllCategories().find((c) => c.id === id);
+  if (existing) return existing;
+
+  const newCategory = { id, label, color, icon, custom: true };
+  const customCategories = getCustomCategories();
+  customCategories.push(newCategory);
+
+  await game.settings.set(MODULE.ID, SETTINGS.CUSTOM_CATEGORIES, customCategories);
+  return newCategory;
+}
+
+/**
+ * Delete a custom category from world settings.
+ * @param {string} categoryId  Category ID to delete
+ * @returns {Promise<boolean>}  True if deleted, false if not found or predefined
+ */
+export async function deleteCustomCategory(categoryId) {
+  // Check if it's a predefined category (can't delete those)
+  const predefined = getPredefinedCategories().find((c) => c.id === categoryId);
+  if (predefined) return false;
+
+  const customCategories = getCustomCategories();
+  const index = customCategories.findIndex((c) => c.id === categoryId);
+
+  if (index === -1) return false;
+
+  customCategories.splice(index, 1);
+  await game.settings.set(MODULE.ID, SETTINGS.CUSTOM_CATEGORIES, customCategories);
+  return true;
+}
+
+/**
+ * Check if a category is custom (user-created).
+ * @param {string} categoryId  Category ID
+ * @returns {boolean}  True if custom
+ */
+export function isCustomCategory(categoryId) {
+  const custom = getCustomCategories();
+  return custom.some((c) => c.id === categoryId);
+}
+
+/**
  * Get category definition by ID.
  * @param {string} categoryId  Category ID
  * @returns {object|null}  Category definition or null
  */
 export function getCategoryDefinition(categoryId) {
-  const categories = getPredefinedCategories();
+  const categories = getAllCategories();
   return categories.find((c) => c.id === categoryId) || null;
 }

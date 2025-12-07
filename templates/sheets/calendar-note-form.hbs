@@ -83,6 +83,26 @@
     </fieldset>
   </div>
 
+  {{!-- Row 3: Categories --}}
+  <div class="form-row-3">
+    <fieldset class="categories-fieldset">
+      <legend>Categories</legend>
+      <div class="categories-container">
+        <multi-select name="system.categories">
+          {{#each categoryOptions}}
+            <option value="{{id}}" {{#if selected}}selected{{/if}} {{#if custom}}data-custom="true"{{/if}}>{{label}}</option>
+          {{/each}}
+        </multi-select>
+        <div class="custom-category-input">
+          <input type="text" class="new-category-input" placeholder="New category..." />
+          <button type="button" class="add-category-btn" data-action="addCategory" data-tooltip="Add custom category">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+      </div>
+    </fieldset>
+  </div>
+
   {{!-- Bottom row: ProseMirror Editor --}}
   <fieldset class="editor-fieldset">
     <legend>Note Content</legend>

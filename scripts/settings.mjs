@@ -64,6 +64,15 @@ export function registerSettings() {
     default: {}
   });
 
+  /** User-created custom note categories */
+  game.settings.register(MODULE.ID, SETTINGS.CUSTOM_CATEGORIES, {
+    name: 'Custom Categories',
+    scope: 'world',
+    config: false,
+    type: Array,
+    default: []
+  });
+
   // ========================================//
   //  Sync & Multiplayer                     //
   // ========================================//
