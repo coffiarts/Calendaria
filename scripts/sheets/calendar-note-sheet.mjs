@@ -13,6 +13,12 @@ import CalendarManager from '../calendar/calendar-manager.mjs';
 import { getAllCategories, addCustomCategory, deleteCustomCategory, isCustomCategory } from '../notes/note-data.mjs';
 
 export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applications.sheets.journal.JournalEntryPageSheet) {
+  /** View/Edit mode enum. */
+  static MODES = Object.freeze({ VIEW: 1, EDIT: 2 });
+
+  /** Current sheet mode. */
+  _mode = CalendarNoteSheet.MODES.VIEW;
+
   static DEFAULT_OPTIONS = {
     classes: ['calendaria', 'calendar-note-sheet'],
     position: { width: 650, height: 850 },
@@ -22,16 +28,53 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
       saveAndClose: this._onSaveAndClose,
       reset: this._onReset,
       deleteNote: this._onDeleteNote,
-      addCategory: this._onAddCategory
+      addCategory: this._onAddCategory,
+      toggleMode: this._onToggleMode
     },
-    form: {
-      closeOnSubmit: false
-    }
+    form: { closeOnSubmit: false }
   };
 
-  static PARTS = {
-    form: { template: 'modules/calendaria/templates/sheets/calendar-note-form.hbs' }
-  };
+  static VIEW_PARTS = { view: { template: 'modules/calendaria/templates/sheets/calendar-note-view.hbs' } };
+
+  static EDIT_PARTS = { form: { template: 'modules/calendaria/templates/sheets/calendar-note-form.hbs' } };
+
+  /** @returns {boolean} Whether currently in view mode. */
+  get isViewMode() {
+    return this._mode === CalendarNoteSheet.MODES.VIEW;
+  }
+
+  /** @returns {boolean} Whether currently in edit mode. */
+  get isEditMode() {
+    return this._mode === CalendarNoteSheet.MODES.EDIT;
+  }
+
+  /** @override */
+  _configureRenderParts(options) {
+    return this.isViewMode ? { ...this.constructor.VIEW_PARTS } : { ...this.constructor.EDIT_PARTS };
+  }
+
+  /** @override */
+  async _preFirstRender(context, options) {
+    await super._preFirstRender(context, options);
+
+    // Determine initial mode based on options and permissions
+    // Sidebar/default opens: no mode specified → EDIT for owners, VIEW for observers
+    // Calendar edit action: mode='edit' → EDIT
+    // Chat/other links: mode='view' → VIEW
+    if (options.mode === 'view') {
+      // Explicitly requested view mode (from chat, etc.)
+      this._mode = CalendarNoteSheet.MODES.VIEW;
+    } else if (options.mode === 'edit' && this.document.isOwner) {
+      // Explicitly requested edit mode
+      this._mode = CalendarNoteSheet.MODES.EDIT;
+    } else if (this.document.isOwner) {
+      // Default for owners: EDIT mode (sidebar, etc.)
+      this._mode = CalendarNoteSheet.MODES.EDIT;
+    } else {
+      // Default for observers: VIEW mode
+      this._mode = CalendarNoteSheet.MODES.VIEW;
+    }
+  }
 
   /** @override */
   get title() {
@@ -59,19 +102,13 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
 
         // Try multiple possible selectors for the tag element
         const tag = event.target.closest('.tag');
-        if (!tag) {
-          log(3, 'No tag found in event path');
-          return;
-        }
+        if (!tag) return;
 
         // Foundry multi-select uses data-key for the tag value
         const categoryId = tag.dataset.key;
         log(3, 'Tag found', tag, 'categoryId:', categoryId);
 
-        if (!categoryId || !isCustomCategory(categoryId)) {
-          log(3, 'Not a custom category or no categoryId');
-          return;
-        }
+        if (!categoryId || !isCustomCategory(categoryId)) return;
 
         event.preventDefault();
         this.#showDeleteCategoryMenu(event, categoryId, tag.textContent.trim());
@@ -104,8 +141,21 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
 
   _onFirstRender(context, options) {
     super._onFirstRender(context, options);
+    this.#renderHeaderControls();
+  }
 
-    // Inject Save and Reset buttons into window header
+  /** @override */
+  _onRender(context, options) {
+    super._onRender(context, options);
+    this.#renderHeaderControls();
+
+    // Add view/edit mode class to element
+    this.element.classList.toggle('view-mode', this.isViewMode);
+    this.element.classList.toggle('edit-mode', this.isEditMode);
+  }
+
+  /** Render header control buttons based on current mode. */
+  #renderHeaderControls() {
     const windowHeader = this.element.querySelector('.window-header');
     if (!windowHeader) return;
 
@@ -114,38 +164,53 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
     if (!controlsContainer) {
       controlsContainer = document.createElement('div');
       controlsContainer.className = 'header-controls';
-
-      // Insert at the very beginning of window-header
       windowHeader.insertBefore(controlsContainer, windowHeader.firstChild);
     }
 
-    // Create Save button
-    const saveBtn = document.createElement('button');
-    saveBtn.type = 'button';
-    saveBtn.className = 'header-control icon fa-solid fa-save';
-    saveBtn.dataset.action = 'saveAndClose';
-    saveBtn.dataset.tooltip = 'Save & Close';
-    saveBtn.setAttribute('aria-label', 'Save & Close');
-    controlsContainer.appendChild(saveBtn);
+    // Clear existing controls
+    controlsContainer.innerHTML = '';
 
-    // Create Reset button
-    const resetBtn = document.createElement('button');
-    resetBtn.type = 'button';
-    resetBtn.className = 'header-control icon fa-solid fa-undo';
-    resetBtn.dataset.action = 'reset';
-    resetBtn.dataset.tooltip = 'Reset Form';
-    resetBtn.setAttribute('aria-label', 'Reset Form');
-    controlsContainer.appendChild(resetBtn);
+    // Mode toggle button (for users with edit permission)
+    if (this.document.isOwner) {
+      const modeBtn = document.createElement('button');
+      modeBtn.type = 'button';
+      modeBtn.className = `header-control icon fa-solid ${this.isViewMode ? 'fa-pen' : 'fa-eye'}`;
+      modeBtn.dataset.action = 'toggleMode';
+      modeBtn.dataset.tooltip = this.isViewMode ? 'Edit Note' : 'View Note';
+      modeBtn.setAttribute('aria-label', this.isViewMode ? 'Edit Note' : 'View Note');
+      controlsContainer.appendChild(modeBtn);
+    }
 
-    // Create Delete button (only for owners of existing notes)
-    if (this.document.isOwner && this.document.id) {
-      const deleteBtn = document.createElement('button');
-      deleteBtn.type = 'button';
-      deleteBtn.className = 'header-control icon fa-solid fa-trash';
-      deleteBtn.dataset.action = 'deleteNote';
-      deleteBtn.dataset.tooltip = 'Delete Note';
-      deleteBtn.setAttribute('aria-label', 'Delete Note');
-      controlsContainer.appendChild(deleteBtn);
+    // Edit mode buttons
+    if (this.isEditMode) {
+      // Save button
+      const saveBtn = document.createElement('button');
+      saveBtn.type = 'button';
+      saveBtn.className = 'header-control icon fa-solid fa-save';
+      saveBtn.dataset.action = 'saveAndClose';
+      saveBtn.dataset.tooltip = 'Save & Close';
+      saveBtn.setAttribute('aria-label', 'Save & Close');
+      controlsContainer.appendChild(saveBtn);
+
+      // Reset button
+      const resetBtn = document.createElement('button');
+      resetBtn.type = 'button';
+      resetBtn.className = 'header-control icon fa-solid fa-undo';
+      resetBtn.dataset.action = 'reset';
+      resetBtn.dataset.tooltip = 'Reset Form';
+      resetBtn.setAttribute('aria-label', 'Reset Form');
+      controlsContainer.appendChild(resetBtn);
+
+      // Delete button (only for owners of existing notes)
+      if (this.document.isOwner && this.document.id) {
+        const deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'header-control icon fa-solid fa-trash';
+        deleteBtn.dataset.action = 'deleteNote';
+        deleteBtn.dataset.tooltip = 'Delete Note';
+        deleteBtn.setAttribute('aria-label', 'Delete Note');
+        controlsContainer.appendChild(deleteBtn);
+      }
     }
   }
 
@@ -205,6 +270,32 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
       ...cat,
       selected: selectedCategories.includes(cat.id)
     }));
+
+    // View mode specific context
+    context.isViewMode = this.isViewMode;
+    context.isEditMode = this.isEditMode;
+    context.canEdit = this.document.isOwner;
+
+    if (this.isViewMode) {
+      // Enriched HTML content for view mode
+      context.enrichedContent = await foundry.applications.ux.TextEditor.implementation.enrichHTML(this.document.text?.content || '', { async: true, relativeTo: this.document });
+
+      // Display categories as labels
+      const allCategories = getAllCategories();
+      context.displayCategories = selectedCategories.map((id) => allCategories.find((c) => c.id === id)?.label).filter(Boolean);
+
+      // Check if end date differs from start date
+      context.hasEndDate = endYear !== startYear || endMonth !== startMonth || endDay !== startDay;
+
+      // Format time displays for view mode
+      context.startTimeDisplay = `${startHour}:${startMinute}`;
+      context.endTimeDisplay = `${endHour}:${endMinute}`;
+      context.hasEndTime = this.document.system.endDate?.hour !== undefined || this.document.system.endDate?.minute !== undefined;
+
+      // Repeat label for view mode
+      const repeatLabels = { never: null, daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly' };
+      context.repeatLabel = repeatLabels[this.document.system.repeat] || null;
+    }
 
     return context;
   }
@@ -736,5 +827,24 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
 
     // Notify success
     ui.notifications.info(`Category "${newCategory.label}" added`);
+  }
+
+  /**
+   * Handle mode toggle button click
+   * @param {PointerEvent} event - The originating click event
+   * @param {HTMLElement} target - The capturing HTML element
+   */
+  static async _onToggleMode(event, target) {
+    if (!this.document.isOwner) return;
+
+    // Toggle between VIEW and EDIT modes
+    this._mode = this._mode === CalendarNoteSheet.MODES.VIEW ? CalendarNoteSheet.MODES.EDIT : CalendarNoteSheet.MODES.VIEW;
+
+    // Clear existing parts before re-rendering (AppV2 doesn't auto-remove old parts)
+    const windowContent = this.element.querySelector('.window-content');
+    if (windowContent) windowContent.innerHTML = '';
+
+    // Re-render to switch templates
+    this.render();
   }
 }

@@ -241,15 +241,17 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
           second: 0
         };
         const dayWorldTime = calendar.componentsToTime(dayComponents);
-        moonPhases = calendar.moons.map((moon, index) => {
-          const phase = calendar.getMoonPhase(index, dayWorldTime);
-          if (!phase) return null;
-          return {
-            moonName: game.i18n.localize(moon.name),
-            phaseName: game.i18n.localize(phase.name),
-            icon: phase.icon
-          };
-        }).filter(Boolean);
+        moonPhases = calendar.moons
+          .map((moon, index) => {
+            const phase = calendar.getMoonPhase(index, dayWorldTime);
+            if (!phase) return null;
+            return {
+              moonName: game.i18n.localize(moon.name),
+              phaseName: game.i18n.localize(phase.name),
+              icon: phase.icon
+            };
+          })
+          .filter(Boolean);
       }
 
       currentWeek.push({
@@ -347,7 +349,8 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
       const isToday = this._isToday(currentYear, currentMonth, currentDay);
 
       // Check if this day has a selected time slot
-      const selectedHour = this._selectedTimeSlot?.year === currentYear && this._selectedTimeSlot?.month === currentMonth && this._selectedTimeSlot?.day === currentDay ? this._selectedTimeSlot.hour : null;
+      const selectedHour =
+        this._selectedTimeSlot?.year === currentYear && this._selectedTimeSlot?.month === currentMonth && this._selectedTimeSlot?.day === currentDay ? this._selectedTimeSlot.hour : null;
 
       days.push({
         day: currentDay,
@@ -862,7 +865,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     this._selectedTimeSlot = null;
 
     // Open the note for editing (hook will handle calendar re-render)
-    if (page) page.sheet.render(true);
+    if (page) page.sheet.render(true, { mode: 'edit' });
   }
 
   static async _onAddNoteToday(event, target) {
@@ -919,7 +922,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     this._selectedTimeSlot = null;
 
     // Open the note for editing (hook will handle calendar re-render)
-    if (page) page.sheet.render(true);
+    if (page) page.sheet.render(true, { mode: 'edit' });
   }
 
   static async _onEditNote(event, target) {
@@ -929,7 +932,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     if (pageId.includes('-week-')) pageId = pageId.split('-week-')[0];
 
     const page = game.journal.find((j) => j.pages.get(pageId))?.pages.get(pageId);
-    if (page) page.sheet.render(true);
+    if (page) page.sheet.render(true, { mode: 'edit' });
   }
 
   static async _onDeleteNote(event, target) {
@@ -1081,7 +1084,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     });
 
     if (action === 'edit') {
-      page.sheet.render(true);
+      page.sheet.render(true, { mode: 'edit' });
     } else if (action === 'delete') {
       const confirmed = await foundry.applications.api.DialogV2.confirm({
         window: { title: 'Delete Note' },

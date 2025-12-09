@@ -88,6 +88,8 @@ export default class EventScheduler {
     // Skip if NoteManager isn't initialized
     if (!NoteManager.isInitialized()) return;
 
+    log(3, 'EventScheduler.onUpdateWorldTime', { lastDate: this.#lastDate, currentDate, delta });
+
     // Check if we've crossed into a new day
     if (this.#lastDate && this.#hasDateChanged(this.#lastDate, currentDate)) {
       // Reset triggered events on day change
@@ -119,6 +121,7 @@ export default class EventScheduler {
   static #checkEventTriggers(previousDate, currentDate, delta) {
     // Get all notes
     const allNotes = NoteManager.getAllNotes();
+    log(3, `EventScheduler: Checking ${allNotes.length} notes for triggers`);
 
     for (const note of allNotes) {
       // Skip if already triggered today
@@ -127,11 +130,11 @@ export default class EventScheduler {
       // Skip if note is silent (don't announce)
       if (note.flagData.silent) continue;
 
-      // Skip GM-only notes if we want to respect visibility
-      // (For now, GM sees all notifications)
-
       // Check if this note should trigger
-      if (this.#shouldTrigger(note, previousDate, currentDate)) {
+      const shouldTrigger = this.#shouldTrigger(note, previousDate, currentDate);
+      log(3, `EventScheduler: Note "${note.name}" shouldTrigger=${shouldTrigger}`, { noteStartDate: note.flagData.startDate, previousDate, currentDate });
+
+      if (shouldTrigger) {
         this.#triggerEvent(note, currentDate);
         this.#triggeredToday.add(note.id);
       }
@@ -148,6 +151,9 @@ export default class EventScheduler {
    * @private
    */
   static #shouldTrigger(note, previousDate, currentDate) {
+    // Need both dates to compare
+    if (!previousDate || !currentDate) return false;
+
     const startDate = note.flagData.startDate;
     if (!startDate) return false;
 
@@ -215,13 +221,11 @@ export default class EventScheduler {
     // Show notification
     ui.notifications[notificationType](message, { permanent: false });
 
+    // Send chat announcement
+    this.#sendChatAnnouncement(note, currentDate);
+
     // Fire hook for other modules
-    Hooks.callAll(HOOKS.EVENT_TRIGGERED, {
-      id: note.id,
-      name: note.name,
-      flagData: note.flagData,
-      currentDate
-    });
+    Hooks.callAll(HOOKS.EVENT_TRIGGERED, { id: note.id, name: note.name, flagData: note.flagData, currentDate });
 
     // Execute macro if attached
     this.#executeMacro(note);
@@ -268,9 +272,7 @@ export default class EventScheduler {
     const categories = note.flagData.categories || [];
     if (categories.length > 0) {
       const categoryDef = NoteManager.getCategoryDefinition(categories[0]);
-      if (categoryDef) {
-        message = `<i class="${categoryDef.icon}" style="color:${categoryDef.color}"></i> ${message}`;
-      }
+      if (categoryDef) message = `<i class="${categoryDef.icon}" style="color:${categoryDef.color}"></i> ${message}`;
     }
 
     return message;
@@ -287,13 +289,117 @@ export default class EventScheduler {
     if (!macroId) return;
 
     const macro = game.macros.get(macroId);
-    if (!macro) {
-      log(2, `Macro not found for event ${note.name}: ${macroId}`);
-      return;
-    }
+    if (!macro) return;
 
     log(3, `Executing macro for event ${note.name}: ${macro.name}`);
     macro.execute();
+  }
+
+  /* -------------------------------------------- */
+  /*  Chat Announcements                          */
+  /* -------------------------------------------- */
+
+  /**
+   * Send a chat announcement for an event.
+   * Respects gmOnly visibility setting.
+   *
+   * @param {Object} note - The note stub
+   * @param {Object} currentDate - Current date components
+   * @private
+   */
+  static async #sendChatAnnouncement(note, currentDate) {
+    const calendar = CalendarManager.getActiveCalendar();
+    const flagData = note.flagData;
+
+    // Get full note document for content
+    const fullNote = NoteManager.getFullNote(note.id);
+    const noteContent = fullNote?.text?.content || '';
+
+    // Strip HTML and truncate content to 140 chars
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = noteContent;
+    let plainContent = tempDiv.textContent || tempDiv.innerText || '';
+    plainContent = plainContent.trim();
+    if (plainContent.length > 140) plainContent = plainContent.substring(0, 140).trim() + '…';
+
+    // Build date range string
+    let dateRange = this.#formatDateRange(calendar, flagData);
+
+    // Build icon - clickable to open note
+    const color = flagData.color || '#4a9eff';
+    let iconHtml = '';
+    if (flagData.icon) {
+      if (flagData.icon.startsWith('fa') || flagData.iconType === 'fontawesome') iconHtml = `<i class="${flagData.icon}"></i>`;
+      else iconHtml = `<img src="${flagData.icon}" alt="" style="width: 24px; height: 24px; object-fit: contain;" />`;
+    } else {
+      iconHtml = `<i class="fas fa-calendar"></i>`;
+    }
+
+    // Build the chat message content
+    const content = `
+      <div class="calendaria-announcement">
+        <div class="announcement-date">${dateRange}</div>
+        ${plainContent ? `<div class="announcement-content">${plainContent}</div>` : ''}
+        <a class="announcement-open" data-action="openNote" data-note-id="${note.id}" data-journal-id="${note.journalId}">
+          ${iconHtml} Open Note
+        </a>
+      </div>
+    `.trim();
+
+    // Determine whisper recipients based on gmOnly
+    let whisper = [];
+    if (flagData.gmOnly) whisper = game.users.filter((u) => u.isGM).map((u) => u.id);
+
+    // Create the chat message
+    await ChatMessage.create({
+      content,
+      whisper,
+      speaker: { alias: note.name },
+      flavor: `<span style="color: ${color};">${iconHtml}</span> Calendar Event`,
+      flags: { [MODULE.ID]: { isAnnouncement: true, noteId: note.id, journalId: note.journalId } }
+    });
+
+    log(3, `Chat announcement sent for event: ${note.name}`, { gmOnly: flagData.gmOnly });
+  }
+
+  /**
+   * Format date range for display.
+   * @param {Object} calendar - The active calendar
+   * @param {Object} flagData - Note flag data
+   * @returns {string} Formatted date range
+   * @private
+   */
+  static #formatDateRange(calendar, flagData) {
+    if (!calendar || !flagData.startDate) return '';
+
+    const formatDate = (date) => {
+      const monthData = calendar.months?.values?.[date.month];
+      const monthName = monthData?.name ? game.i18n.localize(monthData.name) : `Month ${date.month + 1}`;
+      return `${date.day} ${monthName}, ${date.year}`;
+    };
+
+    const formatTime = (date) => {
+      if (flagData.allDay) return '';
+      const hour = String(date.hour ?? 0).padStart(2, '0');
+      const minute = String(date.minute ?? 0).padStart(2, '0');
+      return ` at ${hour}:${minute}`;
+    };
+
+    let result = formatDate(flagData.startDate) + formatTime(flagData.startDate);
+
+    // Add end date if different
+    if (flagData.endDate && flagData.endDate.year) {
+      const startKey = `${flagData.startDate.year}-${flagData.startDate.month}-${flagData.startDate.day}`;
+      const endKey = `${flagData.endDate.year}-${flagData.endDate.month}-${flagData.endDate.day}`;
+      if (startKey !== endKey) {
+        result += ` — ${formatDate(flagData.endDate)}`;
+        if (!flagData.allDay && flagData.endDate.hour !== undefined) result += formatTime(flagData.endDate);
+      }
+    }
+
+    if (flagData.allDay) result += ' (All Day)';
+
+    return result;
   }
 
   /* -------------------------------------------- */
@@ -309,9 +415,7 @@ export default class EventScheduler {
    * @private
    */
   static #hasDateChanged(previous, current) {
-    return previous.year !== current.year ||
-           previous.month !== current.month ||
-           previous.day !== current.day;
+    return previous.year !== current.year || previous.month !== current.month || previous.day !== current.day;
   }
 
   /**
@@ -357,9 +461,7 @@ export default class EventScheduler {
     const current = { year: currentDate.year, month: currentDate.month, day: currentDate.day };
 
     // Current must be >= start and <= end
-    if (compareDates(current, start) < 0 || compareDates(current, end) > 0) {
-      return null;
-    }
+    if (compareDates(current, start) < 0 || compareDates(current, end) > 0) return null;
 
     // Calculate total days and current day
     const totalDays = this.#daysBetween(start, end) + 1;
@@ -416,29 +518,20 @@ export default class EventScheduler {
    *
    * @param {Object} note - The note stub
    * @param {Object} progress - Progress info
+   * @todo localize
    * @private
    */
   static #showProgressNotification(note, progress) {
     const message = `<strong>${note.name}</strong> - Day ${progress.currentDay} of ${progress.totalDays}`;
 
     // For first day, show a starting notification
-    if (progress.isFirstDay) {
-      ui.notifications.info(`${message} (starting today)`, { permanent: false });
-    }
+    if (progress.isFirstDay) ui.notifications.info(`${message} (starting today)`, { permanent: false });
     // For last day, show a completion notification
-    else if (progress.isLastDay) {
-      ui.notifications.info(`${message} (final day)`, { permanent: false });
-    }
+    else if (progress.isLastDay) ui.notifications.info(`${message} (final day)`, { permanent: false });
     // For days in between, show progress
-    else {
-      ui.notifications.info(`${message} (${progress.percentage}% complete)`, { permanent: false });
-    }
+    else ui.notifications.info(`${message} (${progress.percentage}% complete)`, { permanent: false });
 
     // Fire hook for multi-day progress
-    Hooks.callAll(HOOKS.EVENT_DAY_CHANGED, {
-      id: note.id,
-      name: note.name,
-      progress
-    });
+    Hooks.callAll(HOOKS.EVENT_DAY_CHANGED, { id: note.id, name: note.name, progress });
   }
 }

@@ -412,6 +412,47 @@ export default class NoteManager {
     return Array.from(this.#noteIndex.values());
   }
 
+  /**
+   * Delete all calendar notes.
+   * @param {object} [options] - Options
+   * @param {string} [options.calendarId] - Only delete notes for this calendar (not yet implemented)
+   * @returns {Promise<number>} Number of notes deleted
+   */
+  static async deleteAllNotes(options = {}) {
+    if (!game.user.isGM) {
+      ui.notifications.error('Only GMs can delete notes');
+      return 0;
+    }
+
+    const allNotes = this.getAllNotes();
+    if (allNotes.length === 0) {
+      log(3, 'No notes to delete');
+      return 0;
+    }
+
+    // Collect all pages to delete
+    const pagesToDelete = [];
+    for (const note of allNotes) {
+      const page = this.getFullNote(note.id);
+      if (page) pagesToDelete.push(page);
+    }
+
+    // Delete pages in batches to avoid blocking
+    let deletedCount = 0;
+    for (const page of pagesToDelete) {
+      try {
+        await page.delete();
+        deletedCount++;
+      } catch (error) {
+        log(2, `Error deleting note ${page.name}:`, error);
+      }
+    }
+
+    log(3, `Deleted ${deletedCount} calendar notes`);
+    ui.notifications.info(`Deleted ${deletedCount} calendar note(s)`);
+    return deletedCount;
+  }
+
   /* -------------------------------------------- */
   /*  Date Queries                                */
   /* -------------------------------------------- */

@@ -9,6 +9,7 @@
  */
 
 import CalendarManager from './calendar/calendar-manager.mjs';
+import NoteManager from './notes/note-manager.mjs';
 import { log } from './utils/logger.mjs';
 
 /**
@@ -308,7 +309,7 @@ export const CalendariaAPI = {
 
     const components = game.time.components;
     const currentHour = components.hour + components.minute / 60 + components.second / 3600;
-    const hoursUntil = currentHour < targetHour ? targetHour - currentHour : (24 - currentHour) + targetHour;
+    const hoursUntil = currentHour < targetHour ? targetHour - currentHour : 24 - currentHour + targetHour;
 
     const hours = Math.floor(hoursUntil);
     const remainingMinutes = (hoursUntil - hours) * 60;
@@ -334,7 +335,7 @@ export const CalendariaAPI = {
 
     const components = game.time.components;
     const currentHour = components.hour + components.minute / 60 + components.second / 3600;
-    const hoursUntil = currentHour < targetHour ? targetHour - currentHour : (24 - currentHour) + targetHour;
+    const hoursUntil = currentHour < targetHour ? targetHour - currentHour : 24 - currentHour + targetHour;
 
     const hours = Math.floor(hoursUntil);
     const remainingMinutes = (hoursUntil - hours) * 60;
@@ -358,7 +359,7 @@ export const CalendariaAPI = {
     const targetHour = 0;
     const components = game.time.components;
     const currentHour = components.hour + components.minute / 60 + components.second / 3600;
-    const hoursUntil = currentHour < targetHour ? targetHour - currentHour : (24 - currentHour) + targetHour;
+    const hoursUntil = currentHour < targetHour ? targetHour - currentHour : 24 - currentHour + targetHour;
 
     const hours = Math.floor(hoursUntil);
     const remainingMinutes = (hoursUntil - hours) * 60;
@@ -382,7 +383,7 @@ export const CalendariaAPI = {
     const targetHour = 12;
     const components = game.time.components;
     const currentHour = components.hour + components.minute / 60 + components.second / 3600;
-    const hoursUntil = currentHour < targetHour ? targetHour - currentHour : (24 - currentHour) + targetHour;
+    const hoursUntil = currentHour < targetHour ? targetHour - currentHour : 24 - currentHour + targetHour;
 
     const hours = Math.floor(hoursUntil);
     const remainingMinutes = (hoursUntil - hours) * 60;
@@ -452,5 +453,54 @@ export const CalendariaAPI = {
     // Only add yearZero if components are internal (from game.time.components)
     const displayYear = isInternalComponents ? components.year + calendar.years.yearZero : components.year;
     return `${components.dayOfMonth + 1} ${calendar.months.values[components.month]?.name ?? 'Unknown'} ${displayYear}`;
+  },
+
+  /* -------------------------------------------- */
+  /*  Notes Management                            */
+  /* -------------------------------------------- */
+
+  /**
+   * Get all calendar notes.
+   * @returns {object[]} Array of note stubs with id, name, flagData, etc.
+   * @example
+   * const notes = CALENDARIA.api.getAllNotes();
+   * notes.forEach(note => console.log(note.name, note.flagData.startDate));
+   */
+  getAllNotes() {
+    return NoteManager.getAllNotes();
+  },
+
+  /**
+   * Get a specific note by ID.
+   * @param {string} pageId - The journal entry page ID
+   * @returns {object|null} Note stub or null if not found
+   * @example
+   * const note = CALENDARIA.api.getNote('abc123');
+   * if (note) console.log(note.name);
+   */
+  getNote(pageId) {
+    return NoteManager.getNote(pageId);
+  },
+
+  /**
+   * Delete a specific calendar note.
+   * @param {string} pageId - The journal entry page ID
+   * @returns {Promise<boolean>} True if deleted successfully
+   * @example
+   * await CALENDARIA.api.deleteNote('abc123');
+   */
+  async deleteNote(pageId) {
+    return await NoteManager.deleteNote(pageId);
+  },
+
+  /**
+   * Delete all calendar notes.
+   * @returns {Promise<number>} Number of notes deleted
+   * @example
+   * const count = await CALENDARIA.api.deleteAllNotes();
+   * console.log(`Deleted ${count} notes`);
+   */
+  async deleteAllNotes() {
+    return await NoteManager.deleteAllNotes();
   }
 };

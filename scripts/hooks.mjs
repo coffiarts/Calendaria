@@ -5,7 +5,7 @@
  * @author Tyler
  */
 
-import { SYSTEM } from './constants.mjs';
+import { MODULE, SYSTEM } from './constants.mjs';
 import { log } from './utils/logger.mjs';
 import { onRenderSceneConfig, onUpdateWorldTime } from './darkness.mjs';
 import CalendarManager from './calendar/calendar-manager.mjs';
@@ -45,6 +45,9 @@ export function registerHooks() {
   // Journal sidebar button
   Hooks.on('renderJournalDirectory', addJournalCalendarButton);
 
+  // Chat message hooks (for announcement click handlers)
+  Hooks.on('renderChatMessageHTML', onRenderChatMessage);
+
   // System integrations
   registerRestTimeHooks();
 
@@ -56,6 +59,7 @@ export function registerHooks() {
 /**
  * Add Calendar button to journal sidebar footer.
  * @param {Application} app - The journal sidebar application
+ * @todo move this to correct utility file.
  * @returns {void}
  */
 function addJournalCalendarButton(app) {
@@ -74,4 +78,40 @@ function addJournalCalendarButton(app) {
 
   footer.appendChild(button);
   log(3, 'Journal calendar button added');
+}
+
+/* -------------------------------------------- */
+
+/**
+ * Handle renderChatMessage hook for calendar announcements.
+ * @param {ChatMessage} message - The chat message document
+ * @param {HTMLElement} html - The rendered HTML element
+ * @param {object} context - Render context
+ * @todo move this to correct utility file.
+ */
+function onRenderChatMessage(message, html, context) {
+  // Only process calendaria announcements
+  if (!message.flags?.[MODULE.ID]?.isAnnouncement) return;
+
+  // Add click handler for "Open Note" link
+  const openLink = html.querySelector('.announcement-open');
+  if (openLink) {
+    openLink.addEventListener('click', async (event) => {
+      event.preventDefault();
+      const noteId = openLink.dataset.noteId;
+      const journalId = openLink.dataset.journalId;
+
+      if (!noteId) return;
+
+      // Find and render the note sheet in view mode
+      const page = NoteManager.getFullNote(noteId);
+      if (page) {
+        page.sheet.render(true, { mode: 'view' });
+      } else if (journalId) {
+        // Fallback: try to open the journal
+        const journal = game.journal.get(journalId);
+        if (journal) journal.sheet.render(true, { pageId: noteId });
+      }
+    });
+  }
 }

@@ -212,12 +212,13 @@ export function addYears(date, years) {
 
 /**
  * Get current date from game time.
- * @returns {object}  Current date components
+ * @returns {object}  Current date components (day is 1-indexed to match note storage)
  */
 export function getCurrentDate() {
   const components = game.time.components;
 
-  return { year: components.year, month: components.month, day: components.dayOfMonth, hour: components.hour, minute: components.minute };
+  // dayOfMonth is 0-indexed in Foundry, convert to 1-indexed to match note data
+  return { year: components.year, month: components.month, day: components.dayOfMonth + 1, hour: components.hour, minute: components.minute };
 }
 
 /**

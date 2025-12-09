@@ -149,8 +149,7 @@ export function createNoteStub(page) {
   if (page.type !== 'calendaria.calendarnote') return null;
 
   const flagData = page.system;
-
-  if (!flagData || !flagData.isCalendarNote) return null;
+  if (!flagData) return null;
 
   return {
     id: page.id,

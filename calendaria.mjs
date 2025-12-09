@@ -16,6 +16,7 @@ import CalendarManager from './scripts/calendar/calendar-manager.mjs';
 import CalendariaCalendar from './scripts/calendar/data/calendaria-calendar.mjs';
 import NoteManager from './scripts/notes/note-manager.mjs';
 import TimeTracker from './scripts/time/time-tracker.mjs';
+import EventScheduler from './scripts/time/event-scheduler.mjs';
 import { CalendarApplication } from './scripts/applications/calendar-application.mjs';
 import { CalendarNoteDataModel } from './scripts/sheets/calendar-note-data-model.mjs';
 import { CalendarNoteSheet } from './scripts/sheets/calendar-note-sheet.mjs';
@@ -113,11 +114,14 @@ Hooks.once('ready', async () => {
   // Initialize time tracking
   TimeTracker.initialize();
 
+  // Initialize event scheduler
+  EventScheduler.initialize();
+
   // Set initial world time if it's at 0 (new world)
   if (game.user.isGM && game.time.worldTime === 0) {
     log(3, 'Initializing world time to default Renescarran date...');
 
-    // Convert to world time and advance by that amount
+    // game.time.calendar should now be our Renescara calendar (set in setup hook)
     const worldTime = game.time.calendar.componentsToTime(RENESCARA_DEFAULT_DATE);
     await game.time.advance(worldTime);
   }
@@ -126,12 +130,17 @@ Hooks.once('ready', async () => {
 });
 
 Hooks.once('setup', () => {
-  // For non-dnd5e systems, set Renescarran Calendar as the world calendar
+  // For non-dnd5e systems, override game.time.calendar with our calendar
   if (!game.system.id.includes('dnd5e')) {
-    const renescaraCalendar = new CalendariaCalendar(RENESCARA_CALENDAR);
-    CONFIG.time.worldCalendarConfig = renescaraCalendar;
+    log(3, 'Setting up Calendaria calendar for non-dnd5e system...');
+
+    // Set the config as a plain object (not an instance) and our class
+    CONFIG.time.worldCalendarConfig = RENESCARA_CALENDAR;
     CONFIG.time.worldCalendarClass = CalendariaCalendar;
-    log(3, 'Set Renescarran Calendar as world calendar');
+
+    // Re-initialize the calendar with our config
+    game.time.initializeCalendar();
+    log(3, `Synced game.time.calendar to Renescara calendar`);
   }
 
   if (CONFIG.DND5E?.calendar) {

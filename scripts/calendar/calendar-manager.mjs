@@ -31,6 +31,7 @@ export default class CalendarManager {
     if (SYSTEM.isDnd5e) await this.#initializeDnd5e();
     else {
       // For non-dnd5e systems, load from our own settings
+
       await this.loadCalendars();
       if (CalendarRegistry.size === 0) await this.loadDefaultCalendars();
     }
