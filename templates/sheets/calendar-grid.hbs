@@ -1,6 +1,7 @@
 <div class="calendar-grid">
   {{#if calendarData}}
-    <div class="calendar-weekdays" style="grid-template-columns: repeat({{calendarData.daysInWeek}}, minmax(80px, 1fr));">
+    <div class="calendar-weekdays"
+      style="grid-template-columns: repeat({{calendarData.daysInWeek}}, minmax(80px, 1fr));">
       {{#each calendarData.weekdays}}
         <div class="weekday-header">{{this}}</div>
       {{/each}}
@@ -8,21 +9,25 @@
 
     <div class="calendar-days">
       {{#each calendarData.weeks}}
-        <div class="calendar-week" style="grid-template-columns: repeat({{../calendarData.daysInWeek}}, minmax(80px, 1fr));">
+        <div class="calendar-week"
+          style="grid-template-columns: repeat({{../calendarData.daysInWeek}}, minmax(80px, 1fr));">
           {{#each this}}
             {{#if empty}}
               <div class="calendar-day empty"></div>
             {{else}}
-              <div class="calendar-day{{#if isToday}} today{{/if}}{{#if isSelected}} selected{{/if}}{{#if notes.length}} has-notes{{/if}}{{#if isOddDay}} odd-day{{/if}}{{#if isFestival}} festival-day{{/if}}"
+              <div
+                class="calendar-day{{#if isToday}} today{{/if}}{{#if isSelected}} selected{{/if}}{{#if notes.length}} has-notes{{/if}}{{#if isOddDay}} odd-day{{/if}}{{#if isFestival}} festival-day{{/if}}"
                 data-year="{{year}}" data-month="{{month}}" data-day="{{day}}" data-action="selectDay"
-                {{#if festivalName}}data-tooltip="{{festivalName}}"{{/if}}>
+                {{#if festivalName}}data-tooltip="{{festivalName}}" {{/if}}>
                 <div class="day-number">
                   {{day}}
                   {{#if isFestival}}
                     <i class="fas fa-star festival-icon" data-tooltip="{{festivalName}}"></i>
                   {{/if}}
                   {{#each moonPhases}}
-                    <span class="moon-phase" data-tooltip="{{moonName}}: {{phaseName}}">{{icon}}</span>
+                    <span class="moon-phase" data-tooltip="{{moonName}}: {{phaseName}}">
+                      <img src="{{icon}}" alt="{{phaseName}}" />
+                    </span>
                   {{/each}}
                 </div>
                 {{#if notes.length}}
@@ -51,10 +56,8 @@
           <!-- Multi-day event bars -->
           {{#each multiDayEvents}}
             <div class="event-bar{{#if isContinuation}} continuation{{/if}}"
-                 style="left: {{left}}%; width: {{width}}%; top: calc(22px + {{row}} * 26px); background-color: {{color}};"
-                 data-tooltip="{{name}}"
-                 data-action="editNote"
-                 data-note-id="{{id}}">
+              style="left: {{left}}%; width: {{width}}%; top: calc(22px + {{row}} * 26px); background-color: {{color}};"
+              data-tooltip="{{name}}" data-action="editNote" data-note-id="{{id}}">
               {{#if isContinuation}}
                 <i class="fa-solid fa-angles-right event-bar-continuation"></i>
               {{else}}

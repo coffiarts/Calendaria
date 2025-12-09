@@ -57,6 +57,7 @@ jobs:
     - name: Zip Files
       run: |
         zip -r ${{ env.ZIP_NAME }} \
+          assets/ \
           lang/ \
           scripts/ \
           styles/ \

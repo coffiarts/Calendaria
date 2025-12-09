@@ -19,20 +19,17 @@
 
         <!-- Hour grid cells for this day -->
         {{#each ../calendarData.timeSlots}}
-          <div class="week-time-cell {{#if (and ../isToday (eq hour ../currentHour))}}current-hour{{/if}}{{#if (eq hour ../selectedHour)}} selected{{/if}}"
-               data-day="{{../day}}"
-               data-month="{{../month}}"
-               data-year="{{../year}}"
-               data-hour="{{hour}}"
-               data-action="selectTimeSlot">
+          <div
+            class="week-time-cell {{#if (and ../isToday (eq hour ../currentHour))}}current-hour{{/if}}{{#if (eq hour ../selectedHour)}} selected{{/if}}"
+            data-day="{{../day}}" data-month="{{../month}}" data-year="{{../year}}" data-hour="{{hour}}"
+            data-action="selectTimeSlot">
             <!-- Event blocks positioned within cells -->
             {{#each ../eventBlocks}}
               {{#if (eq ../hour startHour)}}
                 <div class="week-event-block {{#if allDay}}all-day{{/if}} {{#if (eq hourSpan 1)}}compact{{/if}}"
-                     style="--hour-span: {{hourSpan}}; background-color: {{color}};"
-                     data-tooltip="{{name}}: {{startTime}}{{#if endTime}} - {{endTime}}{{/if}}"
-                     data-action="editNote"
-                     data-note-id="{{id}}">
+                  style="--hour-span: {{hourSpan}}; background-color: {{color}};"
+                  data-tooltip="{{name}}: {{startTime}}{{#if endTime}} - {{endTime}}{{/if}}" data-action="editNote"
+                  data-note-id="{{id}}">
                   <div class="event-icon">
                     {{#if (eq iconType "fontawesome")}}
                       <i class="{{icon}}"></i>

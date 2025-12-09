@@ -24,6 +24,7 @@ import { CalendariaAPI } from './scripts/api.mjs';
 import { RENESCARA_CALENDAR, RENESCARA_DEFAULT_DATE } from './scripts/calendar/data/renescara-calendar.mjs';
 import { preLocalizeCalendar } from './scripts/calendar/calendar-utils.mjs';
 import { CalendarEditor } from './scripts/applications/calendar-editor.mjs';
+import { injectDefaultMoons } from './scripts/calendar/data/default-moons.mjs';
 
 Hooks.once('init', async () => {
   registerSettings();
@@ -61,6 +62,19 @@ Hooks.once('i18nInit', () => {
 
 // Hook into D&D 5e's calendar setup to take over calendar system completely
 Hooks.once('dnd5e.setupCalendar', () => {
+  // Inject default moons into 5e calendars that don't have them
+  for (const entry of CONFIG.DND5E.calendar.calendars) {
+    if (entry.config && !entry.config.moons?.length) {
+      const configObj = entry.config.toObject?.() ?? entry.config;
+      const injectedConfig = injectDefaultMoons(entry.value, configObj);
+      if (injectedConfig.moons?.length) {
+        entry.config = new CalendariaCalendar(injectedConfig);
+        entry.class = CalendariaCalendar;
+        log(3, `Injected default moons into calendar: ${entry.value}`);
+      }
+    }
+  }
+
   // Create CalendariaCalendar instances for all calendars
   const renescaraCalendar = new CalendariaCalendar(RENESCARA_CALENDAR);
 

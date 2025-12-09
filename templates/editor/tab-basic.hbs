@@ -4,7 +4,8 @@
     <select name="calendarSelect">
       <option value="">{{localize "CALENDARIA.Editor.SelectCalendar"}}</option>
       {{#each templates}}
-        <option value="{{this.id}}">{{this.name}}{{#if this.isCustom}} ({{localize "CALENDARIA.Editor.Custom"}}){{/if}}</option>
+        <option value="{{this.id}}">{{this.name}}{{#if this.isCustom}} ({{localize "CALENDARIA.Editor.Custom"}}){{/if}}
+        </option>
       {{/each}}
     </select>
     <button type="button" data-action="loadCalendar">
