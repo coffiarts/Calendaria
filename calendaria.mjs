@@ -24,6 +24,7 @@ import { CalendariaAPI } from './scripts/api.mjs';
 import { RENESCARA_CALENDAR, RENESCARA_DEFAULT_DATE } from './scripts/calendar/data/renescara-calendar.mjs';
 import { preLocalizeCalendar } from './scripts/calendar/calendar-utils.mjs';
 import { CalendarEditor } from './scripts/applications/calendar-editor.mjs';
+import { ThemeEditor } from './scripts/applications/settings/theme-editor.mjs';
 import { injectDefaultMoons } from './scripts/calendar/data/default-moons.mjs';
 
 Hooks.once('init', async () => {
@@ -136,6 +137,9 @@ Hooks.once('ready', async () => {
   // Initialize event scheduler
   EventScheduler.initialize();
 
+  // Initialize custom theme colors
+  ThemeEditor.initialize();
+
   // Set initial world time if it's at 0 (new world)
   if (game.user.isGM && game.time.worldTime === 0) {
     log(3, 'Initializing world time to default Renescarran date...');
@@ -183,6 +187,7 @@ globalThis['CALENDARIA'] = {
   NoteManager,
   CalendarApplication,
   CalendarEditor,
+  ThemeEditor,
   toggleCalendarVisibility,
   api: CalendariaAPI
 };

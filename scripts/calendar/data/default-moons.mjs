@@ -11,14 +11,14 @@
  * Percentages represent position in the lunar cycle.
  */
 const STANDARD_PHASES = [
-  { name: 'CALENDARIA.MoonPhase.NewMoon', icon: 'modules/calendaria/assets/moon-phases/01_newmoon.png', start: 0, end: 0.0625 },
-  { name: 'CALENDARIA.MoonPhase.WaxingCrescent', icon: 'modules/calendaria/assets/moon-phases/02_waxingcrescent.png', start: 0.0625, end: 0.1875 },
-  { name: 'CALENDARIA.MoonPhase.FirstQuarter', icon: 'modules/calendaria/assets/moon-phases/03_firstquarter.png', start: 0.1875, end: 0.3125 },
-  { name: 'CALENDARIA.MoonPhase.WaxingGibbous', icon: 'modules/calendaria/assets/moon-phases/04_waxinggibbous.png', start: 0.3125, end: 0.4375 },
-  { name: 'CALENDARIA.MoonPhase.FullMoon', icon: 'modules/calendaria/assets/moon-phases/05_fullmoon.png', start: 0.4375, end: 0.5625 },
-  { name: 'CALENDARIA.MoonPhase.WaningGibbous', icon: 'modules/calendaria/assets/moon-phases/06_waninggibbous.png', start: 0.5625, end: 0.6875 },
-  { name: 'CALENDARIA.MoonPhase.LastQuarter', icon: 'modules/calendaria/assets/moon-phases/07_lastquarter.png', start: 0.6875, end: 0.8125 },
-  { name: 'CALENDARIA.MoonPhase.WaningCrescent', icon: 'modules/calendaria/assets/moon-phases/08_waningcrescent.png', start: 0.8125, end: 1 }
+  { name: 'CALENDARIA.MoonPhase.NewMoon', icon: 'modules/calendaria/assets/moon-phases/01_newmoon.svg', start: 0, end: 0.0625 },
+  { name: 'CALENDARIA.MoonPhase.WaxingCrescent', icon: 'modules/calendaria/assets/moon-phases/02_waxingcrescent.svg', start: 0.0625, end: 0.1875 },
+  { name: 'CALENDARIA.MoonPhase.FirstQuarter', icon: 'modules/calendaria/assets/moon-phases/03_firstquarter.svg', start: 0.1875, end: 0.3125 },
+  { name: 'CALENDARIA.MoonPhase.WaxingGibbous', icon: 'modules/calendaria/assets/moon-phases/04_waxinggibbous.svg', start: 0.3125, end: 0.4375 },
+  { name: 'CALENDARIA.MoonPhase.FullMoon', icon: 'modules/calendaria/assets/moon-phases/05_fullmoon.svg', start: 0.4375, end: 0.5625 },
+  { name: 'CALENDARIA.MoonPhase.WaningGibbous', icon: 'modules/calendaria/assets/moon-phases/06_waninggibbous.svg', start: 0.5625, end: 0.6875 },
+  { name: 'CALENDARIA.MoonPhase.LastQuarter', icon: 'modules/calendaria/assets/moon-phases/07_lastquarter.svg', start: 0.6875, end: 0.8125 },
+  { name: 'CALENDARIA.MoonPhase.WaningCrescent', icon: 'modules/calendaria/assets/moon-phases/08_waningcrescent.svg', start: 0.8125, end: 1 }
 ];
 
 /**

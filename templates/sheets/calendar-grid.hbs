@@ -1,7 +1,7 @@
 <div class="calendar-grid">
   {{#if calendarData}}
     <div class="calendar-weekdays"
-      style="grid-template-columns: repeat({{calendarData.daysInWeek}}, minmax(80px, 1fr));">
+      style="grid-template-columns: repeat({{calendarData.daysInWeek}}, var(--calendaria-day-size));">
       {{#each calendarData.weekdays}}
         <div class="weekday-header">{{this}}</div>
       {{/each}}
@@ -10,7 +10,7 @@
     <div class="calendar-days">
       {{#each calendarData.weeks}}
         <div class="calendar-week"
-          style="grid-template-columns: repeat({{../calendarData.daysInWeek}}, minmax(80px, 1fr));">
+          style="grid-template-columns: repeat({{../calendarData.daysInWeek}}, var(--calendaria-day-size));">
           {{#each this}}
             {{#if empty}}
               <div class="calendar-day empty"></div>
@@ -56,7 +56,7 @@
           <!-- Multi-day event bars -->
           {{#each multiDayEvents}}
             <div class="event-bar{{#if isContinuation}} continuation{{/if}}"
-              style="left: {{left}}%; width: {{width}}%; top: calc(22px + {{row}} * 26px); background-color: {{color}};"
+              style="left: {{left}}%; width: {{width}}%; top: calc(26px + {{row}} * 26px); background-color: {{color}};"
               data-tooltip="{{name}}" data-action="editNote" data-note-id="{{id}}">
               {{#if isContinuation}}
                 <i class="fa-solid fa-angles-right event-bar-continuation"></i>

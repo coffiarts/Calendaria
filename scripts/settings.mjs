@@ -7,6 +7,7 @@
 import { MODULE, SETTINGS } from './constants.mjs';
 import { log } from './utils/logger.mjs';
 import { ResetPositionDialog } from './applications/settings/reset-position.mjs';
+import { ThemeEditor } from './applications/settings/theme-editor.mjs';
 import { CalendarEditor } from './applications/calendar-editor.mjs';
 
 /**
@@ -54,6 +55,15 @@ export function registerSettings() {
     config: true,
     type: Boolean,
     default: true
+  });
+
+  /** User-customized theme color overrides */
+  game.settings.register(MODULE.ID, SETTINGS.CUSTOM_THEME_COLORS, {
+    name: 'Custom Theme Colors',
+    scope: 'client',
+    config: false,
+    type: Object,
+    default: {}
   });
 
   /** Stored calendar configurations and active calendar state */
@@ -135,6 +145,16 @@ export function registerSettings() {
     icon: 'fas fa-calendar-plus',
     type: CalendarEditor,
     restricted: true
+  });
+
+  /** Settings menu button to open theme editor */
+  game.settings.registerMenu(MODULE.ID, 'themeEditor', {
+    name: 'CALENDARIA.Settings.ThemeEditor.Name',
+    hint: 'CALENDARIA.Settings.ThemeEditor.Hint',
+    label: 'CALENDARIA.Settings.ThemeEditor.Label',
+    icon: 'fas fa-palette',
+    type: ThemeEditor,
+    restricted: false
   });
 
   /** Settings menu button to reset calendar position */

@@ -83,7 +83,10 @@ export const SETTINGS = {
   SHOW_MOON_PHASES: 'showMoonPhases',
 
   /** @type {string} Whether to advance time during short/long rests (dnd5e only) */
-  ADVANCE_TIME_ON_REST: 'advanceTimeOnRest'
+  ADVANCE_TIME_ON_REST: 'advanceTimeOnRest',
+
+  /** @type {string} User-customized theme color overrides */
+  CUSTOM_THEME_COLORS: 'customThemeColors'
 };
 
 /**
@@ -120,7 +123,9 @@ export const SCENE_FLAGS = {
 export const TEMPLATES = {
   SETTINGS: {
     /** @type {string} Reset position dialog template */
-    RESET_POSITION: `modules/${MODULE.ID}/templates/settings/reset-position.hbs`
+    RESET_POSITION: `modules/${MODULE.ID}/templates/settings/reset-position.hbs`,
+    /** @type {string} Theme editor template */
+    THEME_EDITOR: `modules/${MODULE.ID}/templates/settings/theme-editor.hbs`
   },
 
   /** @type {string} Time rotation dial template */

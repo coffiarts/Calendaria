@@ -17,7 +17,7 @@ const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
 export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV2) {
   constructor(options = {}) {
     super(options);
-    this._currentDate = null;
+    this._viewedDate = null;
     this._calendarId = options.calendarId || null;
     this._displayMode = 'month';
     this._selectedDate = null; // Track clicked/selected date
@@ -30,11 +30,10 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     window: {
       contentClasses: ['calendar-application'],
       icon: 'fas fa-calendar',
-      resizable: true
+      resizable: false
     },
     actions: {
-      previousMonth: CalendarApplication._onPreviousMonth,
-      nextMonth: CalendarApplication._onNextMonth,
+      navigate: CalendarApplication._onNavigate,
       today: CalendarApplication._onToday,
       addNote: CalendarApplication._onAddNote,
       addNoteToday: CalendarApplication._onAddNoteToday,
@@ -47,10 +46,11 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
       selectTimeSlot: CalendarApplication._onSelectTimeSlot
     },
     position: {
-      width: 800,
-      height: 600
+      width: 'auto',
+      height: 'auto'
     }
   };
+
 
   static PARTS = {
     header: { template: 'modules/calendaria/templates/sheets/calendar-header.hbs' },
@@ -70,11 +70,11 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
   }
 
   /**
-   * Get the current viewed date
+   * Get the date being viewed/displayed in the calendar
    * @returns {object}
    */
-  get currentDate() {
-    if (this._currentDate) return this._currentDate;
+  get viewedDate() {
+    if (this._viewedDate) return this._viewedDate;
 
     // Use current game time
     const components = game.time.components;
@@ -94,8 +94,8 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     };
   }
 
-  set currentDate(date) {
-    this._currentDate = date;
+  set viewedDate(date) {
+    this._viewedDate = date;
   }
 
   /**
@@ -117,17 +117,30 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     const calendar = this.calendar;
-    const currentDate = this.currentDate;
+    const viewedDate = this.viewedDate;
 
     // Basic context
     context.editable = game.user.isGM;
 
     // Calendar data
     context.calendar = calendar;
-    context.currentDate = currentDate;
+    context.viewedDate = viewedDate;
     context.displayMode = this._displayMode;
     context.selectedDate = this._selectedDate;
     context.selectedTimeSlot = this._selectedTimeSlot;
+
+    // Check if selected date (or viewed date if none selected) matches game time
+    const today = game.time.components;
+    const yearZero = calendar?.years?.yearZero ?? 0;
+    const todayYear = today.year + yearZero;
+    const todayMonth = today.month;
+    const todayDay = (today.dayOfMonth ?? 0) + 1;
+
+    if (this._selectedDate) {
+      context.isToday = this._selectedDate.year === todayYear && this._selectedDate.month === todayMonth && this._selectedDate.day === todayDay;
+    } else {
+      context.isToday = viewedDate.year === todayYear && viewedDate.month === todayMonth && viewedDate.day === todayDay;
+    }
 
     // Get notes from journal pages
     const allNotes = this._getCalendarNotes();
@@ -138,19 +151,19 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     if (calendar) {
       switch (this._displayMode) {
         case 'week':
-          context.calendarData = this._generateWeekData(calendar, currentDate, context.visibleNotes);
+          context.calendarData = this._generateWeekData(calendar, viewedDate, context.visibleNotes);
           break;
         case 'year':
-          context.calendarData = this._generateYearData(calendar, currentDate);
+          context.calendarData = this._generateYearData(calendar, viewedDate);
           break;
         default: // month
-          context.calendarData = this._generateCalendarData(calendar, currentDate, context.visibleNotes);
+          context.calendarData = this._generateCalendarData(calendar, viewedDate, context.visibleNotes);
           break;
       }
     }
 
     // Filter notes for current view
-    context.currentMonthNotes = this._getNotesForMonth(context.visibleNotes, currentDate.year, currentDate.month);
+    context.currentMonthNotes = this._getNotesForMonth(context.visibleNotes, viewedDate.year, viewedDate.month);
 
     // Moon phases setting for use in calendar data generation
     context.showMoonPhases = game.settings.get(MODULE.ID, SETTINGS.SHOW_MOON_PHASES);
@@ -165,6 +178,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
    * @returns {{full: string, abbrev: string, useAbbrev: boolean}}
    */
   _abbreviateMonthName(monthName) {
+    if (!monthName) return { full: '', abbrev: '', useAbbrev: false };
     const full = monthName;
     const useAbbrev = monthName.length > 5;
 
@@ -380,7 +394,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     const timeSlots = [];
     for (let hour = 0; hour < 24; hour++) {
       timeSlots.push({
-        label: `${hour.toString().padStart(2, '0')}:00`,
+        label: hour.toString(),
         hour: hour
       });
     }
@@ -393,10 +407,18 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
       day.eventBlocks = eventBlocks.filter((block) => block.year === day.year && block.month === day.month && block.day === day.day);
     });
 
+    // Calculate week number (approximate: day of year / days per week)
+    let dayOfYear = day;
+    for (let m = 0; m < month; m++) {
+      dayOfYear += calendar.months?.values?.[m]?.days || 0;
+    }
+    const weekNumber = Math.ceil(dayOfYear / daysInWeek);
+
     return {
       year: weekStartYear,
       month: weekStartMonth,
       monthName: calendar.months?.values?.[month]?.name ? game.i18n.localize(calendar.months.values[month].name) : '',
+      weekNumber,
       days: days,
       timeSlots: timeSlots,
       weekdays: calendar.days?.values?.map((wd) => game.i18n.localize(wd.name)) || [],
@@ -447,6 +469,8 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
 
     return {
       year,
+      startYear,
+      endYear: startYear + 8,
       yearGrid,
       weekdays: []
     };
@@ -725,6 +749,40 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
   /* -------------------------------------------- */
 
   /**
+   * Adjust window size to exactly fit rendered content.
+   * Measures actual DOM elements after render.
+   */
+  _adjustSizeForView() {
+    const windowContent = this.element.querySelector('.window-content');
+    const windowHeader = this.element.querySelector('.window-header');
+    if (!windowContent) return;
+
+    // Measure actual content size
+    const contentRect = windowContent.scrollWidth;
+    const contentHeight = windowContent.scrollHeight;
+    const headerHeight = windowHeader?.offsetHeight || 30;
+
+    this.setPosition({
+      width: contentRect + 2, // +2 for borders
+      height: contentHeight + headerHeight + 2
+    });
+  }
+
+  /**
+   * Update view class and handle post-render tasks
+   * @param {ApplicationRenderContext} context - Render context
+   * @param {object} options - Render options
+   * @override
+   */
+  _onRender(context, options) {
+    super._onRender(context, options);
+
+    // Update view class for CSS targeting
+    this.element.classList.remove('view-month', 'view-week', 'view-year');
+    this.element.classList.add(`view-${this._displayMode}`);
+  }
+
+  /**
    * Set up hook listeners when the application is first rendered
    * @param {ApplicationRenderContext} context - Render context
    * @param {object} options - Render options
@@ -732,6 +790,9 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
    */
   async _onFirstRender(context, options) {
     await super._onFirstRender(context, options);
+
+    // Set initial size based on view mode
+    this._adjustSizeForView();
 
     // Add context menu for notes (right-click to delete)
     this.element.addEventListener('contextmenu', this._onNoteContextMenu.bind(this));
@@ -786,40 +847,69 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
   /*  Event Handlers                              */
   /* -------------------------------------------- */
 
-  static async _onPreviousMonth(event, target) {
-    const current = this.currentDate;
+  static async _onNavigate(event, target) {
+    const direction = target.dataset.direction === 'next' ? 1 : -1;
+    const current = this.viewedDate;
     const calendar = this.calendar;
 
-    let newMonth = current.month - 1;
-    let newYear = current.year;
+    switch (this._displayMode) {
+      case 'week': {
+        // Navigate by one week
+        const daysInWeek = calendar.days?.values?.length || 7;
+        let newDay = current.day + direction * daysInWeek;
+        let newMonth = current.month;
+        let newYear = current.year;
 
-    if (newMonth < 0) {
-      newMonth = calendar.months.values.length - 1;
-      newYear--;
+        // Handle month boundaries
+        const monthData = calendar.months?.values?.[newMonth];
+        if (newDay > monthData?.days) {
+          newDay -= monthData.days;
+          newMonth++;
+          if (newMonth >= calendar.months.values.length) {
+            newMonth = 0;
+            newYear++;
+          }
+        } else if (newDay < 1) {
+          newMonth--;
+          if (newMonth < 0) {
+            newMonth = calendar.months.values.length - 1;
+            newYear--;
+          }
+          const prevMonthData = calendar.months?.values?.[newMonth];
+          newDay += prevMonthData?.days || 30;
+        }
+
+        this.viewedDate = { year: newYear, month: newMonth, day: newDay };
+        break;
+      }
+      case 'year': {
+        // Navigate by 9 years (full grid)
+        this.viewedDate = { ...current, year: current.year + direction * 9 };
+        break;
+      }
+      default: {
+        // Month view - navigate by one month
+        let newMonth = current.month + direction;
+        let newYear = current.year;
+
+        if (newMonth >= calendar.months.values.length) {
+          newMonth = 0;
+          newYear++;
+        } else if (newMonth < 0) {
+          newMonth = calendar.months.values.length - 1;
+          newYear--;
+        }
+
+        this.viewedDate = { year: newYear, month: newMonth, day: 1 };
+        break;
+      }
     }
 
-    this.currentDate = { year: newYear, month: newMonth, day: 1 };
-    await this.render();
-  }
-
-  static async _onNextMonth(event, target) {
-    const current = this.currentDate;
-    const calendar = this.calendar;
-
-    let newMonth = current.month + 1;
-    let newYear = current.year;
-
-    if (newMonth >= calendar.months.values.length) {
-      newMonth = 0;
-      newYear++;
-    }
-
-    this.currentDate = { year: newYear, month: newMonth, day: 1 };
     await this.render();
   }
 
   static async _onToday(event, target) {
-    this._currentDate = null; // Reset to use live game time
+    this._viewedDate = null; // Reset to use live game time
     await this.render();
   }
 
@@ -962,6 +1052,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     const mode = target.dataset.mode;
     this._displayMode = mode;
     await this.render();
+    this._adjustSizeForView();
   }
 
   static async _onSelectMonth(event, target) {
@@ -970,8 +1061,9 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
 
     // Switch to month view and navigate to the selected month
     this._displayMode = 'month';
-    this.currentDate = { year, month, day: 1 };
+    this.viewedDate = { year, month, day: 1 };
     await this.render();
+    this._adjustSizeForView();
   }
 
   static async _onSelectDay(event, target) {
@@ -987,27 +1079,28 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
   }
 
   static async _onSetAsCurrentDate(event, target) {
-    if (!this._selectedDate) return;
-
     const calendar = this.calendar;
     const yearZero = calendar?.years?.yearZero ?? 0;
+
+    // Use selected date or viewed date
+    const dateToSet = this._selectedDate || this.viewedDate;
 
     // Use the calendar's jumpToDate method if available
     if (calendar && typeof calendar.jumpToDate === 'function') {
       // calendar.jumpToDate expects display year and 1-indexed day
       await calendar.jumpToDate({
-        year: this._selectedDate.year, // Display year
-        month: this._selectedDate.month,
-        day: this._selectedDate.day // 1-indexed day (jumpToDate subtracts 1 internally)
+        year: dateToSet.year, // Display year
+        month: dateToSet.month,
+        day: dateToSet.day // 1-indexed day (jumpToDate subtracts 1 internally)
       });
     } else {
       // Fallback: construct time components and set world time
       // For internal components, we need to subtract yearZero and convert day to 0-indexed dayOfMonth
-      const internalYear = this._selectedDate.year - yearZero;
-      const dayOfMonth = this._selectedDate.day - 1; // Convert 1-indexed day to 0-indexed dayOfMonth
+      const internalYear = dateToSet.year - yearZero;
+      const dayOfMonth = dateToSet.day - 1; // Convert 1-indexed day to 0-indexed dayOfMonth
       const components = {
         year: internalYear,
-        month: this._selectedDate.month,
+        month: dateToSet.month,
         dayOfMonth: dayOfMonth,
         hour: game.time.components.hour ?? 12,
         minute: game.time.components.minute ?? 0,

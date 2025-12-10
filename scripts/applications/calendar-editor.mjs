@@ -6,7 +6,7 @@
  * @author Tyler
  */
 
-import { MODULE, TEMPLATES } from '../constants.mjs';
+import { MODULE, SETTINGS, TEMPLATES } from '../constants.mjs';
 import { log } from '../utils/logger.mjs';
 import CalendarManager from '../calendar/calendar-manager.mjs';
 
@@ -383,6 +383,16 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     context = await super._preparePartContext(partId, context, options);
     context.tab = context.tabs[partId];
     return context;
+  }
+
+  /**
+   * Apply theme class to the application element after render.
+   * @param {ApplicationRenderContext} context - Render context
+   * @param {RenderOptions} options - Render options
+   * @protected
+   */
+  _onRender(context, options) {
+    super._onRender?.(context, options);
   }
 
   /**

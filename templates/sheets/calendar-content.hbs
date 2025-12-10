@@ -1,4 +1,30 @@
 <div class="calendar-main-content">
+  <div class="calendar-nav">
+    <button type="button" data-action="navigate" data-direction="previous"
+      title="{{#if (eq displayMode 'week')}}Previous Week{{else if (eq displayMode 'year')}}Previous Years{{else}}Previous Month{{/if}}">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+
+    <h2 class="calendar-title">
+      {{#if calendarData}}
+        {{#if (eq displayMode 'week')}}
+          Week {{calendarData.weekNumber}}, {{calendarData.monthName}} {{calendarData.year}}
+        {{else if (eq displayMode 'year')}}
+          Years {{calendarData.startYear}} - {{calendarData.endYear}}
+        {{else}}
+          {{calendarData.monthName}} {{calendarData.year}}
+        {{/if}}
+      {{else}}
+        Calendar
+      {{/if}}
+    </h2>
+
+    <button type="button" data-action="navigate" data-direction="next"
+      title="{{#if (eq displayMode 'week')}}Next Week{{else if (eq displayMode 'year')}}Next Years{{else}}Next Month{{/if}}">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
+
   {{#if (eq displayMode 'year')}}
     {{> "modules/calendaria/templates/sheets/calendar-year.hbs"}}
   {{else if (eq displayMode 'week')}}

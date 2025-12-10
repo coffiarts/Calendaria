@@ -7,6 +7,82 @@
  */
 
 /* ======================================== */
+/* Theme System - CSS Custom Properties     */
+/* ======================================== */
+
+/**
+ * Default theme variables
+ * These can be overridden via the Theme Editor
+ */
+:root {
+  /* Background colors */
+  --calendaria-bg: rgb(31 31 31);
+  --calendaria-bg-lighter: rgb(42 42 42);
+  --calendaria-bg-hover: rgb(53 53 53);
+
+  /* Border colors */
+  --calendaria-border: rgb(74 74 74);
+  --calendaria-border-light: rgb(58 58 58);
+
+  /* Text colors */
+  --calendaria-text: rgb(224 224 224);
+  --calendaria-text-dim: rgb(153 153 153);
+  --calendaria-title-text: rgb(255 255 255);
+  --calendaria-weekday-header: rgb(224 224 224);
+  --calendaria-day-number: rgb(224 224 224);
+
+  /* Button colors */
+  --calendaria-button-bg: rgb(58 58 58);
+  --calendaria-button-text: rgb(224 224 224);
+  --calendaria-button-border: rgb(74 74 74);
+
+  /* Accent colors */
+  --calendaria-primary: rgb(74 144 226);
+  --calendaria-today: rgb(255 100 0);
+  --calendaria-today-bg: rgb(255 100 0 / 20%);
+  --calendaria-current-hour: rgb(255 100 0 / 12%);
+
+  /* Semantic colors */
+  --calendaria-success: rgb(76 175 80);
+  --calendaria-warning: rgb(255 193 7);
+  --calendaria-error: rgb(244 67 54);
+
+  /* Festival/special day colors */
+  --calendaria-festival-border: rgb(212 175 55);
+  --calendaria-festival-text: rgb(255 215 0);
+
+  /* Event bar colors */
+  --calendaria-event-shadow: rgb(0 0 0 / 20%);
+
+  /* Note sheet colors */
+  --calendaria-note-bg: var(--calendaria-bg);
+  --calendaria-note-header-bg: var(--calendaria-bg-lighter);
+
+  /* ======================================== */
+  /* Layout Dimensions (Content-Aware Sizing) */
+  /* ======================================== */
+
+  /* Month View */
+  --calendaria-day-size: 90px;
+  --calendaria-day-gap: 2px;
+  --calendaria-weekday-height: 28px;
+
+  /* Week View */
+  --calendaria-week-day-width: 100px;
+  --calendaria-week-hour-width: 25px;
+  --calendaria-week-hour-height: 24px;
+  --calendaria-week-header-height: 24px;
+
+  /* Year View */
+  --calendaria-year-month-width: 50px;
+  --calendaria-year-month-height: 24px;
+  --calendaria-year-month-gap: 4px;
+  --calendaria-year-header-height: 32px;
+  --calendaria-year-cell-padding: 8px;
+  --calendaria-year-gap: 12px;
+}
+
+/* ======================================== */
 /* Draggable Calendar & Widget Styles       */
 /* ======================================== */
 
@@ -240,24 +316,16 @@
 /* ======================================== */
 
 .calendar-application {
-  --calendaria-bg: rgb(31 31 31);
-  --calendaria-bg-lighter: rgb(42 42 42);
-  --calendaria-bg-hover: rgb(53 53 53);
-  --calendaria-border: rgb(74 74 74);
-  --calendaria-border-light: rgb(58 58 58);
-  --calendaria-text: rgb(224 224 224);
-  --calendaria-text-dim: rgb(153 153 153);
-  --calendaria-primary: rgb(74 144 226);
-  --calendaria-today: rgb(255 100 0);
-
+  /* Theme variables inherited from :root or theme class */
   display: flex;
   flex-direction: column;
-  height: 100%;
   background: var(--calendaria-bg);
+  color: var(--calendaria-text);
 
   .window-content {
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 0.5rem;
     padding: 0.5rem;
     overflow: hidden;
@@ -265,28 +333,22 @@
   }
 }
 
+/* Main content wrapper - centers content, sizes to fit */
 .calendar-main-content {
   display: flex;
   flex-direction: column;
-  flex: 1;
-  width: 100%;
-  min-height: 0;
+  align-items: center;
+  width: fit-content;
+  height: fit-content;
 }
 
-/* Header */
-.calendar-header {
+/* Navigation bar above calendar grid */
+.calendar-nav {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  padding-bottom: 0.25rem;
-  border-bottom: 2px solid var(--calendaria-border);
-}
-
-.calendar-controls {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  width: 100%;
+  margin-bottom: 0.25rem;
 
   button {
     min-width: 28px;
@@ -297,13 +359,38 @@
 
 .calendar-title {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: var(--calendaria-title-text);
+}
+
+/* Header - action buttons */
+.calendar-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 2px solid var(--calendaria-border);
+}
+
+/* Button styling for calendar application */
+.calendar-application button:not(.view-selector button.active) {
+  background: var(--calendaria-button-bg);
+  color: var(--calendaria-button-text);
+  border-color: var(--calendaria-button-border);
 }
 
 /* Moon Phase Display (inline with day number) */
 .moon-phase {
-  font-size: 12px;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  height: 1em;
+
+  img {
+    height: 100%;
+    width: auto;
+  }
 }
 
 .calendar-actions {
@@ -321,26 +408,33 @@
   }
 }
 
-/* Grid */
+/* Grid - Month View (Fixed Dimensions) */
 .calendar-grid {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  width: fit-content;
+  height: fit-content;
 }
 
 .calendar-weekdays {
   display: grid;
-  gap: 2px;
+  gap: var(--calendaria-day-gap);
   margin-bottom: 0.5rem;
   font-weight: bold;
   text-align: center;
+  /* Column count set via inline style from template */
 }
 
 .weekday-header {
+  width: var(--calendaria-day-size);
+  height: var(--calendaria-weekday-height);
   padding: 0.25rem;
   background: var(--calendaria-bg-lighter);
+  color: var(--calendaria-weekday-header);
   font-size: 0.9rem;
-  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -349,16 +443,14 @@
 .calendar-days {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  flex: 1;
+  gap: var(--calendaria-day-gap);
 }
 
 .calendar-week {
   position: relative;
   display: grid;
-  gap: 2px;
-  flex: 1;
-  min-height: 140px; /* Increased to accommodate event bars */
+  gap: var(--calendaria-day-gap);
+  /* Column count set via inline style from template */
 }
 
 .calendar-day {
@@ -366,14 +458,15 @@
   border: 1px solid var(--calendaria-border-light);
   background: var(--calendaria-bg);
   padding: 0.25rem;
-  min-width: 80px;
-  min-height: 80px;
+  width: var(--calendaria-day-size);
+  height: var(--calendaria-day-size);
   display: flex;
   flex-direction: column;
   cursor: pointer;
   transition:
     background 0.2s ease,
     transform 0.1s ease;
+  box-sizing: border-box;
 
   &:not(.empty):hover {
     background: var(--calendaria-bg-hover);
@@ -394,6 +487,7 @@
   }
 
   &.today {
+    background: var(--calendaria-today-bg);
     border: 1px solid var(--calendaria-today);
     position: relative;
     z-index: 1;
@@ -411,8 +505,8 @@
   }
 
   &.festival-day {
-    background: linear-gradient(135deg, var(--calendaria-bg) 0%, rgb(74 53 32) 100%);
-    border-color: rgb(212 175 55);
+    background: color-mix(in srgb, var(--calendaria-festival-border) 15%, var(--calendaria-bg));
+    border-color: var(--calendaria-festival-border);
     position: relative;
 
     &::after {
@@ -422,12 +516,12 @@
       left: 0;
       right: 0;
       height: 3px;
-      background: linear-gradient(90deg, transparent, rgb(255 215 0) 50%, transparent);
+      background: linear-gradient(90deg, transparent, var(--calendaria-festival-text) 50%, transparent);
       opacity: 0.6;
     }
 
     .day-number {
-      color: rgb(255 215 0);
+      color: var(--calendaria-festival-text);
     }
   }
 }
@@ -438,10 +532,11 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  color: var(--calendaria-day-number);
 }
 
 .festival-icon {
-  color: rgb(255 215 0);
+  color: var(--calendaria-festival-text);
   font-size: 0.75rem;
   animation: twinkle 2s ease-in-out infinite;
 }
@@ -584,21 +679,22 @@
 /* ======================================== */
 
 .calendar-week-view {
-  flex: 1;
-  overflow: auto;
-  padding: 0.5rem;
   background: var(--calendaria-bg);
+  width: fit-content;
+  height: fit-content;
 }
 
 .week-grid {
   display: grid;
-  grid-template-columns: 120px repeat(24, minmax(50px, 1fr));
-  grid-template-rows: 40px repeat(7, minmax(60px, 1fr));
+  /* Fixed column widths: day header + 24 hour columns */
+  grid-template-columns: var(--calendaria-week-day-width) repeat(24, var(--calendaria-week-hour-width));
+  /* Row heights set via inline style (varies by daysInWeek) */
   gap: 1px;
   background: var(--calendaria-border-light);
   border: 1px solid var(--calendaria-border);
   border-radius: 4px;
-  overflow: auto visible;
+  width: fit-content;
+  height: fit-content;
 }
 
 .week-corner-header {
@@ -626,37 +722,27 @@
 }
 
 .week-day-header {
-  padding: 0.5rem;
+  padding: 0.25rem 0.5rem;
   background: var(--calendaria-bg);
   border-right: 2px solid var(--calendaria-border);
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
+  align-items: center;
+  justify-content: flex-start;
   position: sticky;
   left: 0;
+  font-size: 0.85rem;
+  white-space: nowrap;
   z-index: 5;
 
   &.today {
-    background: rgb(255 100 0 / 15%);
+    background: var(--calendaria-today-bg);
     border-right: 3px solid var(--calendaria-today);
-  }
-
-  .day-name {
-    font-weight: 700;
-    font-size: 0.9rem;
-  }
-
-  .day-date {
-    font-size: 0.75rem;
-    color: var(--calendaria-text-dim);
   }
 }
 
 .week-time-cell {
   background: var(--calendaria-bg);
   border-right: 1px solid var(--calendaria-border-light);
-  min-width: 50px;
   cursor: pointer;
   transition: background 0.15s ease;
   position: relative;
@@ -667,15 +753,13 @@
   }
 
   &.current-hour {
-    background: rgb(255 100 0 / 12%);
+    background: var(--calendaria-current-hour);
     border-top: 3px solid var(--calendaria-today);
-    box-shadow: inset 0 0 10px rgb(255 100 0 / 15%);
   }
 
   &.selected {
-    background: var(--calendaria-primary-hover);
+    background: color-mix(in srgb, var(--calendaria-primary) 30%, transparent);
     border: 2px solid var(--calendaria-primary);
-    box-shadow: inset 0 0 10px rgb(0 100 255 / 15%);
   }
 }
 
@@ -773,35 +857,36 @@
 /* ======================================== */
 
 .calendar-year-view {
-  flex: 1;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
+  width: fit-content;
+  height: fit-content;
 }
 
 .year-grid {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  height: 100%;
+  gap: var(--calendaria-year-gap);
+  width: fit-content;
+  height: fit-content;
 }
 
 .year-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  flex: 1;
+  grid-template-columns: repeat(3, auto);
+  gap: var(--calendaria-year-gap);
 }
 
 .year-cell {
   border: 2px solid var(--calendaria-border-light);
   border-radius: 4px;
-  padding: 0.5rem;
+  padding: var(--calendaria-year-cell-padding);
   background: var(--calendaria-bg);
   display: flex;
   flex-direction: column;
   cursor: pointer;
   transition: all 0.2s;
+  box-sizing: border-box;
+  width: fit-content;
+  height: fit-content;
 
   &:hover {
     border-color: var(--calendaria-border);
@@ -815,24 +900,31 @@
 }
 
 .year-header {
+  height: var(--calendaria-year-header-height);
   font-size: 1.2rem;
   font-weight: bold;
   text-align: center;
-  margin-bottom: 0.5rem;
   padding-bottom: 0.25rem;
   border-bottom: 1px solid var(--calendaria-border-light);
+  color: var(--calendaria-title-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .year-months {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.25rem;
-  flex: 1;
+  grid-template-columns: repeat(3, var(--calendaria-year-month-width));
+  gap: var(--calendaria-year-month-gap);
+  margin-top: var(--calendaria-year-month-gap);
 }
 
 .month-mini {
-  padding: 0.25rem;
-  text-align: center;
+  width: var(--calendaria-year-month-width);
+  height: var(--calendaria-year-month-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--calendaria-bg-lighter);
   border-radius: 2px;
   font-size: 0.8rem;
@@ -1867,5 +1959,103 @@
       width: 1em;
       height: 1em;
     }
+  }
+}
+
+/* ======================================== */
+/* Theme Editor Styles                      */
+/* ======================================== */
+
+.theme-editor {
+  .theme-editor-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .base-theme-selector {
+    width: 100%;
+  }
+
+  .color-categories-grid {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .color-category {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .color-row {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 0.25rem 0;
+
+    > label {
+      flex: 1;
+      white-space: nowrap;
+    }
+  }
+
+  .color-fields {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    input[type='color'] {
+      width: 40px;
+      height: 28px;
+      padding: 0;
+      border-radius: 4px;
+      cursor: pointer;
+
+      &::-webkit-color-swatch-wrapper {
+        padding: 2px;
+      }
+
+      &::-webkit-color-swatch {
+        border: none;
+        border-radius: 2px;
+      }
+
+      &::-moz-color-swatch {
+        border: none;
+        border-radius: 2px;
+      }
+    }
+
+    .color-hex {
+      width: 80px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    .reset-color {
+      width: 28px;
+      height: 28px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .default-indicator {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      opacity: 0.5;
+    }
+  }
+
+  footer.form-footer button {
+    flex: unset;
+    width: auto;
   }
 }

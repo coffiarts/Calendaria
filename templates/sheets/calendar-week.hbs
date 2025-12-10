@@ -1,6 +1,7 @@
 <div class="calendar-week-view">
   {{#if calendarData}}
-    <div class="week-grid">
+    <div class="week-grid"
+      style="grid-template-rows: var(--calendaria-week-header-height) repeat({{calendarData.daysInWeek}}, var(--calendaria-week-hour-height));">
       <!-- Empty corner cell -->
       <div class="week-corner-header"></div>
 
@@ -13,8 +14,7 @@
       {{#each calendarData.days}}
         <!-- Day name cell -->
         <div class="week-day-header {{#if isToday}}today{{/if}}">
-          <div class="day-name">{{dayName}}</div>
-          <div class="day-date">{{monthName}} {{day}}</div>
+          <span class="day-header-text"><strong>{{day}}</strong> - {{dayName}}</span>
         </div>
 
         <!-- Hour grid cells for this day -->

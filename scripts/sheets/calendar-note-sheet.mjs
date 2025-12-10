@@ -8,6 +8,7 @@
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 
+import { MODULE, SETTINGS } from '../constants.mjs';
 import { log } from '../utils/logger.mjs';
 import CalendarManager from '../calendar/calendar-manager.mjs';
 import { getAllCategories, addCustomCategory, deleteCustomCategory, isCustomCategory } from '../notes/note-data.mjs';
