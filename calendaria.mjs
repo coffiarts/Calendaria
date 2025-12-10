@@ -11,12 +11,14 @@ import { initializeLogger, log } from './scripts/utils/logger.mjs';
 import { registerKeybindings, toggleCalendarVisibility } from './scripts/utils/keybinds.mjs';
 import { CalendariaSocket } from './scripts/utils/socket.mjs';
 import { CalendariaHUD } from './scripts/applications/calendaria-hud.mjs';
-import { TEMPLATES, JOURNAL_TYPES, SHEET_IDS, HOOKS } from './scripts/constants.mjs';
+import { MODULE, SETTINGS, TEMPLATES, JOURNAL_TYPES, SHEET_IDS, HOOKS } from './scripts/constants.mjs';
 import CalendarManager from './scripts/calendar/calendar-manager.mjs';
 import CalendariaCalendar from './scripts/calendar/data/calendaria-calendar.mjs';
 import NoteManager from './scripts/notes/note-manager.mjs';
 import TimeTracker from './scripts/time/time-tracker.mjs';
+import TimeKeeper from './scripts/time/time-keeper.mjs';
 import EventScheduler from './scripts/time/event-scheduler.mjs';
+import { TimeKeeperHUD } from './scripts/applications/time-keeper-hud.mjs';
 import { CalendarApplication } from './scripts/applications/calendar-application.mjs';
 import { CalendarNoteDataModel } from './scripts/sheets/calendar-note-data-model.mjs';
 import { CalendarNoteSheet } from './scripts/sheets/calendar-note-sheet.mjs';
@@ -25,7 +27,7 @@ import { RENESCARA_CALENDAR, RENESCARA_DEFAULT_DATE } from './scripts/calendar/d
 import { preLocalizeCalendar } from './scripts/calendar/calendar-utils.mjs';
 import { CalendarEditor } from './scripts/applications/calendar-editor.mjs';
 import { ThemeEditor } from './scripts/applications/settings/theme-editor.mjs';
-import { injectDefaultMoons } from './scripts/calendar/data/default-moons.mjs';
+import { getCalendarDefaults } from './scripts/calendar/data/calendar-defaults.mjs';
 
 Hooks.once('init', async () => {
   // Fire calendaria.init hook for other modules to prepare
@@ -65,16 +67,17 @@ Hooks.once('i18nInit', () => {
 
 // Hook into D&D 5e's calendar setup to take over calendar system completely
 Hooks.once('dnd5e.setupCalendar', () => {
-  // Inject default moons into 5e calendars that don't have them
+  // Inject defaults (moons, seasons, eras) into 5e calendars
   for (const entry of CONFIG.DND5E.calendar.calendars) {
-    if (entry.config && !entry.config.moons?.length) {
+    const defaults = getCalendarDefaults(entry.value);
+    if (defaults) {
       const configObj = entry.config.toObject?.() ?? entry.config;
-      const injectedConfig = injectDefaultMoons(entry.value, configObj);
-      if (injectedConfig.moons?.length) {
-        entry.config = new CalendariaCalendar(injectedConfig);
-        entry.class = CalendariaCalendar;
-        log(3, `Injected default moons into calendar: ${entry.value}`);
-      }
+      if (defaults.moons && !configObj.moons?.length) configObj.moons = defaults.moons;
+      if (defaults.seasons && !configObj.seasons?.values?.length) configObj.seasons = defaults.seasons;
+      if (defaults.eras && !configObj.eras?.length) configObj.eras = defaults.eras;
+      entry.config = new CalendariaCalendar(configObj);
+      entry.class = CalendariaCalendar;
+      log(3, `Injected defaults into calendar: ${entry.value}`);
     }
   }
 
@@ -134,6 +137,9 @@ Hooks.once('ready', async () => {
   // Initialize time tracking
   TimeTracker.initialize();
 
+  // Initialize real-time clock controller
+  TimeKeeper.initialize();
+
   // Initialize event scheduler
   EventScheduler.initialize();
 
@@ -147,6 +153,11 @@ Hooks.once('ready', async () => {
     // game.time.calendar should now be our Renescara calendar (set in setup hook)
     const worldTime = game.time.calendar.componentsToTime(RENESCARA_DEFAULT_DATE);
     await game.time.advance(worldTime);
+  }
+
+  // Show TimeKeeper HUD if setting is enabled
+  if (game.settings.get(MODULE.ID, SETTINGS.SHOW_TIME_KEEPER)) {
+    TimeKeeperHUD.show();
   }
 
   // Fire calendaria.ready hook - module is fully initialized
@@ -188,6 +199,8 @@ globalThis['CALENDARIA'] = {
   CalendarApplication,
   CalendarEditor,
   ThemeEditor,
+  TimeKeeper,
+  TimeKeeperHUD,
   toggleCalendarVisibility,
   api: CalendariaAPI
 };

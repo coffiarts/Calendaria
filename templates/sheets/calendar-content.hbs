@@ -6,17 +6,12 @@
     </button>
 
     <h2 class="calendar-title">
-      {{#if calendarData}}
-        {{#if (eq displayMode 'week')}}
-          Week {{calendarData.weekNumber}}, {{calendarData.monthName}} {{calendarData.year}}
+      {{#if calendarData}} {{#if (eq displayMode 'week')}} Week {{calendarData.weekNumber}}, {{calendarData.monthName}}
+          {{calendarData.yearDisplay}}
         {{else if (eq displayMode 'year')}}
-          Years {{calendarData.startYear}} - {{calendarData.endYear}}
-        {{else}}
-          {{calendarData.monthName}} {{calendarData.year}}
-        {{/if}}
-      {{else}}
-        Calendar
-      {{/if}}
+          {{calendarData.startYearDisplay}} - {{calendarData.endYearDisplay}}
+        {{else}} {{calendarData.monthName}} {{calendarData.yearDisplay}} {{/if}}
+      {{else}} Calendar {{/if}}
     </h2>
 
     <button type="button" data-action="navigate" data-direction="next"
@@ -25,11 +20,22 @@
     </button>
   </div>
 
-  {{#if (eq displayMode 'year')}}
-    {{> "modules/calendaria/templates/sheets/calendar-year.hbs"}}
-  {{else if (eq displayMode 'week')}}
-    {{> "modules/calendaria/templates/sheets/calendar-week.hbs"}}
-  {{else}}
-    {{> "modules/calendaria/templates/sheets/calendar-grid.hbs"}}
-  {{/if}}
+  {{#if (or calendarData.currentSeason calendarData.currentEra)}}
+    <div class="calendar-indicators">
+      {{#if calendarData.currentSeason}}
+        <span class="season-indicator" data-tooltip="{{localize 'CALENDARIA.UI.CurrentSeason'}}">
+          <i class="fas fa-leaf"></i>
+          {{localize calendarData.currentSeason.name}}
+        </span>
+      {{/if}} {{#if calendarData.currentEra}}
+        <span class="era-indicator" data-tooltip="{{localize 'CALENDARIA.UI.CurrentEra'}}">
+          <i class="fas fa-hourglass-half"></i>
+          {{localize calendarData.currentEra.name}}
+        </span>
+      {{/if}}
+    </div>
+  {{/if}} {{#if (eq displayMode 'year')}} {{> "modules/calendaria/templates/sheets/calendar-year.hbs"}}
+  {{else if (eq displayMode 'week')}} {{>
+  "modules/calendaria/templates/sheets/calendar-week.hbs"}}
+  {{else}} {{> "modules/calendaria/templates/sheets/calendar-grid.hbs"}} {{/if}}
 </div>

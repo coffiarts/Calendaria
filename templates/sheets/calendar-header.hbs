@@ -12,8 +12,8 @@
 
     {{#if editable}}
       <button type="button" data-action="setAsCurrentDate"
-        title="{{#if isToday}}Current Date{{else}}Set Selected Date as Current{{/if}}"
-        class="set-current-date-btn" {{#if isToday}}disabled{{/if}}>
+        title="{{#if isToday}}Current Date{{else}}Set Selected Date as Current{{/if}}" class="set-current-date-btn"
+        {{#if isToday}}disabled{{/if}}>
         <i class="fas fa-clock"></i>
         {{#if isToday}}Current Date{{else}}Set as Current{{/if}}
       </button>

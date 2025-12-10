@@ -364,6 +364,27 @@
   color: var(--calendaria-title-text);
 }
 
+/* Season/Era indicators below title */
+.calendar-indicators {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: -0.7rem;
+  font-size: 0.75rem;
+  color: var(--calendaria-text-dim);
+}
+
+.season-indicator,
+.era-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  i {
+    font-size: 0.65rem;
+  }
+}
+
 /* Header - action buttons */
 .calendar-header {
   display: flex;
@@ -1959,6 +1980,145 @@
       width: 1em;
       height: 1em;
     }
+  }
+}
+
+/* ======================================== */
+/* TimeKeeper HUD Styles                    */
+/* ======================================== */
+
+.time-keeper-hud {
+  --tk-bg: rgb(31 31 31 / 95%);
+  --tk-border: rgb(74 74 74);
+  --tk-button-bg: rgb(58 58 58);
+  --tk-button-hover: rgb(74 74 74);
+  --tk-button-active: rgb(255 100 0);
+  --tk-text: rgb(224 224 224);
+
+  position: fixed;
+  background: var(--tk-bg);
+  border: 1px solid var(--tk-border);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 40%);
+  padding: 6px;
+  pointer-events: auto;
+}
+
+.time-keeper-hud .time-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--tk-border);
+}
+
+.time-keeper-hud .time-display-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+}
+
+.time-keeper-hud .time-display-row .time-btn {
+  position: absolute;
+  right: 0;
+  width: 24px;
+  height: 24px;
+
+  i {
+    font-size: 12px;
+  }
+}
+
+.time-keeper-hud .time-display-time {
+  font-size: 20px;
+  font-weight: bold;
+  font-family: monospace;
+  color: var(--tk-text);
+  letter-spacing: 1px;
+}
+
+.time-keeper-hud .time-display-date {
+  font-size: 11px;
+  color: var(--tk-text);
+  opacity: 0.7;
+}
+
+.time-keeper-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.time-keeper-hud .time-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--tk-border);
+  border-radius: 4px;
+  background: var(--tk-button-bg);
+  color: var(--tk-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: var(--tk-button-hover);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  &.active {
+    background: var(--tk-button-active);
+    border-color: var(--tk-button-active);
+    color: rgb(255 255 255);
+    box-shadow: 0 0 8px rgb(255 100 0 / 50%);
+  }
+
+  i {
+    font-size: 14px;
+  }
+}
+
+.time-keeper-hud .increment-select {
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid var(--tk-border);
+  border-radius: 4px;
+  background: var(--tk-button-bg);
+  color: var(--tk-text);
+  font-size: 12px;
+  cursor: pointer;
+  min-width: 80px;
+
+  &:hover {
+    background: var(--tk-button-hover);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--tk-button-active);
+  }
+}
+
+.time-keeper-readonly {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  color: var(--tk-text);
+  font-size: 12px;
+  opacity: 0.7;
+
+  i {
+    font-size: 14px;
   }
 }
 

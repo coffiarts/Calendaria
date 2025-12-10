@@ -9,6 +9,7 @@ import { log } from './utils/logger.mjs';
 import { ResetPositionDialog } from './applications/settings/reset-position.mjs';
 import { ThemeEditor } from './applications/settings/theme-editor.mjs';
 import { CalendarEditor } from './applications/calendar-editor.mjs';
+import { TimeKeeperHUD } from './applications/time-keeper-hud.mjs';
 
 /**
  * Register all module settings with Foundry VTT.
@@ -57,6 +58,21 @@ export function registerSettings() {
     default: true
   });
 
+  /** Show TimeKeeper HUD on world load */
+  game.settings.register(MODULE.ID, SETTINGS.SHOW_TIME_KEEPER, {
+    name: 'CALENDARIA.Settings.ShowTimeKeeper.Name',
+    hint: 'CALENDARIA.Settings.ShowTimeKeeper.Hint',
+    scope: 'world',
+    config: true,
+    type: Boolean,
+    default: false,
+    requiresReload: false,
+    onChange: (value) => {
+      if (value) TimeKeeperHUD.show();
+      else TimeKeeperHUD.hide();
+    }
+  });
+
   /** User-customized theme color overrides */
   game.settings.register(MODULE.ID, SETTINGS.CUSTOM_THEME_COLORS, {
     name: 'Custom Theme Colors',
@@ -101,6 +117,16 @@ export function registerSettings() {
   game.settings.register(MODULE.ID, SETTINGS.ADVANCE_TIME_ON_REST, {
     name: 'CALENDARIA.Settings.AdvanceTimeOnRest.Name',
     hint: 'CALENDARIA.Settings.AdvanceTimeOnRest.Hint',
+    scope: 'world',
+    config: true,
+    type: Boolean,
+    default: false
+  });
+
+  /** Whether to advance world time when combat rounds change */
+  game.settings.register(MODULE.ID, SETTINGS.ADVANCE_TIME_ON_COMBAT, {
+    name: 'CALENDARIA.Settings.AdvanceTimeOnCombat.Name',
+    hint: 'CALENDARIA.Settings.AdvanceTimeOnCombat.Hint',
     scope: 'world',
     config: true,
     type: Boolean,
@@ -165,6 +191,16 @@ export function registerSettings() {
     icon: 'fas fa-undo',
     type: ResetPositionDialog,
     restricted: false
+  });
+
+  /** Settings menu button to open TimeKeeper HUD */
+  game.settings.registerMenu(MODULE.ID, 'timeKeeper', {
+    name: 'CALENDARIA.Settings.TimeKeeper.Name',
+    hint: 'CALENDARIA.Settings.TimeKeeper.Hint',
+    label: 'CALENDARIA.Settings.TimeKeeper.Label',
+    icon: 'fas fa-clock',
+    type: TimeKeeperHUD,
+    restricted: true
   });
 
   log(3, 'Module settings registered.');

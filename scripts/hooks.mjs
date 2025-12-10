@@ -5,7 +5,7 @@
  * @author Tyler
  */
 
-import { MODULE, SYSTEM } from './constants.mjs';
+import { MODULE, SETTINGS, SYSTEM } from './constants.mjs';
 import { log } from './utils/logger.mjs';
 import { onRenderSceneConfig, onUpdateWorldTime } from './darkness.mjs';
 import CalendarManager from './calendar/calendar-manager.mjs';
@@ -50,6 +50,9 @@ export function registerHooks() {
 
   // System integrations
   registerRestTimeHooks();
+
+  // Combat time advancement
+  Hooks.on('updateCombat', onUpdateCombat);
 
   log(3, 'Hooks registered');
 }
@@ -114,4 +117,37 @@ function onRenderChatMessage(message, html, context) {
       }
     });
   }
+}
+
+/* -------------------------------------------- */
+
+/**
+ * Handle combat round changes to advance world time.
+ * Advances time by 6 seconds per round (D&D 5e standard).
+ * @param {Combat} combat - The combat document
+ * @param {object} changes - The changes made to the combat
+ * @param {object} options - Update options
+ * @param {string} userId - The user who triggered the update
+ */
+function onUpdateCombat(combat, changes, options, userId) {
+  // Only process round changes
+  if (!('round' in changes)) return;
+
+  // Only the GM who triggered the change should advance time
+  if (game.user.id !== userId || !game.user.isGM) return;
+
+  // Check if setting is enabled
+  if (!game.settings.get(MODULE.ID, SETTINGS.ADVANCE_TIME_ON_COMBAT)) return;
+
+  // Don't advance on round 0 (combat start) or when going backwards
+  const previousRound = combat._source?.round ?? 0;
+  if (changes.round <= previousRound) return;
+
+  // Calculate rounds advanced (usually 1, but could be more if skipped)
+  const roundsAdvanced = changes.round - previousRound;
+  const secondsPerRound = 6; // D&D 5e standard
+  const totalSeconds = roundsAdvanced * secondsPerRound;
+
+  log(3, `Combat round ${previousRound} -> ${changes.round}: advancing time by ${totalSeconds} seconds`);
+  game.time.advance(totalSeconds);
 }

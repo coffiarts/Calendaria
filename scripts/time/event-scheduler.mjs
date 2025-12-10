@@ -46,6 +46,12 @@ export default class EventScheduler {
   /** @type {Map<string, number>} Map of multi-day event IDs to their current progress notification ID */
   static #activeProgressNotifications = new Map();
 
+  /** @type {number} Last world time when triggers were checked (throttle to every 30 game minutes) */
+  static #lastTriggerCheckTime = 0;
+
+  /** @type {number} Minimum interval between trigger checks in game seconds (30 minutes) */
+  static TRIGGER_CHECK_INTERVAL = 1800;
+
   /* -------------------------------------------- */
   /*  Initialization                              */
   /* -------------------------------------------- */
@@ -88,8 +94,6 @@ export default class EventScheduler {
     // Skip if NoteManager isn't initialized
     if (!NoteManager.isInitialized()) return;
 
-    log(3, 'EventScheduler.onUpdateWorldTime', { lastDate: this.#lastDate, currentDate, delta });
-
     // Check if we've crossed into a new day
     if (this.#lastDate && this.#hasDateChanged(this.#lastDate, currentDate)) {
       // Reset triggered events on day change
@@ -99,8 +103,11 @@ export default class EventScheduler {
       this.#updateMultiDayEventProgress(currentDate);
     }
 
-    // Check for events that should trigger
-    this.#checkEventTriggers(this.#lastDate, currentDate, delta);
+    // Throttle trigger checks to every 30 game minutes
+    if (worldTime - this.#lastTriggerCheckTime >= this.TRIGGER_CHECK_INTERVAL) {
+      this.#checkEventTriggers(this.#lastDate, currentDate, delta);
+      this.#lastTriggerCheckTime = worldTime;
+    }
 
     // Update last date
     this.#lastDate = { ...currentDate };
@@ -119,9 +126,7 @@ export default class EventScheduler {
    * @private
    */
   static #checkEventTriggers(previousDate, currentDate, delta) {
-    // Get all notes
     const allNotes = NoteManager.getAllNotes();
-    log(3, `EventScheduler: Checking ${allNotes.length} notes for triggers`);
 
     for (const note of allNotes) {
       // Skip if already triggered today
@@ -131,10 +136,7 @@ export default class EventScheduler {
       if (note.flagData.silent) continue;
 
       // Check if this note should trigger
-      const shouldTrigger = this.#shouldTrigger(note, previousDate, currentDate);
-      log(3, `EventScheduler: Note "${note.name}" shouldTrigger=${shouldTrigger}`, { noteStartDate: note.flagData.startDate, previousDate, currentDate });
-
-      if (shouldTrigger) {
+      if (this.#shouldTrigger(note, previousDate, currentDate)) {
         this.#triggerEvent(note, currentDate);
         this.#triggeredToday.add(note.id);
       }

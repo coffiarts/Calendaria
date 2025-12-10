@@ -41,6 +41,8 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
       moveWeekdayDown: CalendarEditor.#onMoveWeekdayDown,
       addSeason: CalendarEditor.#onAddSeason,
       removeSeason: CalendarEditor.#onRemoveSeason,
+      addEra: CalendarEditor.#onAddEra,
+      removeEra: CalendarEditor.#onRemoveEra,
       addFestival: CalendarEditor.#onAddFestival,
       removeFestival: CalendarEditor.#onRemoveFestival,
       addMoon: CalendarEditor.#onAddMoon,
@@ -61,6 +63,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     weekdays: { template: TEMPLATES.EDITOR.TAB_WEEKDAYS, scrollable: [''] },
     time: { template: TEMPLATES.EDITOR.TAB_TIME, scrollable: [''] },
     seasons: { template: TEMPLATES.EDITOR.TAB_SEASONS, scrollable: [''] },
+    eras: { template: TEMPLATES.EDITOR.TAB_ERAS, scrollable: [''] },
     festivals: { template: TEMPLATES.EDITOR.TAB_FESTIVALS, scrollable: [''] },
     moons: { template: TEMPLATES.EDITOR.TAB_MOONS, scrollable: [''] },
     footer: { template: 'templates/generic/form-footer.hbs' }
@@ -75,6 +78,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
         { id: 'weekdays', icon: 'fas fa-calendar-week', label: 'CALENDARIA.Editor.Tab.Weekdays' },
         { id: 'time', icon: 'fas fa-clock', label: 'CALENDARIA.Editor.Tab.Time' },
         { id: 'seasons', icon: 'fas fa-sun', label: 'CALENDARIA.Editor.Tab.Seasons' },
+        { id: 'eras', icon: 'fas fa-hourglass-half', label: 'CALENDARIA.Editor.Tab.Eras' },
         { id: 'festivals', icon: 'fas fa-star', label: 'CALENDARIA.Editor.Tab.Festivals' },
         { id: 'moons', icon: 'fas fa-moon', label: 'CALENDARIA.Editor.Tab.Moons' }
       ],
@@ -159,6 +163,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
       seasons: {
         values: []
       },
+      eras: [],
       festivals: [],
       moons: [],
       metadata: {
@@ -181,6 +186,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
       this.#calendarData = calendar.toObject();
       // Ensure all required structures exist
       if (!this.#calendarData.seasons) this.#calendarData.seasons = { values: [] };
+      if (!this.#calendarData.eras) this.#calendarData.eras = [];
       if (!this.#calendarData.festivals) this.#calendarData.festivals = [];
       if (!this.#calendarData.moons) this.#calendarData.moons = [];
       if (!this.#calendarData.metadata) this.#calendarData.metadata = {};
@@ -348,6 +354,23 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
       };
     });
 
+    // Prepare format options for eras
+    const formatOptions = [
+      { value: 'suffix', label: 'CALENDARIA.Editor.Format.Suffix' },
+      { value: 'prefix', label: 'CALENDARIA.Editor.Format.Prefix' }
+    ];
+
+    // Prepare eras with format options
+    context.erasWithNav = this.#calendarData.eras.map((era, idx) => ({
+      ...era,
+      index: idx,
+      formatOptions: formatOptions.map((opt) => ({
+        ...opt,
+        selected: opt.value === (era.format || 'suffix')
+      }))
+    }));
+    context.formatOptions = formatOptions;
+
     // Footer buttons
     context.buttons = [
       {
@@ -487,6 +510,9 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     // Process seasons array
     this.#updateSeasonsFromFormData(data);
 
+    // Process eras array
+    this.#updateErasFromFormData(data);
+
     // Process festivals array
     this.#updateArrayFromFormData(data, 'festivals', this.#calendarData.festivals, ['name', 'month', 'day']);
 
@@ -563,6 +589,33 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
         ordinal: this.#calendarData.seasons.values.length + 1
       };
       this.#calendarData.seasons.values.push(season);
+    }
+  }
+
+  /**
+   * Update eras array from form data.
+   * @param {object} data - Form data
+   * @private
+   */
+  #updateErasFromFormData(data) {
+    const indices = new Set();
+    for (const key of Object.keys(data)) {
+      const match = key.match(/^eras\.(\d+)\./);
+      if (match) indices.add(parseInt(match[1]));
+    }
+
+    const sortedIndices = [...indices].sort((a, b) => a - b);
+    this.#calendarData.eras.length = 0;
+
+    for (const idx of sortedIndices) {
+      const era = {
+        name: data[`eras.${idx}.name`] || '',
+        abbreviation: data[`eras.${idx}.abbreviation`] || '',
+        startYear: parseInt(data[`eras.${idx}.startYear`]) || 1,
+        endYear: this.#parseOptionalInt(data[`eras.${idx}.endYear`]),
+        format: data[`eras.${idx}.format`] || 'suffix'
+      };
+      this.#calendarData.eras.push(era);
     }
   }
 
@@ -816,6 +869,36 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
+   * Add a new era after the target index.
+   * @param {Event} event - Click event
+   * @param {HTMLElement} target - Target element
+   */
+  static async #onAddEra(event, target) {
+    const afterIdx = parseInt(target.dataset.index) ?? this.#calendarData.eras.length - 1;
+    const insertIdx = afterIdx + 1;
+    const totalEras = this.#calendarData.eras.length + 1;
+    this.#calendarData.eras.splice(insertIdx, 0, {
+      name: game.i18n.format('CALENDARIA.Editor.Default.EraName', { num: totalEras }),
+      abbreviation: game.i18n.format('CALENDARIA.Editor.Default.EraAbbr', { num: totalEras }),
+      startYear: 1,
+      endYear: null,
+      format: 'suffix'
+    });
+    this.render();
+  }
+
+  /**
+   * Remove an era.
+   * @param {Event} event - Click event
+   * @param {HTMLElement} target - Target element
+   */
+  static async #onRemoveEra(event, target) {
+    const idx = parseInt(target.dataset.index);
+    this.#calendarData.eras.splice(idx, 1);
+    this.render();
+  }
+
+  /**
    * Add a new festival after the target index.
    * @param {Event} event - Click event
    * @param {HTMLElement} target - Target element
@@ -962,6 +1045,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
         name: calendarName
       });
       if (!this.#calendarData.seasons) this.#calendarData.seasons = { values: [] };
+      if (!this.#calendarData.eras) this.#calendarData.eras = [];
       if (!this.#calendarData.festivals) this.#calendarData.festivals = [];
       if (!this.#calendarData.moons) this.#calendarData.moons = [];
       if (this.#calendarData.metadata) {
@@ -1014,6 +1098,14 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     if (data.festivals) {
       for (const festival of data.festivals) {
         if (festival.name) festival.name = game.i18n.localize(festival.name);
+      }
+    }
+
+    // Localize eras
+    if (data.eras) {
+      for (const era of data.eras) {
+        if (era.name) era.name = game.i18n.localize(era.name);
+        if (era.abbreviation) era.abbreviation = game.i18n.localize(era.abbreviation);
       }
     }
 

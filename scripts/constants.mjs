@@ -86,7 +86,13 @@ export const SETTINGS = {
   ADVANCE_TIME_ON_REST: 'advanceTimeOnRest',
 
   /** @type {string} User-customized theme color overrides */
-  CUSTOM_THEME_COLORS: 'customThemeColors'
+  CUSTOM_THEME_COLORS: 'customThemeColors',
+
+  /** @type {string} Whether to show TimeKeeper HUD on world load */
+  SHOW_TIME_KEEPER: 'showTimeKeeper',
+
+  /** @type {string} Whether to advance time when combat rounds change */
+  ADVANCE_TIME_ON_COMBAT: 'advanceTimeOnCombat'
 };
 
 /**
@@ -131,6 +137,9 @@ export const TEMPLATES = {
   /** @type {string} Time rotation dial template */
   TIME_DIAL: `modules/${MODULE.ID}/templates/time-dial.hbs`,
 
+  /** @type {string} TimeKeeper HUD template */
+  TIME_KEEPER_HUD: `modules/${MODULE.ID}/templates/time-keeper-hud.hbs`,
+
   SHEETS: {
     /** @type {string} Calendar sheet header template */
     CALENDAR_HEADER: `modules/${MODULE.ID}/templates/sheets/calendar-header.hbs`,
@@ -157,6 +166,8 @@ export const TEMPLATES = {
     TAB_TIME: `modules/${MODULE.ID}/templates/editor/tab-time.hbs`,
     /** @type {string} Calendar editor seasons tab */
     TAB_SEASONS: `modules/${MODULE.ID}/templates/editor/tab-seasons.hbs`,
+    /** @type {string} Calendar editor eras tab */
+    TAB_ERAS: `modules/${MODULE.ID}/templates/editor/tab-eras.hbs`,
     /** @type {string} Calendar editor moons tab */
     TAB_MOONS: `modules/${MODULE.ID}/templates/editor/tab-moons.hbs`,
     /** @type {string} Calendar editor festivals tab */

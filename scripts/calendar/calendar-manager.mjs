@@ -12,6 +12,7 @@ import { log } from '../utils/logger.mjs';
 import CalendarRegistry from './calendar-registry.mjs';
 import CalendariaCalendar from './data/calendaria-calendar.mjs';
 import { RENESCARA_CALENDAR } from './data/renescara-calendar.mjs';
+import { getCalendarDefaults } from './data/calendar-defaults.mjs';
 
 export default class CalendarManager {
   /** Flag to prevent responding to our own calendar changes */
@@ -131,20 +132,24 @@ export default class CalendarManager {
 
         // Extract festivals if they exist in the dnd5e calendar config
         // Festivals may be in the original config object
-        if (config.festivals && !calendarData.festivals) {
-          calendarData.festivals = config.festivals;
-        }
+        if (config.festivals && !calendarData.festivals) calendarData.festivals = config.festivals;
 
         // Extract moons if they exist in the dnd5e calendar config
-        if (config.moons && !calendarData.moons) {
-          calendarData.moons = config.moons;
+        if (config.moons && !calendarData.moons) calendarData.moons = config.moons;
+
+        // Apply defaults (moons, seasons, eras) for known calendars
+        const defaults = getCalendarDefaults(id);
+        if (defaults) {
+          if (defaults.moons && !calendarData.moons?.length) calendarData.moons = defaults.moons;
+          if (defaults.seasons && !calendarData.seasons?.values?.length) calendarData.seasons = defaults.seasons;
+          if (defaults.eras && !calendarData.eras?.length) calendarData.eras = defaults.eras;
         }
 
         // Convert dnd5e calendar definition to CalendariaCalendar
         const calendar = new CalendariaCalendar(calendarData);
         CalendarRegistry.register(id, calendar);
 
-        log(3, `Loaded calendar ${id} with ${calendar.festivals?.length ?? 0} festivals and ${calendar.moons?.length ?? 0} moons`);
+        log(3, `Loaded calendar ${id} with ${calendar.festivals?.length} festivals, ${calendar.moons?.length} moons, ${calendar.seasons?.values?.length} seasons, ${calendar.eras?.length} eras`);
       } catch (error) {
         log(2, `Error loading dnd5e calendar:`, error);
       }

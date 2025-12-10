@@ -59,6 +59,21 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
       ),
 
       /**
+       * Era configurations for this calendar
+       * Eras define named periods of time (e.g., "Dale Reckoning", "Common Year")
+       * @type {Array<{name: string, abbreviation: string, startYear: number, endYear: number|null, format: string}>}
+       */
+      eras: new ArrayField(
+        new SchemaField({
+          name: new StringField({ required: true }),
+          abbreviation: new StringField({ required: true }),
+          startYear: new NumberField({ required: true, integer: true }),
+          endYear: new NumberField({ required: false, nullable: true, integer: true }),
+          format: new StringField({ required: false, initial: 'suffix' }) // 'prefix' or 'suffix'
+        })
+      ),
+
+      /**
        * Calendar metadata
        * @type {object}
        */
@@ -251,6 +266,133 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     const worldTime = this.componentsToTime(components);
     const secondsPerDay = this.days.hoursPerDay * this.days.minutesPerHour * this.days.secondsPerMinute;
     return Math.floor(worldTime / secondsPerDay);
+  }
+
+  /* -------------------------------------------- */
+  /*  Season Methods                              */
+  /* -------------------------------------------- */
+
+  /**
+   * Get the current season for a given time.
+   * @param {number|TimeComponents} [time]  Time to use, by default the current world time.
+   * @returns {{name: string, abbreviation?: string, icon?: string, color?: string}|null}
+   */
+  getCurrentSeason(time = game.time.worldTime) {
+    if (!this.seasons?.values?.length) return null;
+
+    const components = typeof time === 'number' ? this.timeToComponents(time) : time;
+
+    // Calculate day of year (0-indexed)
+    let dayOfYear = components.dayOfMonth;
+    for (let i = 0; i < components.month; i++) dayOfYear += this.months.values[i]?.days ?? 0;
+
+    // Check each season
+    for (const season of this.seasons.values) {
+      // Handle both formats: dayStart/dayEnd OR monthStart/monthEnd
+      if (season.dayStart != null && season.dayEnd != null) {
+        // Day of year format (0-indexed)
+        if (season.dayStart <= season.dayEnd) {
+          // Normal range (e.g., Spring: 78-170)
+          if (dayOfYear >= season.dayStart && dayOfYear <= season.dayEnd) return season;
+        } else {
+          // Wrapping range (e.g., Winter: 354-77)
+          if (dayOfYear >= season.dayStart || dayOfYear <= season.dayEnd) return season;
+        }
+      } else if (season.monthStart != null && season.monthEnd != null) {
+        // Month-based format (1-indexed months)
+        const currentMonth = components.month + 1; // Convert to 1-indexed
+        const startDay = season.dayStart ?? 1;
+        const endDay = season.dayEnd ?? this.months.values[season.monthEnd - 1]?.days ?? 30;
+
+        if (season.monthStart <= season.monthEnd) {
+          // Normal range
+          if (currentMonth > season.monthStart && currentMonth < season.monthEnd) return season;
+          if (currentMonth === season.monthStart && components.dayOfMonth + 1 >= startDay) return season;
+          if (currentMonth === season.monthEnd && components.dayOfMonth + 1 <= endDay) return season;
+        } else {
+          // Wrapping range (e.g., Winter: month 11 to month 2)
+          if (currentMonth > season.monthStart || currentMonth < season.monthEnd) return season;
+          if (currentMonth === season.monthStart && components.dayOfMonth + 1 >= startDay) return season;
+          if (currentMonth === season.monthEnd && components.dayOfMonth + 1 <= endDay) return season;
+        }
+      }
+    }
+
+    // Fallback: return first season if none matched
+    return this.seasons.values[0] ?? null;
+  }
+
+  /**
+   * Get all seasons for this calendar.
+   * @returns {Array<{name: string, abbreviation?: string}>}
+   */
+  getAllSeasons() {
+    return this.seasons?.values ?? [];
+  }
+
+  /* -------------------------------------------- */
+  /*  Era Methods                                 */
+  /* -------------------------------------------- */
+
+  /**
+   * Get the current era for a given year.
+   * @param {number|TimeComponents} [time]  Time to use, by default the current world time.
+   * @returns {{name: string, abbreviation: string, format: string, yearInEra: number}|null}
+   */
+  getCurrentEra(time = game.time.worldTime) {
+    if (!this.eras?.length) return null;
+
+    const components = typeof time === 'number' ? this.timeToComponents(time) : time;
+    const displayYear = components.year + (this.years?.yearZero ?? 0);
+
+    // Find matching era (sorted by startYear descending to get most recent first)
+    const sortedEras = [...this.eras].sort((a, b) => b.startYear - a.startYear);
+    for (const era of sortedEras) {
+      if (displayYear >= era.startYear && (era.endYear == null || displayYear <= era.endYear)) {
+        return {
+          name: era.name,
+          abbreviation: era.abbreviation,
+          format: era.format || 'suffix',
+          yearInEra: displayYear - era.startYear + 1
+        };
+      }
+    }
+
+    // Fallback: return first era if none matched
+    if (this.eras.length > 0) {
+      const era = this.eras[0];
+      return {
+        name: era.name,
+        abbreviation: era.abbreviation,
+        format: era.format || 'suffix',
+        yearInEra: displayYear
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Format a year with its era designation.
+   * @param {number} year  The display year to format.
+   * @returns {string}  Formatted year string (e.g., "1492 DR" or "CY 591").
+   */
+  formatYearWithEra(year) {
+    const era = this.getCurrentEra({ year: year - (this.years?.yearZero ?? 0), month: 0, dayOfMonth: 0 });
+    if (!era) return String(year);
+
+    const abbr = era.abbreviation ? game.i18n.localize(era.abbreviation) : '';
+    if (!abbr) return String(year);
+    if (era.format === 'prefix') return `${abbr} ${year}`;
+    return `${year} ${abbr}`;
+  }
+
+  /**
+   * Get all eras for this calendar.
+   * @returns {Array<{name: string, abbreviation: string, startYear: number, endYear?: number}>}
+   */
+  getAllEras() {
+    return this.eras ?? [];
   }
 
   /* -------------------------------------------- */

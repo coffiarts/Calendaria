@@ -51,7 +51,6 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     }
   };
 
-
   static PARTS = {
     header: { template: 'modules/calendaria/templates/sheets/calendar-header.hbs' },
     content: { template: 'modules/calendaria/templates/sheets/calendar-content.hbs' }
@@ -104,13 +103,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
    */
   _getCalendarNotes() {
     const notes = [];
-    for (const journal of game.journal) {
-      for (const page of journal.pages) {
-        if (page.type === 'calendaria.calendarnote') {
-          notes.push(page);
-        }
-      }
-    }
+    for (const journal of game.journal) for (const page of journal.pages) if (page.type === 'calendaria.calendarnote') notes.push(page);
     return notes;
   }
 
@@ -136,11 +129,8 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     const todayMonth = today.month;
     const todayDay = (today.dayOfMonth ?? 0) + 1;
 
-    if (this._selectedDate) {
-      context.isToday = this._selectedDate.year === todayYear && this._selectedDate.month === todayMonth && this._selectedDate.day === todayDay;
-    } else {
-      context.isToday = viewedDate.year === todayYear && viewedDate.month === todayMonth && viewedDate.day === todayDay;
-    }
+    if (this._selectedDate) context.isToday = this._selectedDate.year === todayYear && this._selectedDate.month === todayMonth && this._selectedDate.day === todayDay;
+    else context.isToday = viewedDate.year === todayYear && viewedDate.month === todayMonth && viewedDate.day === todayDay;
 
     // Get notes from journal pages
     const allNotes = this._getCalendarNotes();
@@ -182,9 +172,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     const full = monthName;
     const useAbbrev = monthName.length > 5;
 
-    if (!useAbbrev) {
-      return { full, abbrev: full, useAbbrev: false };
-    }
+    if (!useAbbrev) return { full, abbrev: full, useAbbrev: false };
 
     // Take first letter of each word
     const words = monthName.split(' ');
@@ -205,10 +193,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
 
     const monthData = calendar.months?.values?.[month];
 
-    if (!monthData) {
-      console.warn('Month data not found for month:', month);
-      return null;
-    }
+    if (!monthData) return null;
 
     const daysInMonth = monthData.days;
     const daysInWeek = calendar.days?.values?.length || 7;
@@ -302,13 +287,20 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
       week.multiDayEvents = allMultiDayEvents.filter((e) => e.weekIndex === weekIndex);
     });
 
+    // Get current season and era
+    const currentSeason = calendar.getCurrentSeason?.();
+    const currentEra = calendar.getCurrentEra?.();
+
     return {
       year,
       month,
       monthName: game.i18n.localize(monthData.name),
+      yearDisplay: calendar.formatYearWithEra?.(year) ?? String(year),
       weeks,
       weekdays: calendar.days?.values?.map((wd) => game.i18n.localize(wd.name)) || [],
-      daysInWeek
+      daysInWeek,
+      currentSeason,
+      currentEra
     };
   }
 
@@ -414,16 +406,23 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     }
     const weekNumber = Math.ceil(dayOfYear / daysInWeek);
 
+    // Get current season and era
+    const currentSeason = calendar.getCurrentSeason?.();
+    const currentEra = calendar.getCurrentEra?.();
+
     return {
       year: weekStartYear,
       month: weekStartMonth,
       monthName: calendar.months?.values?.[month]?.name ? game.i18n.localize(calendar.months.values[month].name) : '',
+      yearDisplay: calendar.formatYearWithEra?.(weekStartYear) ?? String(weekStartYear),
       weekNumber,
       days: days,
       timeSlots: timeSlots,
       weekdays: calendar.days?.values?.map((wd) => game.i18n.localize(wd.name)) || [],
       daysInWeek,
-      currentHour
+      currentHour,
+      currentSeason,
+      currentEra
     };
   }
 
@@ -451,7 +450,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
           months:
             calendar.months?.values?.map((m, idx) => {
               const localizedName = game.i18n.localize(m.name);
-              const localizedAbbrev = game.i18n.localize(m.abbreviation);
+              const localizedAbbrev = m.abbreviation ? game.i18n.localize(m.abbreviation) : localizedName;
               const abbrevData = this._abbreviateMonthName(localizedAbbrev);
               return {
                 localizedName,
@@ -467,12 +466,20 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
       yearGrid.push(yearRow);
     }
 
+    // Get current season and era
+    const currentSeason = calendar.getCurrentSeason?.();
+    const currentEra = calendar.getCurrentEra?.();
+
     return {
       year,
       startYear,
       endYear: startYear + 8,
+      startYearDisplay: calendar.formatYearWithEra?.(startYear) ?? String(startYear),
+      endYearDisplay: calendar.formatYearWithEra?.(startYear + 8) ?? String(startYear + 8),
       yearGrid,
-      weekdays: []
+      weekdays: [],
+      currentSeason,
+      currentEra
     };
   }
 
