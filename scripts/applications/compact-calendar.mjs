@@ -1056,7 +1056,7 @@ export class CompactCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {number} targetHour - Target hour (fractional, e.g. 6.5 = 6:30)
    * @param {boolean} [nextDay=false] - If true, always advance to next day
    */
-  static async #advanceToHour(targetHour, nextDay = false) {
+  async #advanceToHour(targetHour, nextDay = false) {
     if (!game.user.isGM) return;
 
     const cal = game.time.calendar;
