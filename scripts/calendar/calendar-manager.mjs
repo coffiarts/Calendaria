@@ -8,6 +8,7 @@
  */
 
 import { MODULE, SETTINGS, SYSTEM, HOOKS } from '../constants.mjs';
+import { localize, format } from '../utils/localization.mjs';
 import { log } from '../utils/logger.mjs';
 import CalendarRegistry from './calendar-registry.mjs';
 import CalendariaCalendar from './data/calendaria-calendar.mjs';
@@ -400,7 +401,7 @@ export default class CalendarManager {
 
     return {
       id: calendar.metadata?.id ?? id,
-      name: calendar.metadata?.id ? game.i18n.localize(`CALENDARIA.Calendar.${calendar.metadata.id}.Name`) : id,
+      name: calendar.metadata?.id ? localize(`CALENDARIA.Calendar.${calendar.metadata.id}.Name`) : id,
       description: calendar.metadata?.description ?? '',
       system: calendar.metadata?.system ?? '',
       author: calendar.metadata?.author ?? '',
@@ -800,7 +801,7 @@ export default class CalendarManager {
 
       Hooks.callAll(HOOKS.CALENDAR_UPDATED, id, calendar);
       log(3, `Saved override for default calendar: ${id}`);
-      ui.notifications.info(game.i18n.format('CALENDARIA.Editor.SaveSuccess', { name: data.name || id }));
+      ui.notifications.info(format('CALENDARIA.Editor.SaveSuccess', { name: data.name || id }));
 
       return calendar;
     } catch (error) {
@@ -863,7 +864,7 @@ export default class CalendarManager {
       }
 
       log(3, `Reset default calendar: ${id}`);
-      ui.notifications.info(game.i18n.localize('CALENDARIA.Editor.ResetComplete'));
+      ui.notifications.info(localize('CALENDARIA.Editor.ResetComplete'));
       return true;
     } catch (error) {
       log(2, `Error resetting default calendar ${id}:`, error);

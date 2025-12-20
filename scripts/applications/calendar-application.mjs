@@ -7,14 +7,15 @@
  * @author Tyler
  */
 
-import CalendarManager from '../calendar/calendar-manager.mjs';
-import NoteManager from '../notes/note-manager.mjs';
 import { dayOfWeek } from '../notes/utils/date-utils.mjs';
 import { isRecurringMatch } from '../notes/utils/recurrence.mjs';
+import { localize, format } from '../utils/localization.mjs';
 import { MODULE, SETTINGS, HOOKS, TEMPLATES } from '../constants.mjs';
-import * as ViewUtils from './calendar-view-utils.mjs';
-import WeatherManager from '../weather/weather-manager.mjs';
 import { openWeatherPicker } from '../weather/weather-picker.mjs';
+import * as ViewUtils from './calendar-view-utils.mjs';
+import CalendarManager from '../calendar/calendar-manager.mjs';
+import NoteManager from '../notes/note-manager.mjs';
+import WeatherManager from '../weather/weather-manager.mjs';
 
 const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
 
@@ -233,8 +234,8 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
             const phase = calendar.getMoonPhase(index, dayWorldTime);
             if (!phase) return null;
             return {
-              moonName: game.i18n.localize(moon.name),
-              phaseName: game.i18n.localize(phase.name),
+              moonName: localize(moon.name),
+              phaseName: localize(phase.name),
               icon: phase.icon,
               color: moon.color || null
             };
@@ -251,7 +252,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
         notes: dayNotes,
         isOddDay: dayIndex % 2 === 1,
         isFestival: !!festivalDay,
-        festivalName: festivalDay ? game.i18n.localize(festivalDay.name) : null,
+        festivalName: festivalDay ? localize(festivalDay.name) : null,
         moonPhases
       });
       dayIndex++;
@@ -284,10 +285,10 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     return {
       year,
       month,
-      monthName: game.i18n.localize(monthData.name),
+      monthName: localize(monthData.name),
       yearDisplay: calendar.formatYearWithEra?.(year) ?? String(year),
       weeks,
-      weekdays: calendar.days?.values?.map((wd) => game.i18n.localize(wd.name)) || [],
+      weekdays: calendar.days?.values?.map((wd) => localize(wd.name)) || [],
       daysInWeek,
       currentSeason,
       currentEra
@@ -339,8 +340,8 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
       if (!monthData) break;
 
       const dayNotes = this._getNotesForDay(notes, currentYear, currentMonth, currentDay);
-      const dayName = calendar.days?.values?.[i]?.name ? game.i18n.localize(calendar.days.values[i].name) : '';
-      const monthName = calendar.months?.values?.[currentMonth]?.name ? game.i18n.localize(calendar.months.values[currentMonth].name) : '';
+      const dayName = calendar.days?.values?.[i]?.name ? localize(calendar.days.values[i].name) : '';
+      const monthName = calendar.months?.values?.[currentMonth]?.name ? localize(calendar.months.values[currentMonth].name) : '';
 
       const isToday = this._isToday(currentYear, currentMonth, currentDay);
 
@@ -398,12 +399,12 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     return {
       year: weekStartYear,
       month: weekStartMonth,
-      monthName: calendar.months?.values?.[month]?.name ? game.i18n.localize(calendar.months.values[month].name) : '',
+      monthName: calendar.months?.values?.[month]?.name ? localize(calendar.months.values[month].name) : '',
       yearDisplay: calendar.formatYearWithEra?.(weekStartYear) ?? String(weekStartYear),
       weekNumber,
       days: days,
       timeSlots: timeSlots,
-      weekdays: calendar.days?.values?.map((wd) => game.i18n.localize(wd.name)) || [],
+      weekdays: calendar.days?.values?.map((wd) => localize(wd.name)) || [],
       daysInWeek,
       currentHour,
       currentSeason,
@@ -431,8 +432,8 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
           isCurrent: displayYear === year,
           months:
             calendar.months?.values?.map((m, idx) => {
-              const localizedName = game.i18n.localize(m.name);
-              const localizedAbbrev = m.abbreviation ? game.i18n.localize(m.abbreviation) : localizedName;
+              const localizedName = localize(m.name);
+              const localizedAbbrev = m.abbreviation ? localize(m.abbreviation) : localizedName;
               const abbrevData = this._abbreviateMonthName(localizedAbbrev);
               return {
                 localizedName,
@@ -959,7 +960,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
 
     // Create note using NoteManager (which creates it as a page in the calendar journal)
     const page = await NoteManager.createNote({
-      name: game.i18n.localize('CALENDARIA.Note.NewNote'),
+      name: localize('CALENDARIA.Note.NewNote'),
       noteData: {
         startDate: { year: parseInt(year), month: parseInt(month), day: parseInt(day), hour: parseInt(hour), minute: 0 },
         endDate: { year: parseInt(year), month: parseInt(month), day: endDay, hour: endHour, minute: 0 }
@@ -1004,7 +1005,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
 
     // Create note using NoteManager (which creates it as a page in the calendar journal)
     const page = await NoteManager.createNote({
-      name: game.i18n.localize('CALENDARIA.Note.NewNote'),
+      name: localize('CALENDARIA.Note.NewNote'),
       noteData: {
         startDate: { year: parseInt(year), month: parseInt(month), day: parseInt(day), hour: parseInt(hour), minute: parseInt(minute) },
         endDate: { year: parseInt(year), month: parseInt(month), day: endDay, hour: endHour, minute: parseInt(minute) }
@@ -1035,8 +1036,8 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
 
     if (page) {
       const confirmed = await foundry.applications.api.DialogV2.confirm({
-        window: { title: game.i18n.localize('CALENDARIA.ContextMenu.DeleteNote') },
-        content: `<p>${game.i18n.format('CALENDARIA.ContextMenu.DeleteConfirm', { name: page.name })}</p>`,
+        window: { title: localize('CALENDARIA.ContextMenu.DeleteNote') },
+        content: `<p>${format('CALENDARIA.ContextMenu.DeleteConfirm', { name: page.name })}</p>`,
         rejectClose: false,
         modal: true
       });
@@ -1146,11 +1147,11 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
 
     return {
       id: weather.id,
-      label: game.i18n.localize(weather.label),
+      label: localize(weather.label),
       icon: weather.icon,
       color: weather.color,
       temperature: WeatherManager.formatTemperature(WeatherManager.getTemperature()),
-      tooltip: weather.description ? game.i18n.localize(weather.description) : game.i18n.localize(weather.label)
+      tooltip: weather.description ? localize(weather.description) : localize(weather.label)
     };
   }
 }

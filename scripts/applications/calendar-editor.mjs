@@ -8,6 +8,7 @@
 
 import { MODULE, SETTINGS, TEMPLATES, ASSETS } from '../constants.mjs';
 import { log } from '../utils/logger.mjs';
+import { localize, format, preLocalizeCalendar } from '../utils/localization.mjs';
 import CalendarManager from '../calendar/calendar-manager.mjs';
 import { createImporter } from '../importers/index.mjs';
 import { formatEraTemplate } from '../calendar/calendar-utils.mjs';
@@ -195,8 +196,13 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   #loadExistingCalendar(calendarId) {
     const calendar = CalendarManager.getCalendar(calendarId);
-    if (calendar) this.#calendarData = foundry.utils.mergeObject(createBlankCalendar(), calendar.toObject());
-    else this.#initializeBlankCalendar();
+    if (calendar) {
+      this.#calendarData = foundry.utils.mergeObject(createBlankCalendar(), calendar.toObject());
+      preLocalizeCalendar(this.#calendarData);
+    }
+    else {
+      this.#initializeBlankCalendar();
+    }
   }
 
   /**
@@ -222,7 +228,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     // Pre-localize strings (imported data may have literal strings)
-    this.#prelocalizeCalendarData();
+    preLocalizeCalendar(this.#calendarData);
 
     log(3, `Loaded initial data for calendar: ${this.#calendarData.name}`);
     log(3, `  pendingNotes (instance): ${this.#pendingNotes?.length || 0}, importerId: ${this.#pendingImporterId}`);
@@ -232,8 +238,8 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /** @override */
   get title() {
-    const name = this.#calendarData?.name || game.i18n.localize('CALENDARIA.Editor.NewCalendar');
-    return game.i18n.format('CALENDARIA.Editor.TitleEdit', { name });
+    const name = this.#calendarData?.name || localize('CALENDARIA.Editor.NewCalendar');
+    return format('CALENDARIA.Editor.TitleEdit', { name });
   }
 
   /* -------------------------------------------- */
@@ -259,7 +265,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
 
     // Prepare display string for days per year
     if (context.hasLeapDaysDifference) {
-      const leapText = game.i18n.localize('CALENDARIA.Editor.OnLeapYears');
+      const leapText = localize('CALENDARIA.Editor.OnLeapYears');
       context.daysPerYearDisplay = `${context.calculatedDaysPerYear} (${context.calculatedLeapDaysPerYear} ${leapText})`;
     } else {
       context.daysPerYearDisplay = String(context.calculatedDaysPerYear);
@@ -582,13 +588,13 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
         // Disable format dropdown when template is set
         if (formatSelect) {
           formatSelect.disabled = !!template;
-          formatSelect.dataset.tooltip = template ? game.i18n.localize('CALENDARIA.Editor.Era.FormatDisabled') : '';
+          formatSelect.dataset.tooltip = template ? localize('CALENDARIA.Editor.Era.FormatDisabled') : '';
         }
 
         if (!previewEl) return;
         const sampleYear = 1492;
         if (template) previewEl.textContent = formatEraTemplate(template, { year: sampleYear, abbreviation: abbr, era: eraName, yearInEra: 1 });
-        else previewEl.textContent = game.i18n.localize('CALENDARIA.Editor.Era.PreviewEmpty');
+        else previewEl.textContent = localize('CALENDARIA.Editor.Era.PreviewEmpty');
       };
 
       // Initial state
@@ -1232,8 +1238,8 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const insertIdx = afterIdx + 1;
     const totalMonths = this.#calendarData.months.values.length + 1;
     this.#calendarData.months.values.splice(insertIdx, 0, {
-      name: game.i18n.format('CALENDARIA.Editor.Default.MonthName', { num: totalMonths }),
-      abbreviation: game.i18n.format('CALENDARIA.Editor.Default.MonthAbbr', { num: totalMonths }),
+      name: format('CALENDARIA.Editor.Default.MonthName', { num: totalMonths }),
+      abbreviation: format('CALENDARIA.Editor.Default.MonthAbbr', { num: totalMonths }),
       ordinal: insertIdx + 1,
       days: 30
     });
@@ -1252,7 +1258,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
       this.#reindexArray(this.#calendarData.months.values);
       this.render();
     } else {
-      ui.notifications.warn(game.i18n.localize('CALENDARIA.Editor.Error.MinOneMonth'));
+      ui.notifications.warn(localize('CALENDARIA.Editor.Error.MinOneMonth'));
     }
   }
 
@@ -1296,8 +1302,8 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const insertIdx = afterIdx + 1;
     const totalDays = this.#calendarData.days.values.length + 1;
     this.#calendarData.days.values.splice(insertIdx, 0, {
-      name: game.i18n.format('CALENDARIA.Editor.Default.DayName', { num: totalDays }),
-      abbreviation: game.i18n.format('CALENDARIA.Editor.Default.DayAbbr', { num: totalDays }),
+      name: format('CALENDARIA.Editor.Default.DayName', { num: totalDays }),
+      abbreviation: format('CALENDARIA.Editor.Default.DayAbbr', { num: totalDays }),
       ordinal: insertIdx + 1,
       isRestDay: false
     });
@@ -1316,7 +1322,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
       this.#reindexArray(this.#calendarData.days.values);
       this.render();
     } else {
-      ui.notifications.warn(game.i18n.localize('CALENDARIA.Editor.Error.MinOneWeekday'));
+      ui.notifications.warn(localize('CALENDARIA.Editor.Error.MinOneWeekday'));
     }
   }
 
@@ -1360,8 +1366,8 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const insertIdx = afterIdx + 1;
     const totalSeasons = this.#calendarData.seasons.values.length + 1;
     this.#calendarData.seasons.values.splice(insertIdx, 0, {
-      name: game.i18n.format('CALENDARIA.Editor.Default.SeasonName', { num: totalSeasons }),
-      abbreviation: game.i18n.format('CALENDARIA.Editor.Default.SeasonAbbr', { num: totalSeasons }),
+      name: format('CALENDARIA.Editor.Default.SeasonName', { num: totalSeasons }),
+      abbreviation: format('CALENDARIA.Editor.Default.SeasonAbbr', { num: totalSeasons }),
       monthStart: 1,
       monthEnd: 3,
       dayStart: null,
@@ -1394,8 +1400,8 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const insertIdx = afterIdx + 1;
     const totalEras = this.#calendarData.eras.length + 1;
     this.#calendarData.eras.splice(insertIdx, 0, {
-      name: game.i18n.format('CALENDARIA.Editor.Default.EraName', { num: totalEras }),
-      abbreviation: game.i18n.format('CALENDARIA.Editor.Default.EraAbbr', { num: totalEras }),
+      name: format('CALENDARIA.Editor.Default.EraName', { num: totalEras }),
+      abbreviation: format('CALENDARIA.Editor.Default.EraAbbr', { num: totalEras }),
       startYear: 1,
       endYear: null,
       format: 'suffix',
@@ -1421,10 +1427,10 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
    * @returns {string} Preview string or empty placeholder
    */
   #generateEraPreview(era) {
-    if (!era.template) return game.i18n.localize('CALENDARIA.Editor.Era.PreviewEmpty');
+    if (!era.template) return localize('CALENDARIA.Editor.Era.PreviewEmpty');
     const sampleYear = 1492;
-    const abbr = era.abbreviation ? game.i18n.localize(era.abbreviation) : '';
-    const eraName = era.name ? game.i18n.localize(era.name) : '';
+    const abbr = era.abbreviation ? localize(era.abbreviation) : '';
+    const eraName = era.name ? localize(era.name) : '';
     return formatEraTemplate(era.template, { year: sampleYear, abbreviation: abbr, era: eraName, yearInEra: 1 });
   }
 
@@ -1437,7 +1443,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const afterIdx = parseInt(target.dataset.index) ?? this.#calendarData.festivals.length - 1;
     const insertIdx = afterIdx + 1;
     const totalFestivals = this.#calendarData.festivals.length + 1;
-    this.#calendarData.festivals.splice(insertIdx, 0, { name: game.i18n.format('CALENDARIA.Editor.Default.FestivalName', { num: totalFestivals }), month: 1, day: 1 });
+    this.#calendarData.festivals.splice(insertIdx, 0, { name: format('CALENDARIA.Editor.Default.FestivalName', { num: totalFestivals }), month: 1, day: 1 });
     this.render();
   }
 
@@ -1458,7 +1464,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {HTMLElement} target - Target element
    */
   static async #onAddMoon(event, target) {
-    this.#calendarData.moons.push({ name: game.i18n.localize('CALENDARIA.Editor.Default.MoonName'), cycleLength: 28, cycleDayAdjust: 0, hidden: false, phases: getDefaultMoonPhases(), referenceDate: { year: 0, month: 0, day: 1 } });
+    this.#calendarData.moons.push({ name: localize('CALENDARIA.Editor.Default.MoonName'), cycleLength: 28, cycleDayAdjust: 0, hidden: false, phases: getDefaultMoonPhases(), referenceDate: { year: 0, month: 0, day: 1 } });
     this.render();
   }
 
@@ -1490,7 +1496,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
 
     // Add new phase at end
     moon.phases.push({
-      name: game.i18n.format('CALENDARIA.Editor.Default.PhaseName', { num: phaseCount + 1 }),
+      name: format('CALENDARIA.Editor.Default.PhaseName', { num: phaseCount + 1 }),
       rising: '',
       fading: '',
       icon: `${ASSETS.MOON_ICONS}/05_fullmoon.svg`,
@@ -1568,11 +1574,11 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!this.#calendarData.cycles) this.#calendarData.cycles = [];
     const totalCycles = this.#calendarData.cycles.length + 1;
     this.#calendarData.cycles.push({
-      name: game.i18n.format('CALENDARIA.Editor.Default.CycleName', { num: totalCycles }),
+      name: format('CALENDARIA.Editor.Default.CycleName', { num: totalCycles }),
       length: 12,
       offset: 0,
       basedOn: 'month',
-      entries: [{ name: game.i18n.format('CALENDARIA.Editor.Default.CycleEntry', { num: 1 }) }]
+      entries: [{ name: format('CALENDARIA.Editor.Default.CycleEntry', { num: 1 }) }]
     });
     this.render();
   }
@@ -1600,7 +1606,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
 
     if (!cycle.entries) cycle.entries = [];
     const entryCount = cycle.entries.length + 1;
-    cycle.entries.push({ name: game.i18n.format('CALENDARIA.Editor.Default.CycleEntry', { num: entryCount }) });
+    cycle.entries.push({ name: format('CALENDARIA.Editor.Default.CycleEntry', { num: entryCount }) });
     this.render();
   }
 
@@ -1630,7 +1636,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const insertIdx = afterIdx + 1;
     const totalHours = this.#calendarData.canonicalHours.length;
     this.#calendarData.canonicalHours.splice(insertIdx, 0, {
-      name: game.i18n.format('CALENDARIA.Editor.Default.CanonicalHourName', { num: totalHours + 1 }),
+      name: format('CALENDARIA.Editor.Default.CanonicalHourName', { num: totalHours + 1 }),
       abbreviation: '',
       startHour: totalHours * 3,
       endHour: (totalHours + 1) * 3
@@ -1661,7 +1667,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const insertIdx = afterIdx + 1;
     const totalWeeks = this.#calendarData.weeks.names.length;
     this.#calendarData.weeks.names.splice(insertIdx, 0, {
-      name: game.i18n.format('CALENDARIA.Editor.Default.WeekName', { num: totalWeeks + 1 }),
+      name: format('CALENDARIA.Editor.Default.WeekName', { num: totalWeeks + 1 }),
       abbreviation: ''
     });
     this.render();
@@ -1733,23 +1739,23 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   static async #onAddZone(event, target) {
     const templateOptions = getClimateTemplateOptions();
-    const selectHtml = templateOptions.map((opt) => `<option value="${opt.value}">${game.i18n.localize(opt.label)}</option>`).join('');
+    const selectHtml = templateOptions.map((opt) => `<option value="${opt.value}">${localize(opt.label)}</option>`).join('');
 
     const content = `
       <form>
         <div class="form-group">
-          <label>${game.i18n.localize('CALENDARIA.Editor.Weather.Zone.CopyFrom')}</label>
+          <label>${localize('CALENDARIA.Editor.Weather.Zone.CopyFrom')}</label>
           <select name="template">${selectHtml}</select>
         </div>
         <div class="form-group">
-          <label>${game.i18n.localize('CALENDARIA.Editor.Weather.Zone.Name')}</label>
-          <input type="text" name="name" placeholder="${game.i18n.localize('CALENDARIA.Editor.Weather.Zone.Name')}">
+          <label>${localize('CALENDARIA.Editor.Weather.Zone.Name')}</label>
+          <input type="text" name="name" placeholder="${localize('CALENDARIA.Editor.Weather.Zone.Name')}">
         </div>
       </form>
     `;
 
     const result = await foundry.applications.api.DialogV2.prompt({
-      window: { title: game.i18n.localize('CALENDARIA.Editor.Weather.Zone.Add') },
+      window: { title: localize('CALENDARIA.Editor.Weather.Zone.Add') },
       content,
       ok: {
         callback: (event, button, dialog) => {
@@ -1775,7 +1781,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const existingIds = (this.#calendarData.weather?.zones || []).map((z) => z.id);
     while (existingIds.includes(zoneId)) zoneId = `${baseId}-${counter++}`;
     zoneConfig.id = zoneId;
-    zoneConfig.name = result.name || game.i18n.localize(CLIMATE_ZONE_TEMPLATES[result.template]?.name || result.template);
+    zoneConfig.name = result.name || localize(CLIMATE_ZONE_TEMPLATES[result.template]?.name || result.template);
 
     // Add to calendar
     if (!this.#calendarData.weather) this.#calendarData.weather = { zones: [], activeZone: null, autoGenerate: false };
@@ -1797,7 +1803,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const zone = zones.find((z) => z.id === activeZoneId);
 
     if (!zone) {
-      ui.notifications.warn(game.i18n.localize('CALENDARIA.Editor.Weather.Zone.NoZones'));
+      ui.notifications.warn(localize('CALENDARIA.Editor.Weather.Zone.NoZones'));
       return;
     }
 
@@ -1811,9 +1817,9 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
         return `
         <div class="form-group temperature-row">
           <label>${season}</label>
-          <input type="number" name="temp_${season}_min" value="${temp.min}" placeholder="${game.i18n.localize('CALENDARIA.Editor.Weather.Zone.TempMin')}">
+          <input type="number" name="temp_${season}_min" value="${temp.min}" placeholder="${localize('CALENDARIA.Editor.Weather.Zone.TempMin')}">
           <span>–</span>
-          <input type="number" name="temp_${season}_max" value="${temp.max}" placeholder="${game.i18n.localize('CALENDARIA.Editor.Weather.Zone.TempMax')}">
+          <input type="number" name="temp_${season}_max" value="${temp.max}" placeholder="${localize('CALENDARIA.Editor.Weather.Zone.TempMax')}">
         </div>
       `;
       })
@@ -1822,22 +1828,22 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const content = `
       <form>
         <div class="form-group">
-          <label>${game.i18n.localize('CALENDARIA.Editor.Weather.Zone.Name')}</label>
+          <label>${localize('CALENDARIA.Editor.Weather.Zone.Name')}</label>
           <input type="text" name="name" value="${zone.name}">
         </div>
         <div class="form-group">
-          <label>${game.i18n.localize('CALENDARIA.Editor.Weather.Zone.Description')}</label>
+          <label>${localize('CALENDARIA.Editor.Weather.Zone.Description')}</label>
           <textarea name="description">${zone.description || ''}</textarea>
         </div>
         <fieldset>
-          <legend>${game.i18n.localize('CALENDARIA.Editor.Weather.Zone.Temperatures')}</legend>
+          <legend>${localize('CALENDARIA.Editor.Weather.Zone.Temperatures')}</legend>
           ${tempRows}
         </fieldset>
       </form>
     `;
 
     const result = await foundry.applications.api.DialogV2.prompt({
-      window: { title: game.i18n.localize('CALENDARIA.Editor.Weather.Zone.Edit') },
+      window: { title: localize('CALENDARIA.Editor.Weather.Zone.Edit') },
       content,
       ok: {
         callback: (event, button, dialog) => {
@@ -1877,14 +1883,14 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const zoneIdx = zones.findIndex((z) => z.id === activeZoneId);
 
     if (zoneIdx < 0) {
-      ui.notifications.warn(game.i18n.localize('CALENDARIA.Editor.Weather.Zone.NoZones'));
+      ui.notifications.warn(localize('CALENDARIA.Editor.Weather.Zone.NoZones'));
       return;
     }
 
     const zone = zones[zoneIdx];
     const confirm = await foundry.applications.api.DialogV2.confirm({
-      window: { title: game.i18n.localize('CALENDARIA.Editor.Weather.Zone.Delete') },
-      content: `<p>${game.i18n.format('CALENDARIA.Editor.Weather.Zone.DeleteConfirm', { name: zone.name })}</p>`
+      window: { title: localize('CALENDARIA.Editor.Weather.Zone.Delete') },
+      content: `<p>${format('CALENDARIA.Editor.Weather.Zone.DeleteConfirm', { name: zone.name })}</p>`
     });
 
     if (!confirm) return;
@@ -1930,29 +1936,29 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const calendarId = dropdown?.value;
 
     if (!calendarId) {
-      ui.notifications.warn(game.i18n.localize('CALENDARIA.Editor.SelectCalendarFirst'));
+      ui.notifications.warn(localize('CALENDARIA.Editor.SelectCalendarFirst'));
       return;
     }
 
     const calendar = CalendarManager.getCalendar(calendarId);
     if (!calendar) {
-      ui.notifications.error(game.i18n.format('CALENDARIA.Editor.CalendarNotFound', { id: calendarId }));
+      ui.notifications.error(format('CALENDARIA.Editor.CalendarNotFound', { id: calendarId }));
       return;
     }
 
     const isCustom = CalendarManager.isCustomCalendar(calendarId);
-    const calendarName = game.i18n.localize(calendar.name || calendarId);
+    const calendarName = localize(calendar.name || calendarId);
 
     // Build dialog buttons
     const buttons = [];
 
-    if (isCustom) buttons.push({ action: 'edit', label: game.i18n.localize('CALENDARIA.Editor.EditCalendar'), icon: 'fas fa-edit', default: true });
-    buttons.push({ action: 'template', label: game.i18n.localize('CALENDARIA.Editor.UseAsTemplate'), icon: 'fas fa-copy', default: !isCustom });
-    buttons.push({ action: 'cancel', label: game.i18n.localize('CALENDARIA.UI.Cancel'), icon: 'fas fa-times' });
+    if (isCustom) buttons.push({ action: 'edit', label: localize('CALENDARIA.Editor.EditCalendar'), icon: 'fas fa-edit', default: true });
+    buttons.push({ action: 'template', label: localize('CALENDARIA.Editor.UseAsTemplate'), icon: 'fas fa-copy', default: !isCustom });
+    buttons.push({ action: 'cancel', label: localize('CALENDARIA.UI.Cancel'), icon: 'fas fa-times' });
 
     const result = await foundry.applications.api.DialogV2.wait({
-      window: { title: game.i18n.localize('CALENDARIA.Editor.LoadCalendar') },
-      content: `<p>${game.i18n.format('CALENDARIA.Editor.LoadCalendarPrompt', { name: calendarName })}</p>`,
+      window: { title: localize('CALENDARIA.Editor.LoadCalendar') },
+      content: `<p>${format('CALENDARIA.Editor.LoadCalendarPrompt', { name: calendarName })}</p>`,
       buttons
     });
 
@@ -1963,9 +1969,9 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     } else if (result === 'template') {
       // Load as template (copy data)
       this.#calendarData = calendar.toObject();
-      this.#prelocalizeCalendarData();
+      preLocalizeCalendar(this.#calendarData);
 
-      this.#calendarData.name = game.i18n.format('CALENDARIA.Editor.CopyOfName', {
+      this.#calendarData.name = format('CALENDARIA.Editor.CopyOfName', {
         name: calendarName
       });
       if (!this.#calendarData.seasons) this.#calendarData.seasons = { values: [] };
@@ -1977,74 +1983,11 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
         delete this.#calendarData.metadata.isCustom;
       }
 
-      ui.notifications.info(game.i18n.format('CALENDARIA.Editor.TemplateLoaded', { name: calendarName }));
+      ui.notifications.info(format('CALENDARIA.Editor.TemplateLoaded', { name: calendarName }));
       this.render();
     }
   }
 
-  /**
-   * Pre-localize all string fields in calendar data.
-   * Converts i18n keys to localized strings for editing.
-   * @private
-   */
-  #prelocalizeCalendarData() {
-    const data = this.#calendarData;
-
-    // Localize calendar name and metadata
-    if (data.name) data.name = game.i18n.localize(data.name);
-    if (data.metadata?.description) data.metadata.description = game.i18n.localize(data.metadata.description);
-
-    // Localize months
-    if (data.months?.values) {
-      for (const month of data.months.values) {
-        if (month.name) month.name = game.i18n.localize(month.name);
-        if (month.abbreviation) month.abbreviation = game.i18n.localize(month.abbreviation);
-      }
-    }
-
-    // Localize weekdays
-    if (data.days?.values) {
-      for (const day of data.days.values) {
-        if (day.name) day.name = game.i18n.localize(day.name);
-        if (day.abbreviation) day.abbreviation = game.i18n.localize(day.abbreviation);
-      }
-    }
-
-    // Localize seasons
-    if (data.seasons?.values) {
-      for (const season of data.seasons.values) {
-        if (season.name) season.name = game.i18n.localize(season.name);
-        if (season.abbreviation) season.abbreviation = game.i18n.localize(season.abbreviation);
-      }
-    }
-
-    // Localize festivals
-    if (data.festivals) for (const festival of data.festivals) if (festival.name) festival.name = game.i18n.localize(festival.name);
-
-    // Localize eras
-    if (data.eras) {
-      for (const era of data.eras) {
-        if (era.name) era.name = game.i18n.localize(era.name);
-        if (era.abbreviation) era.abbreviation = game.i18n.localize(era.abbreviation);
-      }
-    }
-
-    // Localize moons
-    if (data.moons) {
-      for (const moon of data.moons) {
-        if (moon.name) moon.name = game.i18n.localize(moon.name);
-        if (moon.phases) for (const phase of moon.phases) if (phase.name) phase.name = game.i18n.localize(phase.name);
-      }
-    }
-
-    // Localize cycles
-    if (data.cycles) {
-      for (const cycle of data.cycles) {
-        if (cycle.name) cycle.name = game.i18n.localize(cycle.name);
-        if (cycle.entries) for (const entry of cycle.entries) if (entry.name) entry.name = game.i18n.localize(entry.name);
-      }
-    }
-  }
 
   /**
    * Save the calendar.
@@ -2054,7 +1997,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
   static async #onSaveCalendar(event, target) {
     // Validate
     if (!this.#calendarData.name) {
-      ui.notifications.error(game.i18n.localize('CALENDARIA.Editor.Error.NameRequired'));
+      ui.notifications.error(localize('CALENDARIA.Editor.Error.NameRequired'));
       return;
     }
 
@@ -2096,7 +2039,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
       }
 
       if (calendar) {
-        ui.notifications.info(game.i18n.format('CALENDARIA.Editor.SaveSuccess', { name: this.#calendarData.name }));
+        ui.notifications.info(format('CALENDARIA.Editor.SaveSuccess', { name: this.#calendarData.name }));
 
         // Import pending notes from importer if any (using instance variables)
         log(3, `Checking for pending notes: ${this.#pendingNotes?.length || 0}, importerId: ${this.#pendingImporterId}, calendarId: ${calendarId}`);
@@ -2105,7 +2048,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
           if (importer) {
             log(3, `Importing ${this.#pendingNotes.length} pending notes to calendar ${calendarId}`);
             const result = await importer.importNotes(this.#pendingNotes, { calendarId });
-            if (result.count > 0) ui.notifications.info(game.i18n.format('CALENDARIA.Editor.NotesImported', { count: result.count }));
+            if (result.count > 0) ui.notifications.info(format('CALENDARIA.Editor.NotesImported', { count: result.count }));
             if (result.errors?.length > 0) log(1, 'Note import errors:', result.errors);
 
             // Clear pending notes after import
@@ -2123,7 +2066,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
       }
     } catch (error) {
       log(2, 'Error saving calendar:', error);
-      ui.notifications.error(game.i18n.format('CALENDARIA.Editor.SaveError', { error: error.message }));
+      ui.notifications.error(format('CALENDARIA.Editor.SaveError', { error: error.message }));
     }
   }
 
@@ -2135,15 +2078,15 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
   async #showSaveDialog() {
     const isGM = game.user.isGM;
     const content = `
-      <p>${game.i18n.localize('CALENDARIA.Editor.ConfirmSave')}</p>
+      <p>${localize('CALENDARIA.Editor.ConfirmSave')}</p>
       ${
         isGM
           ? `<div class="form-group">
         <label class="checkbox">
           <input type="checkbox" name="setActive" ${this.#setActiveOnSave ? 'checked' : ''}>
-          ${game.i18n.localize('CALENDARIA.Editor.SetAsActive')}
+          ${localize('CALENDARIA.Editor.SetAsActive')}
         </label>
-        <p class="hint">${game.i18n.localize('CALENDARIA.Editor.SetAsActiveHint')}</p>
+        <p class="hint">${localize('CALENDARIA.Editor.SetAsActiveHint')}</p>
       </div>`
           : ''
       }
@@ -2151,10 +2094,10 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
 
     return new Promise((resolve) => {
       foundry.applications.api.DialogV2.prompt({
-        window: { title: game.i18n.localize('CALENDARIA.Editor.Button.Save') },
+        window: { title: localize('CALENDARIA.Editor.Button.Save') },
         content,
         ok: {
-          label: game.i18n.localize('CALENDARIA.Editor.Button.Save'),
+          label: localize('CALENDARIA.Editor.Button.Save'),
           icon: 'fas fa-save',
           callback: (event, button, dialog) => {
             const setActive = isGM ? (button.form.elements.setActive?.checked ?? false) : false;
@@ -2176,15 +2119,15 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   static async #onResetCalendar(event, target) {
     const confirmed = await foundry.applications.api.DialogV2.confirm({
-      window: { title: game.i18n.localize('CALENDARIA.Editor.Reset') },
-      content: `<p>${game.i18n.localize('CALENDARIA.Editor.ConfirmReset')}</p>`,
-      yes: { label: game.i18n.localize('CALENDARIA.Editor.Reset'), icon: 'fas fa-undo' },
-      no: { label: game.i18n.localize('CALENDARIA.UI.Cancel'), icon: 'fas fa-times' }
+      window: { title: localize('CALENDARIA.Editor.Reset') },
+      content: `<p>${localize('CALENDARIA.Editor.ConfirmReset')}</p>`,
+      yes: { label: localize('CALENDARIA.Editor.Reset'), icon: 'fas fa-undo' },
+      no: { label: localize('CALENDARIA.UI.Cancel'), icon: 'fas fa-times' }
     });
 
     if (confirmed) {
       this.#initializeBlankCalendar();
-      ui.notifications.info(game.i18n.localize('CALENDARIA.Editor.ResetComplete'));
+      ui.notifications.info(localize('CALENDARIA.Editor.ResetComplete'));
       this.render();
     }
   }
@@ -2198,10 +2141,10 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!this.#calendarId || !CalendarManager.hasDefaultOverride(this.#calendarId)) return;
 
     const confirmed = await foundry.applications.api.DialogV2.confirm({
-      window: { title: game.i18n.localize('CALENDARIA.Editor.Button.ResetToDefault') },
-      content: `<p>${game.i18n.localize('CALENDARIA.Editor.ConfirmResetToDefault')}</p>`,
-      yes: { label: game.i18n.localize('CALENDARIA.Editor.Button.ResetToDefault'), icon: 'fas fa-history', callback: () => true },
-      no: { label: game.i18n.localize('CALENDARIA.UI.Cancel'), icon: 'fas fa-times' }
+      window: { title: localize('CALENDARIA.Editor.Button.ResetToDefault') },
+      content: `<p>${localize('CALENDARIA.Editor.ConfirmResetToDefault')}</p>`,
+      yes: { label: localize('CALENDARIA.Editor.Button.ResetToDefault'), icon: 'fas fa-history', callback: () => true },
+      no: { label: localize('CALENDARIA.UI.Cancel'), icon: 'fas fa-times' }
     });
 
     if (!confirmed) return;
@@ -2223,10 +2166,10 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!this.#calendarId || !this.#isEditing) return;
 
     const confirmed = await foundry.applications.api.DialogV2.confirm({
-      window: { title: game.i18n.localize('CALENDARIA.Editor.Button.Delete') },
-      content: `<p>${game.i18n.format('CALENDARIA.Editor.ConfirmDelete', { name: this.#calendarData.name })}</p>`,
-      yes: { label: game.i18n.localize('CALENDARIA.Editor.Button.Delete'), icon: 'fas fa-trash', callback: () => true },
-      no: { label: game.i18n.localize('CALENDARIA.UI.Cancel'), icon: 'fas fa-times' }
+      window: { title: localize('CALENDARIA.Editor.Button.Delete') },
+      content: `<p>${format('CALENDARIA.Editor.ConfirmDelete', { name: this.#calendarData.name })}</p>`,
+      yes: { label: localize('CALENDARIA.Editor.Button.Delete'), icon: 'fas fa-trash', callback: () => true },
+      no: { label: localize('CALENDARIA.UI.Cancel'), icon: 'fas fa-times' }
     });
 
     if (!confirmed) return;

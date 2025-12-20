@@ -5,6 +5,7 @@
  */
 
 import { MODULE, SETTINGS, TEMPLATES } from '../../constants.mjs';
+import { localize, format } from '../../utils/localization.mjs';
 import { log } from '../../utils/logger.mjs';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
@@ -44,7 +45,7 @@ export class ResetPositionDialog extends HandlebarsApplicationMixin(ApplicationV
     log(3, 'Reset button clicked');
 
     await game.settings.set(MODULE.ID, SETTINGS.CALENDAR_POSITION, null);
-    ui.notifications.info(game.i18n.localize('CALENDARIA.Settings.ResetPosition.Success'));
+    ui.notifications.info(localize('CALENDARIA.Settings.ResetPosition.Success'));
 
     // Refresh calendar if it's open
     CONFIG.DND5E.calendar.application?.resetPosition();

@@ -6,11 +6,12 @@
  * @author Tyler
  */
 
-import BaseImporter from './base-importer.mjs';
-import { log } from '../utils/logger.mjs';
-import NoteManager from '../notes/note-manager.mjs';
-import CalendarManager from '../calendar/calendar-manager.mjs';
 import { ASSETS } from '../constants.mjs';
+import { localize, format } from '../utils/localization.mjs';
+import { log } from '../utils/logger.mjs';
+import BaseImporter from './base-importer.mjs';
+import CalendarManager from '../calendar/calendar-manager.mjs';
+import NoteManager from '../notes/note-manager.mjs';
 
 /**
  * Moon phase names for standard 8 phases.
@@ -87,7 +88,7 @@ export default class CalendariumImporter extends BaseImporter {
    */
   async transform(data) {
     if (!CalendariumImporter.isCalendariumExport(data)) {
-      throw new Error(game.i18n.localize('CALENDARIA.Importer.Calendarium.InvalidFormat'));
+      throw new Error(localize('CALENDARIA.Importer.Calendarium.InvalidFormat'));
     }
 
     // Use first calendar
@@ -201,7 +202,7 @@ export default class CalendariumImporter extends BaseImporter {
     const monthsWithCustomWeeks = months.filter((m) => m.week && Array.isArray(m.week) && m.week.length > 0);
     if (monthsWithCustomWeeks.length > 0) {
       const details = monthsWithCustomWeeks.map((m) => m.name).join(', ');
-      warnings.push(game.i18n.format('CALENDARIA.Importer.Calendarium.Warning.CustomWeekdays', { details }));
+      warnings.push(format('CALENDARIA.Importer.Calendarium.Warning.CustomWeekdays', { details }));
     }
 
     return weekdays.map((wd, idx) => ({ name: wd.name, abbreviation: wd.name.substring(0, 2), ordinal: idx + 1 }));
@@ -248,7 +249,7 @@ export default class CalendariumImporter extends BaseImporter {
       if (ld.intercalary && ld.name) festivals.push({ name: ld.name, month: (ld.timespan || 0) + 1, day: (ld.after || 0) + 1, leapYearOnly: true, countsForWeekday: !ld.numbered });
     }
 
-    if (leapDays.length > 1 && !leapDays.some((ld) => ld.intercalary)) warnings.push(game.i18n.localize('CALENDARIA.Importer.Calendarium.Warning.MultipleLeapDays'));
+    if (leapDays.length > 1 && !leapDays.some((ld) => ld.intercalary)) warnings.push(localize('CALENDARIA.Importer.Calendarium.Warning.MultipleLeapDays'));
     return { config: leapYearConfig, festivals };
   }
 
@@ -312,7 +313,7 @@ export default class CalendariumImporter extends BaseImporter {
     if (!seasons.length) return [];
 
     // Check for procedural weather
-    if (seasonal.weather?.enabled) warnings.push(game.i18n.localize('CALENDARIA.Importer.Calendarium.Warning.ProceduralWeather'));
+    if (seasonal.weather?.enabled) warnings.push(localize('CALENDARIA.Importer.Calendarium.Warning.ProceduralWeather'));
 
     // Build day-of-year starts for each month
     const monthDayStarts = [];
@@ -661,7 +662,7 @@ export default class CalendariumImporter extends BaseImporter {
     // Create journal entries
     const journalData = this._undatedJournals.map((event) => ({ name: event.name, folder: parentId, pages: [{ name: event.name, type: 'text', text: { content: event.content || '' } }] }));
     await JournalEntry.createDocuments(journalData);
-    ui.notifications.info(game.i18n.format('CALENDARIA.Importer.Calendarium.Warning.UndatedEvents', { count: this._undatedJournals.length }));
+    ui.notifications.info(format('CALENDARIA.Importer.Calendarium.Warning.UndatedEvents', { count: this._undatedJournals.length }));
   }
 
   /* -------------------------------------------- */

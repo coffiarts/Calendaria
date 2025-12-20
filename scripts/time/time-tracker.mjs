@@ -8,10 +8,11 @@
  * @author Tyler
  */
 
-import { MODULE, HOOKS, SETTINGS } from '../constants.mjs';
-import { log } from '../utils/logger.mjs';
-import CalendarManager from '../calendar/calendar-manager.mjs';
 import { executeMacroById } from '../utils/macro-utils.mjs';
+import { localize, format } from '../utils/localization.mjs';
+import { log } from '../utils/logger.mjs';
+import { MODULE, HOOKS, SETTINGS } from '../constants.mjs';
+import CalendarManager from '../calendar/calendar-manager.mjs';
 
 /**
  * Static class that tracks world time changes and fires threshold hooks.
@@ -420,11 +421,11 @@ export default class TimeTracker {
 
         changedMoons.push({
           moonIndex,
-          moonName: moon.name ? game.i18n.localize(moon.name) : `Moon ${moonIndex + 1}`,
+          moonName: moon.name ? localize(moon.name) : `Moon ${moonIndex + 1}`,
           previousPhaseIndex: lastPhaseIndex,
-          previousPhaseName: previousPhase?.name ? game.i18n.localize(previousPhase.name) : null,
+          previousPhaseName: previousPhase?.name ? localize(previousPhase.name) : null,
           currentPhaseIndex,
-          currentPhaseName: currentPhase?.name ? game.i18n.localize(currentPhase.name) : null
+          currentPhaseName: currentPhase?.name ? localize(currentPhase.name) : null
         });
       }
     }

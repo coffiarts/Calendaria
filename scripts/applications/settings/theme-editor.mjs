@@ -7,6 +7,7 @@
  */
 
 import { MODULE, SETTINGS, TEMPLATES } from '../../constants.mjs';
+import { localize, format } from '../../utils/localization.mjs';
 import { log } from '../../utils/logger.mjs';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
@@ -261,10 +262,10 @@ export class ThemeEditor extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   static async #onResetAllColors(event, target) {
     const confirmed = await foundry.applications.api.DialogV2.confirm({
-      window: { title: game.i18n.localize('CALENDARIA.ThemeEditor.ResetAll') },
-      content: `<p>${game.i18n.localize('CALENDARIA.ThemeEditor.ConfirmResetAll')}</p>`,
-      yes: { label: game.i18n.localize('CALENDARIA.ThemeEditor.ResetAll'), icon: 'fas fa-undo' },
-      no: { label: game.i18n.localize('CALENDARIA.UI.Cancel'), icon: 'fas fa-times' }
+      window: { title: localize('CALENDARIA.ThemeEditor.ResetAll') },
+      content: `<p>${localize('CALENDARIA.ThemeEditor.ConfirmResetAll')}</p>`,
+      yes: { label: localize('CALENDARIA.ThemeEditor.ResetAll'), icon: 'fas fa-undo' },
+      no: { label: localize('CALENDARIA.UI.Cancel'), icon: 'fas fa-times' }
     });
 
     if (confirmed) {
@@ -275,7 +276,7 @@ export class ThemeEditor extends HandlebarsApplicationMixin(ApplicationV2) {
       this.#colorValues = { ...DEFAULT_COLORS };
       ThemeEditor.applyCustomColors(this.#colorValues);
 
-      ui.notifications.info(game.i18n.localize('CALENDARIA.ThemeEditor.ColorsReset'));
+      ui.notifications.info(localize('CALENDARIA.ThemeEditor.ColorsReset'));
       this.render();
     }
   }
@@ -301,7 +302,7 @@ export class ThemeEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     a.click();
     URL.revokeObjectURL(url);
 
-    ui.notifications.info(game.i18n.localize('CALENDARIA.ThemeEditor.ExportSuccess'));
+    ui.notifications.info(localize('CALENDARIA.ThemeEditor.ExportSuccess'));
   }
 
   /**
@@ -332,11 +333,11 @@ export class ThemeEditor extends HandlebarsApplicationMixin(ApplicationV2) {
         this.#colorValues = { ...DEFAULT_COLORS, ...customColors };
 
         ThemeEditor.applyCustomColors(this.#colorValues);
-        ui.notifications.info(game.i18n.localize('CALENDARIA.ThemeEditor.ImportSuccess'));
+        ui.notifications.info(localize('CALENDARIA.ThemeEditor.ImportSuccess'));
         this.render();
       } catch (err) {
         log(2, 'Theme import failed:', err);
-        ui.notifications.error(game.i18n.localize('CALENDARIA.ThemeEditor.ImportError'));
+        ui.notifications.error(localize('CALENDARIA.ThemeEditor.ImportError'));
       }
     });
 

@@ -7,6 +7,7 @@
  */
 
 import { MODULE, SETTINGS, TEMPLATES } from '../../constants.mjs';
+import { localize, format } from '../../utils/localization.mjs';
 import { log } from '../../utils/logger.mjs';
 import CalendarManager from '../../calendar/calendar-manager.mjs';
 
@@ -74,8 +75,8 @@ export class MacroTriggerConfig extends HandlebarsApplicationMixin(ApplicationV2
     // Global triggers with current values
     context.globalTriggers = GLOBAL_TRIGGERS.map((trigger) => ({
       ...trigger,
-      label: game.i18n.localize(trigger.label),
-      hint: game.i18n.localize(trigger.hint),
+      label: localize(trigger.label),
+      hint: localize(trigger.hint),
       macroId: config.global?.[trigger.key] || ''
     }));
 
@@ -89,7 +90,7 @@ export class MacroTriggerConfig extends HandlebarsApplicationMixin(ApplicationV2
       // Build season options
       context.seasons = calendar.seasons.values.map((season, index) => ({
         index,
-        name: game.i18n.localize(season.name)
+        name: localize(season.name)
       }));
 
       // Existing season triggers
@@ -99,7 +100,7 @@ export class MacroTriggerConfig extends HandlebarsApplicationMixin(ApplicationV2
         return {
           index,
           seasonIndex: trigger.seasonIndex,
-          seasonName: isAll ? game.i18n.localize('CALENDARIA.MacroTrigger.AllSeasons') : season ? game.i18n.localize(season.name) : `Season ${trigger.seasonIndex}`,
+          seasonName: isAll ? localize('CALENDARIA.MacroTrigger.AllSeasons') : season ? localize(season.name) : `Season ${trigger.seasonIndex}`,
           macroId: trigger.macroId
         };
       });
@@ -112,7 +113,7 @@ export class MacroTriggerConfig extends HandlebarsApplicationMixin(ApplicationV2
       // Build moon options
       context.moons = calendar.moons.map((moon, index) => ({
         index,
-        name: game.i18n.localize(moon.name)
+        name: localize(moon.name)
       }));
 
       // Build phase options per moon
@@ -121,7 +122,7 @@ export class MacroTriggerConfig extends HandlebarsApplicationMixin(ApplicationV2
         context.moonPhases[moonIndex] =
           moon.phases?.map((phase, phaseIndex) => ({
             index: phaseIndex,
-            name: game.i18n.localize(phase.name)
+            name: localize(phase.name)
           })) || [];
       });
 
@@ -134,9 +135,9 @@ export class MacroTriggerConfig extends HandlebarsApplicationMixin(ApplicationV2
         return {
           index,
           moonIndex: trigger.moonIndex,
-          moonName: isAllMoons ? game.i18n.localize('CALENDARIA.MacroTrigger.AllMoons') : moon ? game.i18n.localize(moon.name) : `Moon ${trigger.moonIndex}`,
+          moonName: isAllMoons ? localize('CALENDARIA.MacroTrigger.AllMoons') : moon ? localize(moon.name) : `Moon ${trigger.moonIndex}`,
           phaseIndex: trigger.phaseIndex,
-          phaseName: isAllPhases ? game.i18n.localize('CALENDARIA.MacroTrigger.AllPhases') : phase ? game.i18n.localize(phase.name) : `Phase ${trigger.phaseIndex}`,
+          phaseName: isAllPhases ? localize('CALENDARIA.MacroTrigger.AllPhases') : phase ? localize(phase.name) : `Phase ${trigger.phaseIndex}`,
           macroId: trigger.macroId
         };
       });
@@ -178,7 +179,7 @@ export class MacroTriggerConfig extends HandlebarsApplicationMixin(ApplicationV2
     // Save config
     await game.settings.set(MODULE.ID, SETTINGS.MACRO_TRIGGERS, config);
     log(3, 'Macro trigger config saved', config);
-    ui.notifications.info(game.i18n.localize('CALENDARIA.MacroTrigger.Saved'));
+    ui.notifications.info(localize('CALENDARIA.MacroTrigger.Saved'));
   }
 
   /**
@@ -197,7 +198,7 @@ export class MacroTriggerConfig extends HandlebarsApplicationMixin(ApplicationV2
     const macroId = macroSelect?.value;
 
     if (isNaN(moonIndex) || isNaN(phaseIndex) || !macroId) {
-      ui.notifications.warn(game.i18n.localize('CALENDARIA.MacroTrigger.SelectAll'));
+      ui.notifications.warn(localize('CALENDARIA.MacroTrigger.SelectAll'));
       return;
     }
 
@@ -208,7 +209,7 @@ export class MacroTriggerConfig extends HandlebarsApplicationMixin(ApplicationV2
     // Check for duplicate
     const exists = config.moonPhase.some((t) => t.moonIndex === moonIndex && t.phaseIndex === phaseIndex);
     if (exists) {
-      ui.notifications.warn(game.i18n.localize('CALENDARIA.MacroTrigger.DuplicateMoon'));
+      ui.notifications.warn(localize('CALENDARIA.MacroTrigger.DuplicateMoon'));
       return;
     }
 
@@ -251,7 +252,7 @@ export class MacroTriggerConfig extends HandlebarsApplicationMixin(ApplicationV2
     const macroId = macroSelect?.value;
 
     if (isNaN(seasonIndex) || !macroId) {
-      ui.notifications.warn(game.i18n.localize('CALENDARIA.MacroTrigger.SelectSeasonAndMacro'));
+      ui.notifications.warn(localize('CALENDARIA.MacroTrigger.SelectSeasonAndMacro'));
       return;
     }
 
@@ -262,7 +263,7 @@ export class MacroTriggerConfig extends HandlebarsApplicationMixin(ApplicationV2
     // Check for duplicate
     const exists = config.season.some((t) => t.seasonIndex === seasonIndex);
     if (exists) {
-      ui.notifications.warn(game.i18n.localize('CALENDARIA.MacroTrigger.DuplicateSeason'));
+      ui.notifications.warn(localize('CALENDARIA.MacroTrigger.DuplicateSeason'));
       return;
     }
 

@@ -6,11 +6,12 @@
  * @author Tyler
  */
 
-import BaseImporter from './base-importer.mjs';
-import { log } from '../utils/logger.mjs';
-import NoteManager from '../notes/note-manager.mjs';
-import CalendarManager from '../calendar/calendar-manager.mjs';
 import { ASSETS } from '../constants.mjs';
+import { localize, format } from '../utils/localization.mjs';
+import { log } from '../utils/logger.mjs';
+import BaseImporter from './base-importer.mjs';
+import CalendarManager from '../calendar/calendar-manager.mjs';
+import NoteManager from '../notes/note-manager.mjs';
 
 /**
  * FC color names to hex mapping.
@@ -92,7 +93,7 @@ export default class FantasyCalendarImporter extends BaseImporter {
    * @returns {Promise<object>} CalendariaCalendar-compatible data
    */
   async transform(data) {
-    if (!FantasyCalendarImporter.isFantasyCalendarExport(data)) throw new Error(game.i18n.localize('CALENDARIA.Importer.FantasyCalendar.InvalidFormat'));
+    if (!FantasyCalendarImporter.isFantasyCalendarExport(data)) throw new Error(localize('CALENDARIA.Importer.FantasyCalendar.InvalidFormat'));
 
     log(3, 'Transforming Fantasy-Calendar data:', data.name);
 

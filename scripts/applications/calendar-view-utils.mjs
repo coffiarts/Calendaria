@@ -7,6 +7,7 @@
  */
 
 import { MODULE, SETTINGS } from '../constants.mjs';
+import { localize, format } from '../utils/localization.mjs';
 import CalendarManager from '../calendar/calendar-manager.mjs';
 import NoteManager from '../notes/note-manager.mjs';
 import { isRecurringMatch } from '../notes/utils/recurrence.mjs';
@@ -53,7 +54,7 @@ export function enrichSeasonData(season) {
   if (season.icon && season.color) return season;
 
   // Map season names to icons and colors
-  const seasonName = game.i18n.localize(season.name).toLowerCase();
+  const seasonName = localize(season.name).toLowerCase();
   const enriched = { ...season };
 
   // Match common season names (English and localized variants)
@@ -219,7 +220,7 @@ export function getFirstMoonPhase(calendar, year, month, day) {
   if (!phase) return null;
 
   const color = calendar.moons[0].color || null;
-  return { icon: phase.icon, color, hue: color ? hexToHue(color) : null, tooltip: `${game.i18n.localize(calendar.moons[0].name)}: ${game.i18n.localize(phase.name)}` };
+  return { icon: phase.icon, color, hue: color ? hexToHue(color) : null, tooltip: `${localize(calendar.moons[0].name)}: ${localize(phase.name)}` };
 }
 
 /**
@@ -246,7 +247,7 @@ export function getAllMoonPhases(calendar, year, month, day) {
       const phase = calendar.getMoonPhase(index, dayWorldTime);
       if (!phase) return null;
       const color = moon.color || null;
-      return { moonName: game.i18n.localize(moon.name), phaseName: game.i18n.localize(phase.name), icon: phase.icon, color, hue: color ? hexToHue(color) : null };
+      return { moonName: localize(moon.name), phaseName: localize(phase.name), icon: phase.icon, color, hue: color ? hexToHue(color) : null };
     })
     .filter(Boolean);
 }
@@ -315,7 +316,7 @@ export async function setDateTo(year, month, day, calendar = null) {
  */
 export async function createNoteOnDate(year, month, day) {
   const page = await NoteManager.createNote({
-    name: game.i18n.localize('CALENDARIA.Note.NewNote'),
+    name: localize('CALENDARIA.Note.NewNote'),
     noteData: { startDate: { year, month, day, hour: 12, minute: 0 }, endDate: { year, month, day, hour: 13, minute: 0 } }
   });
   if (page) page.sheet.render(true, { mode: 'edit' });
@@ -425,8 +426,8 @@ export function getDayContextMenuItems({ calendar, onSetDate, onCreateNote } = {
 
         const page = notes[0];
         const confirmed = await foundry.applications.api.DialogV2.confirm({
-          window: { title: game.i18n.localize('CALENDARIA.ContextMenu.DeleteNote') },
-          content: `<p>${game.i18n.format('CALENDARIA.ContextMenu.DeleteConfirm', { name: page.name })}</p>`,
+          window: { title: localize('CALENDARIA.ContextMenu.DeleteNote') },
+          content: `<p>${format('CALENDARIA.ContextMenu.DeleteConfirm', { name: page.name })}</p>`,
           rejectClose: false,
           modal: true
         });
@@ -456,13 +457,13 @@ export function injectContextMenuInfo(target, calendar) {
 
   // Build date string
   const monthData = calendar.months?.values?.[month];
-  const monthName = monthData ? game.i18n.localize(monthData.name) : '';
+  const monthName = monthData ? localize(monthData.name) : '';
   const yearDisplay = calendar.formatYearWithEra?.(year) ?? String(year);
   const fullDate = `${monthName} ${day}, ${yearDisplay}`;
 
   // Get season
   const season = calendar.getCurrentSeason?.();
-  const seasonName = season ? game.i18n.localize(season.name) : null;
+  const seasonName = season ? localize(season.name) : null;
 
   // Get sunrise/sunset
   const sunriseHour = calendar.sunrise?.() ?? 6;
@@ -479,7 +480,7 @@ export function injectContextMenuInfo(target, calendar) {
   infoHeader.innerHTML = `
     <div class="info-row date"><strong>${fullDate}</strong></div>
     ${seasonName ? `<div class="info-row season">${seasonName}</div>` : ''}
-    <div class="info-row sun"><i class="fas fa-sun" data-tooltip="${game.i18n.localize('CALENDARIA.CompactCalendar.Sunrise')}"></i> ${formatTime(sunriseHour)} <i class="fas fa-moon" data-tooltip="${game.i18n.localize('CALENDARIA.CompactCalendar.Sunset')}"></i> ${formatTime(sunsetHour)}</div>
+    <div class="info-row sun"><i class="fas fa-sun" data-tooltip="${localize('CALENDARIA.CompactCalendar.Sunrise')}"></i> ${formatTime(sunriseHour)} <i class="fas fa-moon" data-tooltip="${localize('CALENDARIA.CompactCalendar.Sunset')}"></i> ${formatTime(sunsetHour)}</div>
   `;
 
   // Insert at beginning of menu

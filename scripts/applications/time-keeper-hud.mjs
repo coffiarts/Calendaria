@@ -7,6 +7,7 @@
  */
 
 import { MODULE, HOOKS, TEMPLATES, SETTINGS } from '../constants.mjs';
+import { localize, format } from '../utils/localization.mjs';
 import TimeKeeper, { getTimeIncrements } from '../time/time-keeper.mjs';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
@@ -231,15 +232,15 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   #formatIncrement(key) {
     const labels = {
-      second: game.i18n.localize('CALENDARIA.TimeKeeper.Second'),
-      round: game.i18n.localize('CALENDARIA.TimeKeeper.Round'),
-      minute: game.i18n.localize('CALENDARIA.TimeKeeper.Minute'),
-      hour: game.i18n.localize('CALENDARIA.TimeKeeper.Hour'),
-      day: game.i18n.localize('CALENDARIA.TimeKeeper.Day'),
-      week: game.i18n.localize('CALENDARIA.TimeKeeper.Week'),
-      month: game.i18n.localize('CALENDARIA.TimeKeeper.Month'),
-      season: game.i18n.localize('CALENDARIA.TimeKeeper.Season'),
-      year: game.i18n.localize('CALENDARIA.TimeKeeper.Year')
+      second: localize('CALENDARIA.TimeKeeper.Second'),
+      round: localize('CALENDARIA.TimeKeeper.Round'),
+      minute: localize('CALENDARIA.TimeKeeper.Minute'),
+      hour: localize('CALENDARIA.TimeKeeper.Hour'),
+      day: localize('CALENDARIA.TimeKeeper.Day'),
+      week: localize('CALENDARIA.TimeKeeper.Week'),
+      month: localize('CALENDARIA.TimeKeeper.Month'),
+      season: localize('CALENDARIA.TimeKeeper.Season'),
+      year: localize('CALENDARIA.TimeKeeper.Year')
     };
     return labels[key] || key;
   }

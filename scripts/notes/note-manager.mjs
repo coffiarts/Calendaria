@@ -7,12 +7,13 @@
  * @author Tyler
  */
 
-import { MODULE, SETTINGS, SYSTEM, HOOKS } from '../constants.mjs';
-import { log } from '../utils/logger.mjs';
-import CalendarManager from '../calendar/calendar-manager.mjs';
-import { getDefaultNoteData, validateNoteData, sanitizeNoteData, createNoteStub, getPredefinedCategories, getCategoryDefinition } from './note-data.mjs';
 import { compareDates, isValidDate } from './utils/date-utils.mjs';
+import { getDefaultNoteData, validateNoteData, sanitizeNoteData, createNoteStub, getPredefinedCategories, getCategoryDefinition } from './note-data.mjs';
 import { isRecurringMatch, getOccurrencesInRange, getRecurrenceDescription } from './utils/recurrence.mjs';
+import { localize, format } from '../utils/localization.mjs';
+import { log } from '../utils/logger.mjs';
+import { MODULE, SETTINGS, SYSTEM, HOOKS } from '../constants.mjs';
+import CalendarManager from '../calendar/calendar-manager.mjs';
 
 export default class NoteManager {
   /** @type {Map<string, object>} In-memory index of note stubs */
@@ -598,7 +599,7 @@ export default class NoteManager {
 
         // If name is a localization key, localize it
         if (calendarName.includes('.')) {
-          calendarName = game.i18n.localize(calendarName);
+          calendarName = localize(calendarName);
         }
 
         const journal = await JournalEntry.create({ name: calendarName, folder: folder?.id, flags: { [MODULE.ID]: { calendarId, isCalendarJournal: true } } });
@@ -691,7 +692,7 @@ export default class NoteManager {
       } else {
         // Create new month page
         try {
-          const monthName = game.i18n.localize(month.name);
+          const monthName = localize(month.name);
           const page = await JournalEntryPage.create(
             {
               name: monthName,

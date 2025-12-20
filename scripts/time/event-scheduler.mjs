@@ -27,12 +27,13 @@
  * @author Tyler
  */
 
-import { MODULE, HOOKS } from '../constants.mjs';
-import { log } from '../utils/logger.mjs';
-import CalendarManager from '../calendar/calendar-manager.mjs';
-import NoteManager from '../notes/note-manager.mjs';
 import { compareDates, getCurrentDate } from '../notes/utils/date-utils.mjs';
 import { generateRandomOccurrences, needsRandomRegeneration } from '../notes/utils/recurrence.mjs';
+import { localize, format } from '../utils/localization.mjs';
+import { log } from '../utils/logger.mjs';
+import { MODULE, HOOKS } from '../constants.mjs';
+import CalendarManager from '../calendar/calendar-manager.mjs';
+import NoteManager from '../notes/note-manager.mjs';
 
 /**
  * Event Scheduler class that monitors time changes and triggers event notifications.
@@ -383,7 +384,7 @@ export default class EventScheduler {
 
     const formatDate = (date) => {
       const monthData = calendar.months?.values?.[date.month];
-      const monthName = monthData?.name ? game.i18n.localize(monthData.name) : `Month ${date.month + 1}`;
+      const monthName = monthData?.name ? localize(monthData.name) : `Month ${date.month + 1}`;
       return `${date.day} ${monthName}, ${date.year}`;
     };
 

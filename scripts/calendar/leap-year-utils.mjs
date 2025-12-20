@@ -6,6 +6,8 @@
  * @author Tyler
  */
 
+import { localize, format } from '../utils/localization.mjs';
+
 /**
  * Parse a single interval string into an interval object.
  * @param {string|number} intervalStr - Interval string like "4", "!100", or "+400"
@@ -115,25 +117,25 @@ export function isLeapYear(leapYearConfig, year, yearZeroExists = true) {
  * @returns {string}
  */
 export function getLeapYearDescription(leapYearConfig) {
-  if (!leapYearConfig) return game.i18n.localize('CALENDARIA.LeapYear.None');
+  if (!leapYearConfig) return localize('CALENDARIA.LeapYear.None');
 
   const rule = leapYearConfig.rule || 'none';
 
   switch (rule) {
     case 'none':
-      return game.i18n.localize('CALENDARIA.LeapYear.None');
+      return localize('CALENDARIA.LeapYear.None');
     case 'simple': {
       const interval = leapYearConfig.interval ?? leapYearConfig.leapInterval ?? 4;
       const start = leapYearConfig.start ?? leapYearConfig.leapStart ?? 0;
-      return game.i18n.format('CALENDARIA.LeapYear.Simple', { interval, start });
+      return format('CALENDARIA.LeapYear.Simple', { interval, start });
     }
     case 'gregorian':
-      return game.i18n.localize('CALENDARIA.LeapYear.Gregorian');
+      return localize('CALENDARIA.LeapYear.Gregorian');
     case 'custom': {
       const pattern = leapYearConfig.pattern || '';
-      return game.i18n.format('CALENDARIA.LeapYear.Custom', { pattern });
+      return format('CALENDARIA.LeapYear.Custom', { pattern });
     }
     default:
-      return game.i18n.localize('CALENDARIA.LeapYear.None');
+      return localize('CALENDARIA.LeapYear.None');
   }
 }

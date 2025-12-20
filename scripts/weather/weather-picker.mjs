@@ -7,6 +7,7 @@
  */
 
 import { MODULE, TEMPLATES, HOOKS } from '../constants.mjs';
+import { localize, format } from '../utils/localization.mjs';
 import { WEATHER_CATEGORIES, getPresetsByCategory } from './weather-presets.mjs';
 import WeatherManager from './weather-manager.mjs';
 
@@ -50,11 +51,11 @@ class WeatherPickerApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       context.categories.push({
         id: categoryId,
-        label: game.i18n.localize(category.label),
+        label: localize(category.label),
         presets: presets.map((p) => ({
           id: p.id,
-          label: game.i18n.localize(p.label),
-          description: p.description ? game.i18n.localize(p.description) : game.i18n.localize(p.label),
+          label: localize(p.label),
+          description: p.description ? localize(p.description) : localize(p.label),
           icon: p.icon,
           color: p.color
         }))
@@ -65,10 +66,10 @@ class WeatherPickerApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (customPresets.length > 0) {
       context.categories.push({
         id: 'custom',
-        label: game.i18n.localize(WEATHER_CATEGORIES.custom.label),
+        label: localize(WEATHER_CATEGORIES.custom.label),
         presets: customPresets.map((p) => {
-          const label = p.label.startsWith('CALENDARIA.') ? game.i18n.localize(p.label) : p.label;
-          const description = p.description ? (p.description.startsWith('CALENDARIA.') ? game.i18n.localize(p.description) : p.description) : label;
+          const label = p.label.startsWith('CALENDARIA.') ? localize(p.label) : p.label;
+          const description = p.description ? (p.description.startsWith('CALENDARIA.') ? localize(p.description) : p.description) : label;
           return { id: p.id, label, description, icon: p.icon, color: p.color };
         })
       });

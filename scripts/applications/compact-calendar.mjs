@@ -6,16 +6,17 @@
  * @author Tyler
  */
 
+import { CalendarApplication } from './calendar-application.mjs';
+import { dayOfWeek } from '../notes/utils/date-utils.mjs';
+import { isRecurringMatch } from '../notes/utils/recurrence.mjs';
+import { localize, format } from '../utils/localization.mjs';
 import { MODULE, SETTINGS, TEMPLATES, HOOKS } from '../constants.mjs';
+import { openWeatherPicker } from '../weather/weather-picker.mjs';
+import * as ViewUtils from './calendar-view-utils.mjs';
 import CalendarManager from '../calendar/calendar-manager.mjs';
 import NoteManager from '../notes/note-manager.mjs';
 import TimeKeeper, { getTimeIncrements } from '../time/time-keeper.mjs';
-import { dayOfWeek } from '../notes/utils/date-utils.mjs';
-import { isRecurringMatch } from '../notes/utils/recurrence.mjs';
-import { CalendarApplication } from './calendar-application.mjs';
-import * as ViewUtils from './calendar-view-utils.mjs';
 import WeatherManager from '../weather/weather-manager.mjs';
-import { openWeatherPicker } from '../weather/weather-picker.mjs';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -214,11 +215,11 @@ export class CompactCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
 
     return {
       id: weather.id,
-      label: game.i18n.localize(weather.label),
+      label: localize(weather.label),
       icon: weather.icon,
       color: weather.color,
       temperature: WeatherManager.formatTemperature(WeatherManager.getTemperature()),
-      tooltip: weather.description ? game.i18n.localize(weather.description) : game.i18n.localize(weather.label)
+      tooltip: weather.description ? localize(weather.description) : localize(weather.label)
     };
   }
 
@@ -266,7 +267,7 @@ export class CompactCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
         hasNotes: noteCount > 0,
         noteCount,
         isFestival: !!festivalDay,
-        festivalName: festivalDay ? game.i18n.localize(festivalDay.name) : null,
+        festivalName: festivalDay ? localize(festivalDay.name) : null,
         moonIcon: moonData?.icon ?? null,
         moonPhase: moonData?.tooltip ?? null,
         moonColor: moonData?.color ?? null
@@ -291,7 +292,7 @@ export class CompactCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
     return {
       year,
       month,
-      monthName: game.i18n.localize(monthData.name),
+      monthName: localize(monthData.name),
       yearDisplay: calendar.formatYearWithEra?.(year) ?? String(year),
       currentSeason,
       currentEra,
@@ -299,7 +300,7 @@ export class CompactCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
       daysInWeek,
       weekdays:
         calendar.days?.values?.map((wd) => {
-          const name = game.i18n.localize(wd.name);
+          const name = localize(wd.name);
           return name.substring(0, 2); // First 2 chars for compact view
         }) || []
     };
@@ -366,7 +367,7 @@ export class CompactCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
         // Format time range
         let timeLabel = '';
         if (isAllDay) {
-          timeLabel = game.i18n.localize('CALENDARIA.CompactCalendar.AllDay');
+          timeLabel = localize('CALENDARIA.CompactCalendar.AllDay');
         } else {
           const startTime = this._formatTime(start.hour, start.minute);
           const endTime = this._formatTime(end.hour, end.minute);
@@ -374,7 +375,7 @@ export class CompactCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
         }
 
         // Get author name from author document
-        const authorName = page.system.author?.name || game.i18n.localize('CALENDARIA.CompactCalendar.Unknown');
+        const authorName = page.system.author?.name || localize('CALENDARIA.CompactCalendar.Unknown');
 
         return {
           id: page.id,
@@ -410,7 +411,7 @@ export class CompactCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
     const { year, month, day } = this._selectedDate;
     const calendar = this.calendar;
     const monthData = calendar.months?.values?.[month];
-    const monthName = monthData ? game.i18n.localize(monthData.name) : '';
+    const monthName = monthData ? localize(monthData.name) : '';
     const yearDisplay = calendar.formatYearWithEra?.(year) ?? String(year);
     return `${monthName} ${day}, ${yearDisplay}`;
   }
@@ -704,7 +705,7 @@ export class CompactCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
   #onClockStateChange() {
     if (!this.rendered) return;
     const running = TimeKeeper.running;
-    const tooltip = running ? game.i18n.localize('CALENDARIA.TimeKeeper.Stop') : game.i18n.localize('CALENDARIA.TimeKeeper.Start');
+    const tooltip = running ? localize('CALENDARIA.TimeKeeper.Stop') : localize('CALENDARIA.TimeKeeper.Start');
 
     // Update time-toggle in time-display
     const timeToggle = this.element.querySelector('.time-toggle');
@@ -787,7 +788,7 @@ export class CompactCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     const page = await NoteManager.createNote({
-      name: game.i18n.localize('CALENDARIA.Note.NewNote'),
+      name: localize('CALENDARIA.Note.NewNote'),
       noteData: {
         startDate: { year: parseInt(year), month: parseInt(month), day: parseInt(day), hour: 12, minute: 0 },
         endDate: { year: parseInt(year), month: parseInt(month), day: parseInt(day), hour: 13, minute: 0 }
@@ -816,7 +817,7 @@ export class CompactCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
         icon.classList.toggle('fa-play', !TimeKeeper.running);
         icon.classList.toggle('fa-pause', TimeKeeper.running);
       }
-      timeToggle.dataset.tooltip = TimeKeeper.running ? game.i18n.localize('CALENDARIA.TimeKeeper.Stop') : game.i18n.localize('CALENDARIA.TimeKeeper.Start');
+      timeToggle.dataset.tooltip = TimeKeeper.running ? localize('CALENDARIA.TimeKeeper.Stop') : localize('CALENDARIA.TimeKeeper.Start');
     }
   }
 
@@ -1105,15 +1106,15 @@ export class CompactCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   _formatIncrement(key) {
     const labels = {
-      second: game.i18n.localize('CALENDARIA.TimeKeeper.Second'),
-      round: game.i18n.localize('CALENDARIA.TimeKeeper.Round'),
-      minute: game.i18n.localize('CALENDARIA.TimeKeeper.Minute'),
-      hour: game.i18n.localize('CALENDARIA.TimeKeeper.Hour'),
-      day: game.i18n.localize('CALENDARIA.TimeKeeper.Day'),
-      week: game.i18n.localize('CALENDARIA.TimeKeeper.Week'),
-      month: game.i18n.localize('CALENDARIA.TimeKeeper.Month'),
-      season: game.i18n.localize('CALENDARIA.TimeKeeper.Season'),
-      year: game.i18n.localize('CALENDARIA.TimeKeeper.Year')
+      second: localize('CALENDARIA.TimeKeeper.Second'),
+      round: localize('CALENDARIA.TimeKeeper.Round'),
+      minute: localize('CALENDARIA.TimeKeeper.Minute'),
+      hour: localize('CALENDARIA.TimeKeeper.Hour'),
+      day: localize('CALENDARIA.TimeKeeper.Day'),
+      week: localize('CALENDARIA.TimeKeeper.Week'),
+      month: localize('CALENDARIA.TimeKeeper.Month'),
+      season: localize('CALENDARIA.TimeKeeper.Season'),
+      year: localize('CALENDARIA.TimeKeeper.Year')
     };
     return labels[key] || key;
   }

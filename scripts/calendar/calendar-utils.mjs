@@ -6,6 +6,8 @@
  * @author Tyler
  */
 
+import { localize, format } from '../utils/localization.mjs';
+
 /**
  * Prelocalize calendar configuration data.
  * Recursively walks through the calendar definition and replaces localization keys with their localized values.
@@ -16,7 +18,7 @@
 export function preLocalizeCalendar(calendarData) {
   for (const key in calendarData) {
     const value = calendarData[key];
-    if (typeof value === 'string') calendarData[key] = game.i18n.localize(value);
+    if (typeof value === 'string') calendarData[key] = localize(value);
     else if (Array.isArray(value)) {
       for (const item of value) if (typeof item === 'object' && item !== null) preLocalizeCalendar(item);
     } else if (typeof value === 'object' && value !== null) {
@@ -75,11 +77,11 @@ export function getMonthAbbreviation(month) {
  */
 export function formatMonthDay(calendar, components, options = {}) {
   const festivalDay = findFestivalDay(calendar, components);
-  if (festivalDay) return game.i18n.localize(festivalDay.name);
+  if (festivalDay) return localize(festivalDay.name);
   const day = components.dayOfMonth + 1;
   const month = calendar.months.values[components.month];
   const monthName = options.abbreviated ? getMonthAbbreviation(month) : month.name;
-  return game.i18n.format('CALENDARIA.Formatters.DayMonth', { day, month: game.i18n.localize(monthName) });
+  return format('CALENDARIA.Formatters.DayMonth', { day, month: localize(monthName) });
 }
 
 /**
@@ -95,7 +97,7 @@ export function formatMonthDayYear(calendar, components, options = {}) {
   const festivalDay = findFestivalDay(calendar, components);
   if (festivalDay) {
     const year = components.year + (calendar.years?.yearZero ?? 0);
-    return game.i18n.format('CALENDARIA.Formatters.FestivalDayYear', { day: game.i18n.localize(festivalDay.name), yyyy: year });
+    return format('CALENDARIA.Formatters.FestivalDayYear', { day: localize(festivalDay.name), yyyy: year });
   }
 
   // Use standard formatting if no festival
@@ -103,7 +105,7 @@ export function formatMonthDayYear(calendar, components, options = {}) {
   const month = calendar.months.values[components.month];
   const monthName = options.abbreviated ? getMonthAbbreviation(month) : month.name;
   const year = components.year + (calendar.years?.yearZero ?? 0);
-  return game.i18n.format('CALENDARIA.Formatters.DayMonthYear', { day, month: game.i18n.localize(monthName), yyyy: year });
+  return format('CALENDARIA.Formatters.DayMonthYear', { day, month: localize(monthName), yyyy: year });
 }
 
 /**

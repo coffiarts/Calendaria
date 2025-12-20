@@ -5,16 +5,17 @@
  * @author Tyler
  */
 
-import { MODULE, SETTINGS, SYSTEM } from './constants.mjs';
+import { CalendarApplication } from './applications/calendar-application.mjs';
+import { initializeImporters } from './importers/index.mjs';
+import { localize, format } from './utils/localization.mjs';
 import { log } from './utils/logger.mjs';
+import { MODULE, SETTINGS, SYSTEM } from './constants.mjs';
 import { onRenderSceneConfig, onUpdateWorldTime } from './darkness.mjs';
+import { registerRestTimeHooks } from './integrations/rest-time.mjs';
 import CalendarManager from './calendar/calendar-manager.mjs';
+import EventScheduler from './time/event-scheduler.mjs';
 import NoteManager from './notes/note-manager.mjs';
 import TimeTracker from './time/time-tracker.mjs';
-import EventScheduler from './time/event-scheduler.mjs';
-import { CalendarApplication } from './applications/calendar-application.mjs';
-import { registerRestTimeHooks } from './integrations/rest-time.mjs';
-import { initializeImporters } from './importers/index.mjs';
 
 /**
  * Register all hooks for the Calendaria module.
@@ -80,7 +81,7 @@ function addJournalCalendarButton(app) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'calendaria-open-button';
-  button.innerHTML = `<i class="fas fa-calendar-days"></i> ${game.i18n.localize('CALENDARIA.HUD.OpenCalendar')}`;
+  button.innerHTML = `<i class="fas fa-calendar-days"></i> ${localize('CALENDARIA.HUD.OpenCalendar')}`;
   button.addEventListener('click', () => new CalendarApplication().render(true));
 
   footer.appendChild(button);

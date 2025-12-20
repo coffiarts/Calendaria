@@ -7,10 +7,11 @@
  */
 
 import BaseImporter from './base-importer.mjs';
-import { log } from '../utils/logger.mjs';
-import NoteManager from '../notes/note-manager.mjs';
-import CalendarManager from '../calendar/calendar-manager.mjs';
 import { ASSETS } from '../constants.mjs';
+import { localize, format } from '../utils/localization.mjs';
+import { log } from '../utils/logger.mjs';
+import CalendarManager from '../calendar/calendar-manager.mjs';
+import NoteManager from '../notes/note-manager.mjs';
 
 /**
  * Importer for Simple Calendar module data.
@@ -40,11 +41,11 @@ export default class SimpleCalendarImporter extends BaseImporter {
    * @returns {Promise<object>} Raw SC calendar data
    */
   async loadFromModule() {
-    if (!this.constructor.detect()) throw new Error(game.i18n.localize('CALENDARIA.Importer.SimpleCalendar.NotInstalled'));
+    if (!this.constructor.detect()) throw new Error(localize('CALENDARIA.Importer.SimpleCalendar.NotInstalled'));
 
     // SC stores calendar data in settings
     const calendars = game.settings.get('foundryvtt-simple-calendar', 'calendar-configuration') || [];
-    if (!calendars.length) throw new Error(game.i18n.localize('CALENDARIA.Importer.SimpleCalendar.NoCalendars'));
+    if (!calendars.length) throw new Error(localize('CALENDARIA.Importer.SimpleCalendar.NoCalendars'));
 
     // Get notes from the SC notes folder
     const notesFolder = game.folders.find((f) => f.getFlag('foundryvtt-simple-calendar', 'root') === true);
@@ -338,7 +339,8 @@ export default class SimpleCalendarImporter extends BaseImporter {
     let regularMonthIndex = 0;
     for (const month of months) {
       if (month.intercalary) {
-        for (let day = 1; day <= month.numberOfDays; day++) festivals.push({ name: month.numberOfDays === 1 ? month.name : `${month.name} (Day ${day})`, startDate: { month: regularMonthIndex, day: day } });
+        for (let day = 1; day <= month.numberOfDays; day++)
+          festivals.push({ name: month.numberOfDays === 1 ? month.name : `${month.name} (Day ${day})`, startDate: { month: regularMonthIndex, day: day } });
       } else {
         regularMonthIndex++;
       }

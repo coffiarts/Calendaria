@@ -8,6 +8,7 @@
 
 import { MODULE, TEMPLATES } from '../constants.mjs';
 import { log } from '../utils/logger.mjs';
+import { localize, format } from '../utils/localization.mjs';
 import { getImporterOptions, createImporter } from '../importers/index.mjs';
 import { CalendarEditor } from './calendar-editor.mjs';
 
@@ -302,7 +303,7 @@ export class ImporterApp extends HandlebarsApplicationMixin(ApplicationV2) {
   async #handleFile(file) {
     const importer = this.#getSelectedImporter();
     if (!importer) {
-      ui.notifications.warn(game.i18n.localize('CALENDARIA.Importer.SelectSourceFirst'));
+      ui.notifications.warn(localize('CALENDARIA.Importer.SelectSourceFirst'));
       return;
     }
 
@@ -313,7 +314,7 @@ export class ImporterApp extends HandlebarsApplicationMixin(ApplicationV2) {
       await this.#processData(data);
     } catch (error) {
       log(2, 'Error parsing file:', error);
-      this.#errorMessage = game.i18n.format('CALENDARIA.Importer.ParseError', { error: error.message });
+      this.#errorMessage = format('CALENDARIA.Importer.ParseError', { error: error.message });
       this.render();
     }
   }
@@ -383,7 +384,7 @@ export class ImporterApp extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   static async #onSubmit(event, form, formData) {
     if (!this.#transformedData) {
-      ui.notifications.warn(game.i18n.localize('CALENDARIA.Importer.NoData'));
+      ui.notifications.warn(localize('CALENDARIA.Importer.NoData'));
       return;
     }
 
@@ -449,7 +450,7 @@ export class ImporterApp extends HandlebarsApplicationMixin(ApplicationV2) {
     await this.close();
     CalendarEditor.createFromData(this.#transformedData, { suggestedId: calendarId });
 
-    ui.notifications.info(game.i18n.localize('CALENDARIA.Importer.OpeningEditor'));
+    ui.notifications.info(localize('CALENDARIA.Importer.OpeningEditor'));
   }
 
   /* -------------------------------------------- */

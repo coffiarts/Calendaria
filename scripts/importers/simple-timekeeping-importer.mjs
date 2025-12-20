@@ -7,13 +7,14 @@
  * @author Tyler
  */
 
-import BaseImporter from './base-importer.mjs';
-import { log } from '../utils/logger.mjs';
-import NoteManager from '../notes/note-manager.mjs';
-import CalendarManager from '../calendar/calendar-manager.mjs';
-import WeatherManager from '../weather/weather-manager.mjs';
-import { getDefaultZoneConfig } from '../weather/climate-data.mjs';
 import { getDefaultMoonPhases } from '../calendar/data/calendar-defaults.mjs';
+import { getDefaultZoneConfig } from '../weather/climate-data.mjs';
+import { localize, format } from '../utils/localization.mjs';
+import { log } from '../utils/logger.mjs';
+import BaseImporter from './base-importer.mjs';
+import CalendarManager from '../calendar/calendar-manager.mjs';
+import NoteManager from '../notes/note-manager.mjs';
+import WeatherManager from '../weather/weather-manager.mjs';
 
 /**
  * Importer for Simple Timekeeping module data.
@@ -89,11 +90,11 @@ export default class SimpleTimekeepingImporter extends BaseImporter {
    * @returns {Promise<object>} Raw STK calendar data
    */
   async loadFromModule() {
-    if (!this.constructor.detect()) throw new Error(game.i18n.localize('CALENDARIA.Importer.SimpleTimekeeping.NotInstalled'));
+    if (!this.constructor.detect()) throw new Error(localize('CALENDARIA.Importer.SimpleTimekeeping.NotInstalled'));
 
     // Get STK configuration
     const config = game.settings.get('simple-timekeeping', 'configuration');
-    if (!config) throw new Error(game.i18n.localize('CALENDARIA.Importer.SimpleTimekeeping.NoConfig'));
+    if (!config) throw new Error(localize('CALENDARIA.Importer.SimpleTimekeeping.NoConfig'));
 
     // Resolve calendar data
     let calendarData;
@@ -354,7 +355,7 @@ export default class SimpleTimekeepingImporter extends BaseImporter {
     if (!str) return '';
     // Check if it's a localization key (contains dots like "CALENDAR.GREGORIAN.January")
     if (str.includes('.') && !str.includes(' ')) {
-      const localized = game.i18n.localize(str);
+      const localized = localize(str);
       // If localization failed (returned the key), use the last part of the key
       if (localized === str) {
         const parts = str.split('.');

@@ -8,6 +8,7 @@
  */
 
 import * as LeapYearUtils from '../leap-year-utils.mjs';
+import { localize, format } from '../../utils/localization.mjs';
 import { formatEraTemplate } from '../calendar-utils.mjs';
 
 const { ArrayField, BooleanField, NumberField, SchemaField, StringField } = foundry.data.fields;
@@ -710,19 +711,19 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
    */
   static #getSubPhaseName(phase, dayWithinPhase, phaseDuration) {
     const phaseName = phase.name;
-    if (phaseDuration <= 1) return game.i18n.localize(phaseName);
+    if (phaseDuration <= 1) return localize(phaseName);
 
     // Divide phase into thirds: Rising, Peak, Fading
     const third = phaseDuration / 3;
 
     if (dayWithinPhase < third) {
-      if (phase.rising) return game.i18n.localize(phase.rising);
-      return game.i18n.format('CALENDARIA.MoonPhase.SubPhase.Rising', { phase: game.i18n.localize(phaseName) });
+      if (phase.rising) return localize(phase.rising);
+      return format('CALENDARIA.MoonPhase.SubPhase.Rising', { phase: localize(phaseName) });
     } else if (dayWithinPhase >= phaseDuration - third) {
-      if (phase.fading) return game.i18n.localize(phase.fading);
-      return game.i18n.format('CALENDARIA.MoonPhase.SubPhase.Fading', { phase: game.i18n.localize(phaseName) });
+      if (phase.fading) return localize(phase.fading);
+      return format('CALENDARIA.MoonPhase.SubPhase.Fading', { phase: localize(phaseName) });
     }
-    return game.i18n.localize(phaseName);
+    return localize(phaseName);
   }
 
   /**
@@ -859,8 +860,8 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     const eraData = this.getCurrentEra({ year: year - (this.years?.yearZero ?? 0), month: 0, dayOfMonth: 0 });
     if (!eraData) return String(year);
 
-    const abbr = eraData.abbreviation ? game.i18n.localize(eraData.abbreviation) : '';
-    const eraName = eraData.name ? game.i18n.localize(eraData.name) : '';
+    const abbr = eraData.abbreviation ? localize(eraData.abbreviation) : '';
+    const eraName = eraData.name ? localize(eraData.name) : '';
 
     // Template mode: use {{variable}} pattern substitution
     if (eraData.template) {
@@ -950,7 +951,7 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     const nameIndex = weekNumber % weekNames.length;
     const week = weekNames[nameIndex];
 
-    return { weekNumber: weekNumber + 1, weekName: game.i18n.localize(week?.name ?? ''), weekAbbr: week?.abbreviation ? game.i18n.localize(week.abbreviation) : '', type: this.weeks.type };
+    return { weekNumber: weekNumber + 1, weekName: localize(week?.name ?? ''), weekAbbr: week?.abbreviation ? localize(week.abbreviation) : '', type: this.weeks.type };
   }
 
   /**
@@ -1022,7 +1023,7 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
       values.push({ cycleName: cycle.name, entryName: entry?.name ?? '', index: normalizedIndex });
 
       // Add to text replacements for format template
-      textReplacements[(i + 1).toString()] = game.i18n.localize(entry?.name ?? '');
+      textReplacements[(i + 1).toString()] = localize(entry?.name ?? '');
     }
 
     // Format the cycle text using the template
@@ -1088,8 +1089,8 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
 
     // Canonical hour lookup
     const canonicalHour = calendar.getCanonicalHour?.(components);
-    const chName = canonicalHour ? game.i18n.localize(canonicalHour.name) : '';
-    const chAbbr = canonicalHour?.abbreviation ? game.i18n.localize(canonicalHour.abbreviation) : '';
+    const chName = canonicalHour ? localize(canonicalHour.name) : '';
+    const chAbbr = canonicalHour?.abbreviation ? localize(canonicalHour.abbreviation) : '';
 
     // Named week lookup
     const currentWeek = calendar.getCurrentWeek?.(components);
@@ -1100,7 +1101,7 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     return {
       y: year,
       yyyy: String(year).padStart(4, '0'),
-      B: game.i18n.localize(month?.name ?? 'Unknown'),
+      B: localize(month?.name ?? 'Unknown'),
       b: month?.abbreviation ?? '',
       m: month?.ordinal ?? components.month + 1,
       mm: String(month?.ordinal ?? components.month + 1).padStart(2, '0'),
@@ -1134,10 +1135,10 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
    */
   static formatMonthDay(calendar, components, options = {}) {
     const festivalDay = calendar.findFestivalDay?.(components);
-    if (festivalDay) return game.i18n.localize(festivalDay.name);
+    if (festivalDay) return localize(festivalDay.name);
 
     const context = CalendariaCalendar.dateFormattingParts(calendar, components);
-    return game.i18n.format('CALENDARIA.Formatters.DayMonth', { day: context.d, month: context.B });
+    return format('CALENDARIA.Formatters.DayMonth', { day: context.d, month: context.B });
   }
 
   /**
@@ -1151,11 +1152,11 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     const festivalDay = calendar.findFestivalDay?.(components);
     if (festivalDay) {
       const context = CalendariaCalendar.dateFormattingParts(calendar, components);
-      return game.i18n.format('CALENDARIA.Formatters.FestivalDayYear', { day: game.i18n.localize(festivalDay.name), yyyy: context.y });
+      return format('CALENDARIA.Formatters.FestivalDayYear', { day: localize(festivalDay.name), yyyy: context.y });
     }
 
     const context = CalendariaCalendar.dateFormattingParts(calendar, components);
-    return game.i18n.format('CALENDARIA.Formatters.DayMonthYear', { day: context.d, month: context.B, yyyy: context.y });
+    return format('CALENDARIA.Formatters.DayMonthYear', { day: context.d, month: context.B, yyyy: context.y });
   }
 
   /**
@@ -1229,29 +1230,29 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
    */
   static getFormatVariables() {
     return {
-      y: game.i18n.localize('CALENDARIA.FormatVar.y'),
-      yyyy: game.i18n.localize('CALENDARIA.FormatVar.yyyy'),
-      B: game.i18n.localize('CALENDARIA.FormatVar.B'),
-      b: game.i18n.localize('CALENDARIA.FormatVar.b'),
-      m: game.i18n.localize('CALENDARIA.FormatVar.m'),
-      mm: game.i18n.localize('CALENDARIA.FormatVar.mm'),
-      d: game.i18n.localize('CALENDARIA.FormatVar.d'),
-      dd: game.i18n.localize('CALENDARIA.FormatVar.dd'),
-      j: game.i18n.localize('CALENDARIA.FormatVar.j'),
-      w: game.i18n.localize('CALENDARIA.FormatVar.w'),
-      H: game.i18n.localize('CALENDARIA.FormatVar.H'),
-      h: game.i18n.localize('CALENDARIA.FormatVar.h'),
-      hh: game.i18n.localize('CALENDARIA.FormatVar.hh'),
-      M: game.i18n.localize('CALENDARIA.FormatVar.M'),
-      S: game.i18n.localize('CALENDARIA.FormatVar.S'),
-      p: game.i18n.localize('CALENDARIA.FormatVar.p'),
-      P: game.i18n.localize('CALENDARIA.FormatVar.P'),
-      ch: game.i18n.localize('CALENDARIA.FormatVar.ch'),
-      chAbbr: game.i18n.localize('CALENDARIA.FormatVar.chAbbr'),
-      W: game.i18n.localize('CALENDARIA.FormatVar.W'),
-      WW: game.i18n.localize('CALENDARIA.FormatVar.WW'),
-      WN: game.i18n.localize('CALENDARIA.FormatVar.WN'),
-      Wn: game.i18n.localize('CALENDARIA.FormatVar.Wn')
+      y: localize('CALENDARIA.FormatVar.y'),
+      yyyy: localize('CALENDARIA.FormatVar.yyyy'),
+      B: localize('CALENDARIA.FormatVar.B'),
+      b: localize('CALENDARIA.FormatVar.b'),
+      m: localize('CALENDARIA.FormatVar.m'),
+      mm: localize('CALENDARIA.FormatVar.mm'),
+      d: localize('CALENDARIA.FormatVar.d'),
+      dd: localize('CALENDARIA.FormatVar.dd'),
+      j: localize('CALENDARIA.FormatVar.j'),
+      w: localize('CALENDARIA.FormatVar.w'),
+      H: localize('CALENDARIA.FormatVar.H'),
+      h: localize('CALENDARIA.FormatVar.h'),
+      hh: localize('CALENDARIA.FormatVar.hh'),
+      M: localize('CALENDARIA.FormatVar.M'),
+      S: localize('CALENDARIA.FormatVar.S'),
+      p: localize('CALENDARIA.FormatVar.p'),
+      P: localize('CALENDARIA.FormatVar.P'),
+      ch: localize('CALENDARIA.FormatVar.ch'),
+      chAbbr: localize('CALENDARIA.FormatVar.chAbbr'),
+      W: localize('CALENDARIA.FormatVar.W'),
+      WW: localize('CALENDARIA.FormatVar.WW'),
+      WN: localize('CALENDARIA.FormatVar.WN'),
+      Wn: localize('CALENDARIA.FormatVar.Wn')
     };
   }
 

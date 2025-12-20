@@ -8,11 +8,12 @@
 
 const { HandlebarsApplicationMixin } = foundry.applications.api;
 
-import { MODULE, SETTINGS, TEMPLATES } from '../constants.mjs';
-import { log } from '../utils/logger.mjs';
-import CalendarManager from '../calendar/calendar-manager.mjs';
 import { getAllCategories, addCustomCategory, deleteCustomCategory, isCustomCategory, getRepeatOptions } from '../notes/note-data.mjs';
 import { getRecurrenceDescription, generateRandomOccurrences, needsRandomRegeneration } from '../notes/utils/recurrence.mjs';
+import { localize, format } from '../utils/localization.mjs';
+import { log } from '../utils/logger.mjs';
+import { MODULE, SETTINGS, TEMPLATES } from '../constants.mjs';
+import CalendarManager from '../calendar/calendar-manager.mjs';
 import NoteManager from '../notes/note-manager.mjs';
 
 export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applications.sheets.journal.JournalEntryPageSheet) {
@@ -303,8 +304,8 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
     context.moons =
       calendar?.moons?.map((moon, index) => ({
         index,
-        name: game.i18n.localize(moon.name),
-        phases: moon.phases?.map((phase) => ({ name: game.i18n.localize(phase.name), start: phase.start, end: phase.end })) || []
+        name: localize(moon.name),
+        phases: moon.phases?.map((phase) => ({ name: localize(phase.name), start: phase.start, end: phase.end })) || []
       })) || [];
     context.hasMoons = context.moons.length > 0;
 
@@ -390,7 +391,7 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
     const months = calendar?.months?.values || [];
     context.monthOptions = months.map((m, idx) => ({
       index: idx,
-      name: game.i18n.localize(m.name),
+      name: localize(m.name),
       selected: rangeMonthValue === idx,
       selectedMin: rangeMonthMin === idx,
       selectedMax: rangeMonthMax === idx
@@ -659,7 +660,7 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
   _formatDateDisplay(calendar, year, month, day) {
     if (!calendar || !calendar.months?.values) return `${day} / ${month + 1} / ${year}`;
     const monthData = calendar.months.values[month];
-    const monthName = monthData?.name ? game.i18n.localize(monthData.name) : `Month ${month + 1}`;
+    const monthName = monthData?.name ? localize(monthData.name) : `Month ${month + 1}`;
     return `${day} ${monthName}, ${year}`;
   }
 
@@ -702,7 +703,7 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
     const displaySpan = target.querySelector('.date-display');
     if (displaySpan) {
       const monthData = calendar.months.values[result.month];
-      const monthName = monthData?.name ? game.i18n.localize(monthData.name) : `Month ${result.month + 1}`;
+      const monthName = monthData?.name ? localize(monthData.name) : `Month ${result.month + 1}`;
       displaySpan.textContent = `${result.day} ${monthName}, ${result.year}`;
     }
 
@@ -722,7 +723,7 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
    */
   static async _showDatePickerDialog(calendar, currentYear, currentMonth, currentDay) {
     // Build month options
-    const monthOptions = calendar.months.values.map((m, i) => `<option value="${i}" ${i === currentMonth ? 'selected' : ''}>${game.i18n.localize(m.name)}</option>`).join('');
+    const monthOptions = calendar.months.values.map((m, i) => `<option value="${i}" ${i === currentMonth ? 'selected' : ''}>${localize(m.name)}</option>`).join('');
 
     // Build day options for current month
     const daysInMonth = calendar.months.values[currentMonth]?.days || 30;
@@ -798,8 +799,8 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
     if (!this.document.isOwner) return;
 
     const confirmed = await foundry.applications.api.DialogV2.confirm({
-      window: { title: game.i18n.localize('CALENDARIA.ContextMenu.DeleteNote') },
-      content: `<p>${game.i18n.format('CALENDARIA.ContextMenu.DeleteConfirm', { name: this.document.name })}</p>`,
+      window: { title: localize('CALENDARIA.ContextMenu.DeleteNote') },
+      content: `<p>${format('CALENDARIA.ContextMenu.DeleteConfirm', { name: this.document.name })}</p>`,
       rejectClose: false,
       modal: true
     });
@@ -834,7 +835,7 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
 
     // Reset title
     const titleInput = form.querySelector('input[name="name"]');
-    if (titleInput) titleInput.value = game.i18n.localize('CALENDARIA.Note.NewNote');
+    if (titleInput) titleInput.value = localize('CALENDARIA.Note.NewNote');
 
     // Reset emblem
     const iconInput = form.querySelector('input[name="system.icon"]');

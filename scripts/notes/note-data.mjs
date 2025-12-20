@@ -7,6 +7,7 @@
  */
 
 import { MODULE, SETTINGS } from '../constants.mjs';
+import { localize, format } from '../utils/localization.mjs';
 import { isValidDate } from './utils/date-utils.mjs';
 
 /**
@@ -248,7 +249,7 @@ export function createNoteStub(page) {
  */
 export function getRepeatOptions(selected = 'never') {
   const choices = CONFIG.JournalEntryPage.dataModels['calendaria.calendarnote']._schema.fields.repeat.choices;
-  return choices.map((value) => ({ value, label: game.i18n.localize(`CALENDARIA.Repeat.${value}`), selected: value === selected }));
+  return choices.map((value) => ({ value, label: localize(`CALENDARIA.Repeat.${value}`), selected: value === selected }));
 }
 
 /**
@@ -257,16 +258,16 @@ export function getRepeatOptions(selected = 'never') {
  */
 export function getPredefinedCategories() {
   return [
-    { id: 'holiday', label: game.i18n.localize('CALENDARIA.Category.Holiday'), color: '#ff6b6b', icon: 'fa-gift' },
-    { id: 'festival', label: game.i18n.localize('CALENDARIA.Category.Festival'), color: '#f0a500', icon: 'fa-masks-theater' },
-    { id: 'quest', label: game.i18n.localize('CALENDARIA.Category.Quest'), color: '#4a9eff', icon: 'fa-scroll' },
-    { id: 'session', label: game.i18n.localize('CALENDARIA.Category.Session'), color: '#51cf66', icon: 'fa-users' },
-    { id: 'combat', label: game.i18n.localize('CALENDARIA.Category.Combat'), color: '#ff6b6b', icon: 'fa-swords' },
-    { id: 'meeting', label: game.i18n.localize('CALENDARIA.Category.Meeting'), color: '#845ef7', icon: 'fa-handshake' },
-    { id: 'birthday', label: game.i18n.localize('CALENDARIA.Category.Birthday'), color: '#ff6b6b', icon: 'fa-cake-candles' },
-    { id: 'deadline', label: game.i18n.localize('CALENDARIA.Category.Deadline'), color: '#f03e3e', icon: 'fa-hourglass-end' },
-    { id: 'reminder', label: game.i18n.localize('CALENDARIA.Category.Reminder'), color: '#fcc419', icon: 'fa-bell' },
-    { id: 'other', label: game.i18n.localize('CALENDARIA.Category.Other'), color: '#868e96', icon: 'fa-circle' }
+    { id: 'holiday', label: localize('CALENDARIA.Category.Holiday'), color: '#ff6b6b', icon: 'fa-gift' },
+    { id: 'festival', label: localize('CALENDARIA.Category.Festival'), color: '#f0a500', icon: 'fa-masks-theater' },
+    { id: 'quest', label: localize('CALENDARIA.Category.Quest'), color: '#4a9eff', icon: 'fa-scroll' },
+    { id: 'session', label: localize('CALENDARIA.Category.Session'), color: '#51cf66', icon: 'fa-users' },
+    { id: 'combat', label: localize('CALENDARIA.Category.Combat'), color: '#ff6b6b', icon: 'fa-swords' },
+    { id: 'meeting', label: localize('CALENDARIA.Category.Meeting'), color: '#845ef7', icon: 'fa-handshake' },
+    { id: 'birthday', label: localize('CALENDARIA.Category.Birthday'), color: '#ff6b6b', icon: 'fa-cake-candles' },
+    { id: 'deadline', label: localize('CALENDARIA.Category.Deadline'), color: '#f03e3e', icon: 'fa-hourglass-end' },
+    { id: 'reminder', label: localize('CALENDARIA.Category.Reminder'), color: '#fcc419', icon: 'fa-bell' },
+    { id: 'other', label: localize('CALENDARIA.Category.Other'), color: '#868e96', icon: 'fa-circle' }
   ];
 }
 

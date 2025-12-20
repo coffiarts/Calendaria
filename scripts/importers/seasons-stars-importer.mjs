@@ -6,11 +6,12 @@
  * @author Tyler
  */
 
-import BaseImporter from './base-importer.mjs';
-import { log } from '../utils/logger.mjs';
-import NoteManager from '../notes/note-manager.mjs';
-import CalendarManager from '../calendar/calendar-manager.mjs';
 import { ASSETS } from '../constants.mjs';
+import { localize, format } from '../utils/localization.mjs';
+import { log } from '../utils/logger.mjs';
+import BaseImporter from './base-importer.mjs';
+import CalendarManager from '../calendar/calendar-manager.mjs';
+import NoteManager from '../notes/note-manager.mjs';
 
 /**
  * Importer for Seasons & Stars module data.
@@ -53,10 +54,10 @@ export default class SeasonsStarsImporter extends BaseImporter {
    * @returns {Promise<object>} Raw S&S calendar data
    */
   async loadFromModule() {
-    if (!this.constructor.detect()) throw new Error(game.i18n.localize('CALENDARIA.Importer.SeasonsStars.NotInstalled'));
+    if (!this.constructor.detect()) throw new Error(localize('CALENDARIA.Importer.SeasonsStars.NotInstalled'));
 
     const calendarData = game.settings.get('seasons-and-stars', 'activeCalendarData');
-    if (!calendarData) throw new Error(game.i18n.localize('CALENDARIA.Importer.SeasonsStars.NoCalendar'));
+    if (!calendarData) throw new Error(localize('CALENDARIA.Importer.SeasonsStars.NoCalendar'));
 
     // Also get world events if available
     let worldEvents = [];
@@ -85,7 +86,7 @@ export default class SeasonsStarsImporter extends BaseImporter {
     log(3, 'Transforming Seasons & Stars data:', label);
 
     // Log warning for unsupported features
-    if (calendar.variants) log(2, game.i18n.localize('CALENDARIA.Importer.SeasonsStars.Warning.Variants'));
+    if (calendar.variants) log(2, localize('CALENDARIA.Importer.SeasonsStars.Warning.Variants'));
 
     const weekdays = this.#transformWeekdays(calendar.weekdays);
     const months = this.#transformMonths(calendar.months);
@@ -521,7 +522,7 @@ export default class SeasonsStarsImporter extends BaseImporter {
           day: 1 // Placeholder - ordinal dates can't be accurately represented
         };
         note.importWarnings = [`Ordinal recurrence (${rec.occurrence} ${rec.weekday} of month) imported as first of month`];
-        log(2, game.i18n.localize('CALENDARIA.Importer.SeasonsStars.Warning.OrdinalRecurrence'));
+        log(2, localize('CALENDARIA.Importer.SeasonsStars.Warning.OrdinalRecurrence'));
       } else if (rec.type === 'interval') {
         note.repeat = 'yearly';
         note.interval = rec.intervalYears;

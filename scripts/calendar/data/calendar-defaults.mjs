@@ -8,6 +8,7 @@
 
 import { getDefaultZoneConfig } from '../../weather/climate-data.mjs';
 import { ASSETS } from '../../constants.mjs';
+import { localize, format } from '../../utils/localization.mjs';
 
 /* -------------------------------------------- */
 /*  Blank Calendar Factory                       */
@@ -24,10 +25,10 @@ export function createBlankCalendar() {
     leapYearConfig: null,
     years: { yearZero: 0, firstWeekday: 0, leapYear: null },
     months: {
-      values: [{ name: game.i18n.format('CALENDARIA.Editor.Default.MonthName', { num: 1 }), abbreviation: game.i18n.format('CALENDARIA.Editor.Default.MonthAbbr', { num: 1 }), ordinal: 1, days: 30 }]
+      values: [{ name: format('CALENDARIA.Editor.Default.MonthName', { num: 1 }), abbreviation: format('CALENDARIA.Editor.Default.MonthAbbr', { num: 1 }), ordinal: 1, days: 30 }]
     },
     days: {
-      values: [{ name: game.i18n.format('CALENDARIA.Editor.Default.DayName', { num: 1 }), abbreviation: game.i18n.format('CALENDARIA.Editor.Default.DayAbbr', { num: 1 }), ordinal: 1 }],
+      values: [{ name: format('CALENDARIA.Editor.Default.DayName', { num: 1 }), abbreviation: format('CALENDARIA.Editor.Default.DayAbbr', { num: 1 }), ordinal: 1 }],
       daysPerYear: 365,
       hoursPerDay: 24,
       minutesPerHour: 60,

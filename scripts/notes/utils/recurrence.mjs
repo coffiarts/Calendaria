@@ -17,6 +17,7 @@
 // - Consider calendar-specific season definitions
 
 import { compareDates, compareDays, daysBetween, monthsBetween, dayOfWeek, isSameDay, addDays, addMonths, addYears } from './date-utils.mjs';
+import { localize, format } from '../../utils/localization.mjs';
 import CalendarManager from '../../calendar/calendar-manager.mjs';
 import NoteManager from '../note-manager.mjs';
 
@@ -872,7 +873,7 @@ function getMoonConditionsDescription(moonConditions) {
 
   for (const cond of moonConditions) {
     const moon = calendar?.moons?.[cond.moonIndex];
-    const moonName = moon?.name ? game.i18n.localize(moon.name) : `Moon ${cond.moonIndex + 1}`;
+    const moonName = moon?.name ? localize(moon.name) : `Moon ${cond.moonIndex + 1}`;
 
     // Find phase name(s) that match the condition range
     const matchingPhases = moon?.phases?.filter((p) => {
@@ -886,10 +887,10 @@ function getMoonConditionsDescription(moonConditions) {
     });
 
     if (matchingPhases?.length === 1) {
-      const phaseName = game.i18n.localize(matchingPhases[0].name);
+      const phaseName = localize(matchingPhases[0].name);
       descriptions.push(`${moonName}: ${phaseName}`);
     } else if (matchingPhases?.length > 1) {
-      const phaseNames = matchingPhases.map((p) => game.i18n.localize(p.name)).join(', ');
+      const phaseNames = matchingPhases.map((p) => localize(p.name)).join(', ');
       descriptions.push(`${moonName}: ${phaseNames}`);
     } else {
       descriptions.push(`${moonName}: custom phase`);

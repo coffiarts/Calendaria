@@ -7,6 +7,7 @@
  */
 
 import { MODULE, SETTINGS, TEMPLATES, SYSTEM } from '../constants.mjs';
+import { localize, format } from '../utils/localization.mjs';
 import { log } from '../utils/logger.mjs';
 import { CalendarApplication } from './calendar-application.mjs';
 
@@ -203,7 +204,7 @@ export class CalendariaHUD extends BaseClass {
     if (startButtons.querySelector('[data-action="openCalendar"]')) return;
 
     // Create button element
-    const label = game.i18n.localize('CALENDARIA.HUD.OpenCalendar');
+    const label = localize('CALENDARIA.HUD.OpenCalendar');
     const li = document.createElement('li');
     li.className = 'calendar-button';
     li.innerHTML = `
@@ -235,7 +236,7 @@ export class CalendariaHUD extends BaseClass {
 
     // Get current lock state
     const isLocked = game.settings.get(MODULE.ID, SETTINGS.POSITION_LOCKED);
-    const label = game.i18n.localize(isLocked ? 'CALENDARIA.HUD.UnlockPosition' : 'CALENDARIA.HUD.LockPosition');
+    const label = localize(isLocked ? 'CALENDARIA.HUD.UnlockPosition' : 'CALENDARIA.HUD.LockPosition');
     const icon = isLocked ? 'fa-lock' : 'fa-lock-open';
 
     // Create button element
@@ -258,7 +259,7 @@ export class CalendariaHUD extends BaseClass {
       await game.settings.set(MODULE.ID, SETTINGS.POSITION_LOCKED, newLock);
 
       // Update button UI in-place (avoid full re-render which causes position jump)
-      const newLabel = game.i18n.localize(newLock ? 'CALENDARIA.HUD.UnlockPosition' : 'CALENDARIA.HUD.LockPosition');
+      const newLabel = localize(newLock ? 'CALENDARIA.HUD.UnlockPosition' : 'CALENDARIA.HUD.LockPosition');
       const newIcon = newLock ? 'fa-lock' : 'fa-lock-open';
       button.dataset.tooltip = newLabel;
       button.setAttribute('aria-label', newLabel);

@@ -7,13 +7,14 @@
  * @author Tyler
  */
 
-import { MODULE, SETTINGS, HOOKS } from '../constants.mjs';
-import { log } from '../utils/logger.mjs';
 import { CalendariaSocket } from '../utils/socket.mjs';
-import CalendarManager from '../calendar/calendar-manager.mjs';
-import { getPreset, getAllPresets, ALL_PRESETS, WEATHER_CATEGORIES } from './weather-presets.mjs';
 import { CLIMATE_ZONE_TEMPLATES } from './climate-data.mjs';
 import { generateWeather, generateForecast } from './weather-generator.mjs';
+import { getPreset, getAllPresets, ALL_PRESETS, WEATHER_CATEGORIES } from './weather-presets.mjs';
+import { localize, format } from '../utils/localization.mjs';
+import { log } from '../utils/logger.mjs';
+import { MODULE, SETTINGS, HOOKS } from '../constants.mjs';
+import CalendarManager from '../calendar/calendar-manager.mjs';
 
 /**
  * Weather Manager singleton.
@@ -80,7 +81,7 @@ class WeatherManager {
   async setWeather(presetId, options = {}) {
     if (!game.user.isGM) {
       log(1, 'Only GMs can set weather');
-      ui.notifications.error(game.i18n.localize('CALENDARIA.Weather.Error.GMOnly'));
+      ui.notifications.error(localize('CALENDARIA.Weather.Error.GMOnly'));
       return this.#currentWeather;
     }
 
@@ -89,7 +90,7 @@ class WeatherManager {
 
     if (!preset) {
       log(2, `Weather preset not found: ${presetId}`);
-      ui.notifications.warn(game.i18n.format('CALENDARIA.Weather.Error.PresetNotFound', { id: presetId }));
+      ui.notifications.warn(format('CALENDARIA.Weather.Error.PresetNotFound', { id: presetId }));
       return this.#currentWeather;
     }
 
@@ -126,7 +127,7 @@ class WeatherManager {
   async setCustomWeather(weatherData, broadcast = true) {
     if (!game.user.isGM) {
       log(1, 'Only GMs can set weather');
-      ui.notifications.error(game.i18n.localize('CALENDARIA.Weather.Error.GMOnly'));
+      ui.notifications.error(localize('CALENDARIA.Weather.Error.GMOnly'));
       return this.#currentWeather;
     }
 
@@ -268,7 +269,7 @@ class WeatherManager {
       customPresets,
       getSeasonForDate: (year, month, day) => {
         const season = calendar.getCurrentSeason?.({ month, dayOfMonth: day - 1 });
-        return season ? game.i18n.localize(season.name) : null;
+        return season ? localize(season.name) : null;
       }
     });
   }
@@ -300,7 +301,7 @@ class WeatherManager {
     if (!calendar?.getCurrentSeason) return null;
 
     const season = calendar.getCurrentSeason(game.time.components);
-    return season ? game.i18n.localize(season.name) : null;
+    return season ? localize(season.name) : null;
   }
 
   /**
@@ -426,7 +427,7 @@ class WeatherManager {
     // Check for duplicate ID
     if (customPresets.some((p) => p.id === preset.id) || ALL_PRESETS.some((p) => p.id === preset.id)) {
       log(2, `Weather preset ID already exists: ${preset.id}`);
-      ui.notifications.warn(game.i18n.format('CALENDARIA.Weather.Error.DuplicateId', { id: preset.id }));
+      ui.notifications.warn(format('CALENDARIA.Weather.Error.DuplicateId', { id: preset.id }));
       return null;
     }
 

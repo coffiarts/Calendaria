@@ -4,14 +4,15 @@
  * @author Tyler
  */
 
-import { MODULE, SETTINGS } from './constants.mjs';
+import { CalendarEditor } from './applications/calendar-editor.mjs';
+import { ImporterApp } from './applications/importer-app.mjs';
+import { localize, format } from './utils/localization.mjs';
 import { log } from './utils/logger.mjs';
+import { MacroTriggerConfig } from './applications/settings/macro-trigger-config.mjs';
+import { MODULE, SETTINGS } from './constants.mjs';
 import { ResetPositionDialog } from './applications/settings/reset-position.mjs';
 import { ThemeEditor } from './applications/settings/theme-editor.mjs';
-import { CalendarEditor } from './applications/calendar-editor.mjs';
 import { TimeKeeperHUD } from './applications/time-keeper-hud.mjs';
-import { ImporterApp } from './applications/importer-app.mjs';
-import { MacroTriggerConfig } from './applications/settings/macro-trigger-config.mjs';
 
 /**
  * Register all module settings with Foundry VTT.
@@ -368,7 +369,7 @@ export function registerReadySettings() {
         acc[user.id] = user.name;
         return acc;
       },
-      { '': game.i18n.localize('CALENDARIA.Settings.PrimaryGM.Auto') }
+      { '': localize('CALENDARIA.Settings.PrimaryGM.Auto') }
     );
 
   /** Primary GM user ID override for sync operations */

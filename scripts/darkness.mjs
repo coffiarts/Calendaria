@@ -5,6 +5,7 @@
  */
 
 import { MODULE, SETTINGS, SCENE_FLAGS } from './constants.mjs';
+import { localize, format } from './utils/localization.mjs';
 import { log } from './utils/logger.mjs';
 
 /**
@@ -95,13 +96,13 @@ export function onRenderSceneConfig(app, html, data) {
   /** @todo move this to template file */
   const formGroup = `
     <div class="form-group slim">
-      <label>${game.i18n.localize('CALENDARIA.Scene.DarknessSync.Name')}</label>
+      <label>${localize('CALENDARIA.Scene.DarknessSync.Name')}</label>
       <select name="flags.${MODULE.ID}.${SCENE_FLAGS.DARKNESS_SYNC}">
-        <option value="default" ${selectValue === 'default' ? 'selected' : ''}>${game.i18n.localize('CALENDARIA.Scene.DarknessSync.Choices.Default')}</option>
-        <option value="enabled" ${selectValue === 'enabled' ? 'selected' : ''}>${game.i18n.localize('CALENDARIA.Scene.DarknessSync.Choices.Enabled')}</option>
-        <option value="disabled" ${selectValue === 'disabled' ? 'selected' : ''}>${game.i18n.localize('CALENDARIA.Scene.DarknessSync.Choices.Disabled')}</option>
+        <option value="default" ${selectValue === 'default' ? 'selected' : ''}>${localize('CALENDARIA.Scene.DarknessSync.Choices.Default')}</option>
+        <option value="enabled" ${selectValue === 'enabled' ? 'selected' : ''}>${localize('CALENDARIA.Scene.DarknessSync.Choices.Enabled')}</option>
+        <option value="disabled" ${selectValue === 'disabled' ? 'selected' : ''}>${localize('CALENDARIA.Scene.DarknessSync.Choices.Disabled')}</option>
       </select>
-      <p class="hint">${game.i18n.localize('CALENDARIA.Scene.DarknessSync.Hint')}</p>
+      <p class="hint">${localize('CALENDARIA.Scene.DarknessSync.Hint')}</p>
     </div>
   `;
 

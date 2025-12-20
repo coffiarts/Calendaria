@@ -7,6 +7,7 @@
  */
 
 import { MODULE, HOOKS } from '../constants.mjs';
+import { localize, format } from '../utils/localization.mjs';
 import { log } from '../utils/logger.mjs';
 import { CalendariaSocket } from '../utils/socket.mjs';
 
@@ -337,7 +338,7 @@ export default class TimeKeeper {
     const components = cal.timeToComponents(game.time.worldTime);
     const monthData = cal.months?.values?.[components.month];
     const monthNameRaw = monthData?.name ?? `Month ${components.month + 1}`;
-    const monthName = game.i18n.localize(monthNameRaw);
+    const monthName = localize(monthNameRaw);
     const day = components.dayOfMonth + 1;
     const yearZero = cal.year?.yearZero ?? 0;
     const year = components.year + yearZero;
