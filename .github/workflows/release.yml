@@ -25,7 +25,7 @@ jobs:
         VERSION=${TAG#release-}
         echo "TAG_NAME=$TAG" >> $GITHUB_ENV
         echo "VERSION=$VERSION" >> $GITHUB_ENV
-        echo "ZIP_NAME=calendaria-$VERSION.zip" >> $GITHUB_ENV
+        echo "ZIP_NAME=module.zip
         echo "RELEASE_DOWNLOAD_URL=${{ env.REPO_URL }}/releases/download/$TAG/calendaria-$VERSION.zip" >> $GITHUB_ENV
         echo "RELEASE_MANIFEST_URL=${{ env.REPO_URL }}/releases/download/$TAG/module.json" >> $GITHUB_ENV
 

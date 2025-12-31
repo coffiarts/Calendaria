@@ -1,51 +1,81 @@
 # Calendaria
 
-> **ALPHA RELEASE WARNING**
-> This module is currently in alpha development and is **NOT recommended for use in live games**. Features are incomplete, bugs are expected, and breaking changes may occur between updates. Use at your own risk.
+![GitHub release](https://img.shields.io/github/v/release/Sayshal/calendaria?style=for-the-badge)
+![GitHub Downloads (specific asset, all releases)](<https://img.shields.io/github/downloads/Sayshal/calendaria/module.zip?style=for-the-badge&logo=foundryvirtualtabletop&logoColor=white&logoSize=auto&label=Downloads%20(Total)&color=ff144f>)
+![GitHub Downloads (specific asset, latest release)](<https://img.shields.io/github/downloads/Sayshal/calendaria/latest/module.zip?sort=date&style=for-the-badge&logo=foundryvirtualtabletop&logoColor=white&logoSize=auto&label=Downloads%20(Latest)&color=ff144f>)
 
-A hopefully-system-agnostic Foundry VTT module  that provides calendar and time tracking with journal integration.
+![Foundry Version](https://img.shields.io/endpoint?url=https%3A%2F%2Ffoundryshields.com%2Fversion%3Fstyle%3Dfor-the-badge%26url%3Dhttps%3A%2F%2Fgithub.com%2FSayshal%2Fcalendaria%2Freleases%2Flatest%2Fdownload%2Fmodule.json)
+
+## Support
+
+[![Discord](https://dcbadge.limes.pink/api/server/PzzUwU9gdz)](https://discord.gg/PzzUwU9gdz)
+
+---
+
+A system-agnostic calendar and time tracking module for Foundry VTT. Manage in-game dates, track moon phases, schedule events, and sync scene darkness with the time of day—and keep tabs on everything from a floating calendar.
+
+## Pre-Built Calendars
+
+Calendaria ships with 15+ ready-to-use calendars:
+
+**Official D&D Settings**: Greyhawk, Harptos (Forgotten Realms), Khorvaire (Eberron), Exandria (Critical Role), Barovia (Ravenloft), Athas (Dark Sun), Krynn (Dragonlance - Elven & Solamnic)
+
+**Other Settings**: Golarion (Pathfinder), Cerilia (Birthright), Thyatia (Mystara), Drakkenheim, Forbidden Lands
+
+**General**: Gregorian, plus the Renescara showcase calendar demonstrating advanced features
+
+Don't see yours? The Calendar Editor lets you build custom calendars from scratch, or import from Simple Calendar, Fantasy-Calendar.com, Seasons & Stars, Simple Timekeeping, and Calendarium (Obsidian.MD).
 
 ## Features
 
-### Completed (Alpha)
+**Calendar HUD** — A dome-style widget with animated sky gradients, sun/moon positioning, cloud effects, and time controls. Drag it anywhere on screen, lock position, or collapse to a minimal bar.
 
-- **Multi-calendar system** - Switch between different calendar configurations
-- **Moon phase tracking** - Customizable lunar cycles with phase calculations
-- **Notes & events** - Journal integration with recurring patterns (daily/weekly/monthly/yearly)
-- **Time tracking** - Date utilities and current date management
-- **Darkness sync** - Automatic scene darkness based on time of day
-- **Draggable HUD** - Persistent calendar widget
-- **Public API** - Module integration via `CALENDARIA` global
+**Moon Phases** — Track multiple moons with independent cycles. Define custom phase names, set colors, and configure per-moon behavior.
 
-### Planned (Beta & Beyond)
+**Weather** — 27 weather presets across standard, severe, environmental, and fantasy categories. Set up climate zones with seasonal temperature ranges, or pick weather manually.
 
-- **Multiplayer sync** - Socket-based real-time updates for multi-GM games
-- **System integrations** - Combat rounds, rest mechanics, active effects
-- **Enhanced UI** - Theme system, search, compact/full views
-- **Event reminders** - Notification system for upcoming events
+**Notes & Events** — Create journal-linked notes tied to specific dates. Supports recurrence patterns including weekday-of-month ("2nd Tuesday"), seasonal triggers, moon phase conditions, and linked events that spawn automatically.
 
-## API Usage
+**Reminders** — Schedule notifications before events trigger. Choose between toast popups, chat messages, or dialog prompts with snooze.
 
-Calendaria provides a comprehensive public API for macros and module integration. Access it via `CALENDARIA.api`.
+**Scene Darkness** — Scene lighting follows a day/night cycle based on world time. Configure sunrise/sunset per calendar, or override per-scene.
 
-**Quick Examples:**
+**Eras & Cycles** — Track historical eras with custom formatting, plus repeating cycles like zodiac signs or elemental weeks.
 
-```javascript
-// Get current date/time
-const now = CALENDARIA.api.getCurrentDateTime();
+**Search** — Find notes by name or content across your entire calendar.
 
-// Advance time (GM only)
-await CALENDARIA.api.advanceTime({ hour: 8 });
+**Chat Timestamps** — Optionally display in-game time on chat messages.
 
-// Get moon phase
-const moon = CALENDARIA.api.getMoonPhase(0);
+## Installation
 
-// Check for festivals
-const festival = CALENDARIA.api.getCurrentFestival();
+Install through Foundry's Module Manager or The Forge's Bazaar.
+
+**Manual**: Paste this manifest URL in Foundry's Install Module dialog:
+```
+https://github.com/Sayshal/calendaria/releases/latest/download/module.json
 ```
 
-## Development
+## API
 
-- **Alpha Release Milestone**: [View Milestone](https://github.com/Sayshal/Calendaria/milestone/1)
-- **Beta Release Milestone**: [View Milestone](https://github.com/Sayshal/Calendaria/milestone/2)
-- **Project Tracker**: [View Project](https://github.com/users/Sayshal/projects/3)
+Calendaria exposes a public API at `CALENDARIA.api` for macros and module integration:
+
+```javascript
+// Current date and time
+const now = CALENDARIA.api.getCurrentDateTime();
+
+// Advance time by 8 hours
+await CALENDARIA.api.advanceTime({ hour: 8 });
+
+// Get moon phase (first moon)
+const phase = CALENDARIA.api.getMoonPhase(0);
+
+// Check for active festival
+const festival = CALENDARIA.api.getCurrentFestival();
+
+// Get weather
+const weather = CALENDARIA.api.getWeather();
+
+// Search notes
+const results = CALENDARIA.api.search("dragon");
+```
+
