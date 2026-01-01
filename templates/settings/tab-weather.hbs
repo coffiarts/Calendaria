@@ -21,12 +21,22 @@
   {{#if isGM}}
     <fieldset>
       <legend>{{localize "CALENDARIA.SettingsPanel.Section.Climate"}}</legend>
-      <p class="hint section-hint">{{localize "CALENDARIA.SettingsPanel.Hint.Climate"}}</p>
 
-      <div class="info-box">
-        <i class="fas fa-info-circle"></i>
-        <p>{{localize "CALENDARIA.SettingsPanel.Climate.EditorInfo"}}</p>
-      </div>
+      {{#if hasZones}}
+        <div class="form-group">
+          <label>{{localize "CALENDARIA.SettingsPanel.Field.ClimateZone"}}</label>
+          <div class="form-fields">
+            <select name="climateZone">
+              {{#each zoneOptions}}
+                <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
+              {{/each}}
+            </select>
+          </div>
+          <p class="hint">{{localize "CALENDARIA.SettingsPanel.Hint.ClimateZone"}}</p>
+        </div>
+      {{else}}
+        <p class="hint section-hint">{{localize "CALENDARIA.SettingsPanel.Hint.NoZones"}}</p>
+      {{/if}}
 
       <div class="form-group stacked button-row">
         <button type="button" data-action="openCalendarEditor">

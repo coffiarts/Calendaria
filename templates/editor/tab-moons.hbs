@@ -45,13 +45,13 @@
               <legend>{{localize "CALENDARIA.Editor.Section.ReferenceDate"}}</legend>
               <p class="hint">{{localize "CALENDARIA.Editor.Hint.ReferenceDate"}}</p>
 
-              <div class="date-fields flexrow">
-                <div class="form-group">
+              <div class="ref-date-grid">
+                <div class="grid-col">
                   <label>{{localize "CALENDARIA.Common.Year"}}</label>
                   <input type="number" name="moons.{{this.index}}.referenceDate.year"
                     value="{{this.referenceDate.year}}" step="1">
                 </div>
-                <div class="form-group">
+                <div class="grid-col">
                   <label>{{localize "CALENDARIA.Common.Month"}}</label>
                   <select name="moons.{{this.index}}.referenceDate.month">
                     {{#each this.refMonthOptions}}
@@ -61,23 +61,22 @@
                     {{/each}}
                   </select>
                 </div>
-                <div class="form-group">
+                <div class="grid-col">
                   <label>{{localize "CALENDARIA.Common.Day"}}</label>
                   <input type="number" name="moons.{{this.index}}.referenceDate.day" value="{{this.referenceDate.day}}"
                     min="1" step="1">
                 </div>
-                <div class="form-group">
-                  <label
-                    data-tooltip="{{localize 'CALENDARIA.Editor.Tooltip.CycleDayAdjust'}}">{{localize "CALENDARIA.Editor.Field.CycleDayAdjust"}}</label>
+                <div class="grid-col">
+                  <label data-tooltip="{{localize 'CALENDARIA.Editor.Tooltip.CycleDayAdjust'}}">
+                    {{localize "CALENDARIA.Editor.Field.CycleDayAdjust"}}
+                  </label>
                   <input type="number" name="moons.{{this.index}}.cycleDayAdjust" value="{{this.cycleDayAdjust}}"
                     step="1">
                 </div>
-                <div class="form-group checkbox-group">
-                  <label>
-                    <input type="checkbox" name="moons.{{this.index}}.hidden" value="true"
-                      {{#if this.hidden}}checked{{/if}}>
-                    {{localize "CALENDARIA.Editor.Field.Hidden"}}
-                  </label>
+                <div class="grid-col">
+                  <label>{{localize "CALENDARIA.Editor.Field.Hidden"}}</label>
+                  <input type="checkbox" name="moons.{{this.index}}.hidden" value="true"
+                    {{#if this.hidden}}checked{{/if}}>
                 </div>
               </div>
             </fieldset>
