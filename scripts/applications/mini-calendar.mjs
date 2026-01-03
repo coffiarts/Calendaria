@@ -645,7 +645,8 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
   async _onFirstRender(context, options) {
     await super._onFirstRender(context, options);
     this.#restoreStickyStates();
-    this.#lastDay = ViewUtils.getCurrentViewedDate(this.calendar)?.day;
+    const c = game.time.components;
+    this.#lastDay = `${c.year}-${c.month}-${c.dayOfMonth}`;
     ViewUtils.setupDayContextMenu(this.element, '.mini-day:not(.empty)', this.calendar, {
       onSetDate: () => {
         this._selectedDate = null;
@@ -821,7 +822,7 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
       timeEl.textContent = formatForLocation(calendar, { ...components, year: components.year + yearZero, dayOfMonth: (components.dayOfMonth ?? 0) + 1 }, 'miniCalendarTime');
     }
     if (dateEl) dateEl.textContent = TimeKeeper.getFormattedDate();
-    const currentDay = ViewUtils.getCurrentViewedDate(this.calendar)?.day;
+    const currentDay = `${components.year}-${components.month}-${components.dayOfMonth}`;
     if (currentDay !== this.#lastDay) {
       this.#lastDay = currentDay;
       this.render();

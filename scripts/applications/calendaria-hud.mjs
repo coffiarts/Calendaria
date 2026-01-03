@@ -224,7 +224,8 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     this.#updateDomeVisibility();
     this.#setupEventListeners();
     if (!this.#timeHookId) this.#timeHookId = Hooks.on('updateWorldTime', this.#onUpdateWorldTime.bind(this));
-    this.#lastDay = game.time.components.dayOfMonth;
+    const c = game.time.components;
+    this.#lastDay = `${c.year}-${c.month}-${c.dayOfMonth}`;
   }
 
   /** @override */
@@ -650,19 +651,21 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
   #onUpdateWorldTime() {
     if (!this.rendered) return;
     const components = game.time.components;
-    if (this.#lastDay !== null && this.#lastDay !== components.dayOfMonth) {
-      this.#lastDay = components.dayOfMonth;
+    const currentDay = `${components.year}-${components.month}-${components.dayOfMonth}`;
+    const dayChanged = this.#lastDay !== null && this.#lastDay !== currentDay;
+    if (dayChanged) {
+      this.#lastDay = currentDay;
       if (this.#barRenderDebounce) clearTimeout(this.#barRenderDebounce);
       this.#barRenderDebounce = setTimeout(() => {
         this.#barRenderDebounce = null;
         this.render({ parts: ['bar'] });
       }, 200);
-      const dateEl = this.element.querySelector('.calendaria-hud-date');
-      if (dateEl) dateEl.textContent = this.#formatDateDisplay(components);
     }
 
     const timeEl = this.element.querySelector('.calendaria-hud-time');
     if (timeEl) timeEl.textContent = this.#formatTime(components);
+    const dateEl = this.element.querySelector('.calendaria-hud-date');
+    if (dateEl) dateEl.textContent = this.#formatDateDisplay(components);
     const hud = this.element.querySelector('.calendaria-hud');
     if (hud) hud.classList.toggle('time-flowing', TimeKeeper.running);
     this.#updateCelestialDisplay();

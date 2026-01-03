@@ -9,36 +9,12 @@ import { CalendariaHUD } from './applications/calendaria-hud.mjs';
 import { ImporterApp } from './applications/importer-app.mjs';
 import { SettingsPanel } from './applications/settings/settings-panel.mjs';
 import { TimeKeeperHUD } from './applications/time-keeper-hud.mjs';
-import { BUNDLED_CALENDARS } from './calendar/calendar-loader.mjs';
 import { MODULE, SETTINGS } from './constants.mjs';
 import { migrateCustomCalendars, migrateIntercalaryFestivals } from './utils/format-utils.mjs';
 import { localize } from './utils/localization.mjs';
 import { log } from './utils/logger.mjs';
 
 const { ArrayField, ObjectField, BooleanField, NumberField, StringField } = foundry.data.fields;
-
-/**
- * Convert kebab-case ID to PascalCase for localization keys.
- * @param {string} id - Calendar ID (e.g., 'forbidden-lands')
- * @returns {string} PascalCase key (e.g., 'ForbiddenLands')
- */
-function toPascalCase(id) {
-  return id.split('-').map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join('');
-}
-
-/**
- * Build calendar choices for the active calendar dropdown.
- * @returns {Object<string, string>} Map of calendar ID to display name
- */
-function buildCalendarChoices() {
-  const choices = BUNDLED_CALENDARS.reduce((acc, id) => {
-    acc[id] = `CALENDARIA.Calendar.${toPascalCase(id)}.Name`;
-    return acc;
-  }, {});
-  const customCalendars = game.settings.get(MODULE.ID, SETTINGS.CUSTOM_CALENDARS) || {};
-  for (const [id, data] of Object.entries(customCalendars)) choices[id] = data.name || id;
-  return choices;
-}
 
 /**
  * Register all module settings with Foundry VTT.
@@ -273,8 +249,8 @@ export function registerSettings() {
     name: 'CALENDARIA.Settings.ActiveCalendar.Name',
     hint: 'CALENDARIA.Settings.ActiveCalendar.Hint',
     scope: 'world',
-    config: true,
-    type: new StringField({ choices: buildCalendarChoices(), initial: 'gregorian', blank: true }),
+    config: false,
+    type: new StringField({ initial: 'gregorian', blank: true }),
     requiresReload: true
   });
 
