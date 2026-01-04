@@ -482,7 +482,7 @@
 .moon-phase {
   display: inline-flex;
   align-items: center;
-  height: 1em;
+  height: 10px;
 
   img {
     width: auto;

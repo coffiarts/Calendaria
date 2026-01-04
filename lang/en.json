@@ -1988,6 +1988,7 @@
   "CALENDARIA.UI.SilentTooltip": "Suppress automatic notifications when this event triggers",
   "CALENDARIA.UI.StartDateTooltip": "Select start date for this note",
   "CALENDARIA.UI.StartTimeTooltip": "Set the start time for this note",
+  "CALENDARIA.Warning.CannotDeleteCalendarFolder": "Cannot delete calendar folder. This folder contains all notes for this calendar.",
   "CALENDARIA.Warning.CannotDeleteCalendarJournal": "Cannot delete calendar journal. This journal contains the calendar structure and all events.",
   "CALENDARIA.Warning.CannotDeleteNotesFolder": "Cannot delete Calendar Notes folder. This folder contains all calendar journals and events.",
   "CALENDARIA.Weather.AetherHaze": "Aether Haze",

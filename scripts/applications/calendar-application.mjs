@@ -120,6 +120,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     const calendar = this.calendar;
     const viewedDate = this.viewedDate;
     context.editable = game.user.isGM;
+    context.canAddNotes = true;
     context.calendar = calendar;
     context.viewedDate = viewedDate;
     context.displayMode = this._displayMode;
@@ -306,12 +307,12 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     }
 
     // Fill remaining slots with next month days
-    const lastRegularWeek = weeks.filter(w => !w.isIntercalaryRow).pop();
+    const lastRegularWeek = weeks.filter((w) => !w.isIntercalaryRow).pop();
     const needsNextMonth = intercalaryDays.length > 0 || (lastRegularWeek && lastRegularWeek.length < daysInWeek);
 
     if (needsNextMonth) {
       const totalMonths = calendar.months?.values?.length ?? 12;
-      let remainingSlots = intercalaryDays.length > 0 ? daysInWeek : (daysInWeek - (lastRegularWeek?.length || 0));
+      let remainingSlots = intercalaryDays.length > 0 ? daysInWeek : daysInWeek - (lastRegularWeek?.length || 0);
       let checkMonth = month;
       let checkYear = year;
       let dayInMonth = 1;

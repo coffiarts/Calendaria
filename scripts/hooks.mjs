@@ -15,7 +15,7 @@ import NoteManager from './notes/note-manager.mjs';
 import EventScheduler from './time/event-scheduler.mjs';
 import ReminderScheduler from './time/reminder-scheduler.mjs';
 import TimeTracker from './time/time-tracker.mjs';
-import { onRenderJournalDirectory } from './utils/journal-button.mjs';
+import { onActivateDocumentDirectory } from './utils/journal-button.mjs';
 import { localize } from './utils/localization.mjs';
 import { log } from './utils/logger.mjs';
 
@@ -35,7 +35,7 @@ export function registerHooks() {
   Hooks.on('preDeleteJournalEntry', NoteManager.onPreDeleteJournalEntry.bind(NoteManager));
   Hooks.on('renderChatMessageHTML', onRenderAnnouncementMessage);
   Hooks.on('renderChatMessageHTML', onRenderChatMessageHTML);
-  Hooks.on('renderJournalDirectory', onRenderJournalDirectory);
+  Hooks.on('activateDocumentDirectory', onActivateDocumentDirectory);
   Hooks.on('renderSceneConfig', onRenderSceneConfig);
   Hooks.on('updateJournalEntryPage', NoteManager.onUpdateJournalEntryPage.bind(NoteManager));
   Hooks.on('updateSetting', CalendarManager.onUpdateSetting.bind(CalendarManager));

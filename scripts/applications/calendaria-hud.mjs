@@ -1174,6 +1174,7 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {HTMLElement} _target - Target element
    */
   static async #onOpenTimeDial(_event, _target) {
+    if (!game.user.isGM) return;
     await this.#openTimeRotationDial();
   }
 

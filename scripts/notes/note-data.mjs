@@ -38,6 +38,7 @@ export function getDefaultNoteData() {
     macro: null,
     sceneId: null,
     author: null,
+    gmOnly: false,
     isCalendarNote: true,
     version: 1
   };
@@ -162,6 +163,7 @@ export function sanitizeNoteData(noteData) {
     macro: noteData.macro || null,
     sceneId: noteData.sceneId || null,
     author: noteData.author || null,
+    gmOnly: noteData.gmOnly ?? false,
     isCalendarNote: true,
     version: noteData.version || defaults.version
   };
@@ -176,17 +178,21 @@ export function createNoteStub(page) {
   if (page.type !== 'calendaria.calendarnote') return null;
   const flagData = page.system;
   if (!flagData) return null;
-  const calendarId = page.getFlag(MODULE.ID, 'calendarId') || page.parent?.getFlag(MODULE.ID, 'calendarId') || null;
+  let calendarId = page.getFlag(MODULE.ID, 'calendarId') || page.parent?.getFlag(MODULE.ID, 'calendarId');
+  if (!calendarId && page.parent?.folder) calendarId = page.parent.folder.getFlag?.(MODULE.ID, 'calendarId') || null;
   const randomOccurrences = page.getFlag(MODULE.ID, 'randomOccurrences');
   const enrichedFlagData = randomOccurrences?.occurrences ? { ...flagData, cachedRandomOccurrences: randomOccurrences.occurrences } : flagData;
+  const parentJournal = page.parent;
+  const isOwner = parentJournal?.isOwner ?? page.isOwner;
   return {
     id: page.id,
     name: page.name,
     flagData: enrichedFlagData,
     calendarId,
     visible: page.testUserPermission(game.user, 'OBSERVER'),
-    journalId: page.parent?.id || null,
-    ownership: page.ownership
+    isOwner,
+    journalId: parentJournal?.id || null,
+    ownership: parentJournal?.ownership || page.ownership
   };
 }
 

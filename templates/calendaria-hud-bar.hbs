@@ -39,8 +39,8 @@
     <div class="calendaria-hud-divider"></div>
 
     <div class="calendaria-hud-info-panel left">
-      <span class="calendaria-hud-date" data-action="setDate"
-        data-tooltip="{{dateDisplay}} (Click to set date)">{{dateDisplay}}</span>
+      <span class="calendaria-hud-date"{{#if isGM}} data-action="setDate"
+        data-tooltip="{{dateDisplay}} (Click to set date)"{{else}} data-tooltip="{{dateDisplay}}"{{/if}}>{{dateDisplay}}</span>
       {{#if hasEvents}}
       <div class="calendaria-hud-events">
         {{#each liveEvents}}
