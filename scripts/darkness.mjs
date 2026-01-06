@@ -58,10 +58,12 @@ export function getCurrentDarkness() {
 
 /**
  * Update a scene's darkness level based on current time.
+ * Only GM can update scene darkness.
  * @param {object} scene - The scene to update
  * @returns {Promise<void>}
  */
 export async function updateSceneDarkness(scene) {
+  if (!game.user.isGM) return;
   if (!scene) return;
   const darkness = getCurrentDarkness();
 
@@ -93,10 +95,12 @@ export async function onRenderSceneConfig(app, html, _data) {
 /**
  * Update scene darkness when world time changes.
  * Only triggers transition when the hour changes.
+ * Only GM should update scene darkness to avoid permission errors.
  * @param {number} worldTime - The new world time
  * @param {number} _dt - The time delta
  */
 export async function onUpdateWorldTime(worldTime, _dt) {
+  if (!game.user.isGM) return;
   const activeScene = game.scenes.active;
   if (!activeScene) return;
   if (!shouldSyncSceneDarkness(activeScene)) return;

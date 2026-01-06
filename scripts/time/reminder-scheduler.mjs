@@ -8,11 +8,13 @@
 
 import CalendarManager from '../calendar/calendar-manager.mjs';
 import CalendarRegistry from '../calendar/calendar-registry.mjs';
-import { HOOKS, MODULE } from '../constants.mjs';
+import { HOOKS, MODULE, SOCKET_TYPES } from '../constants.mjs';
 import NoteManager from '../notes/note-manager.mjs';
 import { getCurrentDate } from '../notes/utils/date-utils.mjs';
 import { isRecurringMatch } from '../notes/utils/recurrence.mjs';
 import { format, localize } from '../utils/localization.mjs';
+import { log } from '../utils/logger.mjs';
+import { CalendariaSocket } from '../utils/socket.mjs';
 
 /**
  * Reminder Scheduler class that monitors time and triggers pre-event reminders.
@@ -36,10 +38,12 @@ export default class ReminderScheduler {
 
   /**
    * Initialize the reminder scheduler.
+   * Registers hook listener for socket-broadcast reminders.
    * @returns {void}
    */
   static initialize() {
     this.#lastDate = getCurrentDate();
+    Hooks.on(HOOKS.REMINDER_RECEIVED, (data) => this.handleReminderNotify(data));
   }
 
   /* -------------------------------------------- */
@@ -48,12 +52,13 @@ export default class ReminderScheduler {
 
   /**
    * Handle world time updates.
+   * Only the primary GM runs reminder checks to avoid duplicates.
    * @param {number} worldTime - The new world time in seconds
    * @param {number} _delta - The time delta in seconds
    * @returns {void}
    */
   static onUpdateWorldTime(worldTime, _delta) {
-    if (!game.user.isGM) return;
+    if (!CalendariaSocket.isPrimaryGM()) return;
     const currentDate = getCurrentDate();
     if (!currentDate) return;
     if (!NoteManager.isInitialized()) return;
@@ -71,6 +76,7 @@ export default class ReminderScheduler {
 
   /**
    * Check all notes for pending reminders.
+   * Uses occurrence-based keys to support recurring events firing on each occurrence.
    * @param {number} worldTime - Current world time in seconds
    * @param {object} currentDate - Current date components
    * @private
@@ -80,13 +86,15 @@ export default class ReminderScheduler {
     if (!calendar) return;
     const activeCalendarId = calendar.metadata?.id || CalendarRegistry.getActiveId() || 'unknown';
     const allNotes = NoteManager.getAllNotes();
+    log(3, `Checking ${allNotes.length} notes for reminders at ${currentDate.year}-${currentDate.month}-${currentDate.day} ${currentDate.hour}:${currentDate.minute}`);
     for (const note of allNotes) {
       if (note.flagData.calendarId && note.flagData.calendarId !== activeCalendarId) continue;
       if (!note.flagData.reminderOffset || note.flagData.reminderOffset <= 0) continue;
       if (note.flagData.silent) continue;
-      const reminderKey = `${note.id}:${note.flagData.reminderOffset}`;
+      const reminderKey = `${note.id}:${currentDate.year}-${currentDate.month}-${currentDate.day}`;
       if (this.#firedToday.has(reminderKey)) continue;
-      if (this.#shouldFireReminder(note, worldTime, calendar)) {
+      log(3, `Evaluating reminder for "${note.name}" (offset: ${note.flagData.reminderOffset}h, allDay: ${note.flagData.allDay}, repeat: ${note.flagData.repeat})`);
+      if (this.#shouldFireReminder(note, worldTime, calendar, currentDate)) {
         this.#fireReminder(note, currentDate);
         this.#firedToday.add(reminderKey);
       }
@@ -95,58 +103,103 @@ export default class ReminderScheduler {
 
   /**
    * Determine if a reminder should fire based on current time and offset.
+   * Reminder offset is stored in hours, converted to minutes for calculations.
    * @param {object} note - The note stub
    * @param {number} _worldTime - Current world time in seconds
    * @param {object} calendar - Active calendar
+   * @param {object} currentDate - Current date components
    * @returns {boolean} - Should reminder fire?
    * @private
    */
-  static #shouldFireReminder(note, _worldTime, calendar) {
+  static #shouldFireReminder(note, _worldTime, calendar, currentDate) {
     const startDate = note.flagData.startDate;
     if (!startDate) return false;
-    const currentDate = getCurrentDate();
     if (!currentDate) return false;
+    const offsetMinutes = (note.flagData.reminderOffset ?? 0) * 60;
     const hasRecurrence = note.flagData.repeat && note.flagData.repeat !== 'never';
     const hasConditions = note.flagData.conditions?.length > 0;
+
     if (hasRecurrence || hasConditions) {
       const occursToday = isRecurringMatch(note.flagData, currentDate);
       let occursTomorrow = false;
-      if (note.flagData.allDay) {
+      if (note.flagData.allDay && offsetMinutes > 0) {
         const tomorrow = this.#getNextDay(currentDate, calendar);
         occursTomorrow = isRecurringMatch(note.flagData, tomorrow);
+        log(3, `  Tomorrow check: ${tomorrow.year}-${tomorrow.month}-${tomorrow.day}, occursTomorrow=${occursTomorrow}`);
       }
 
+      log(3, `  Recurring: occursToday=${occursToday}, occursTomorrow=${occursTomorrow}, allDay=${note.flagData.allDay}`);
       if (!occursToday && !occursTomorrow) return false;
-      if (!occursToday && occursTomorrow && note.flagData.allDay) {
-        const components = game.time.components;
-        const currentMinutes = components.hour * 60 + components.minute;
+
+      // For all-day events, check if we should fire reminder tonight for tomorrow's occurrence
+      if (occursTomorrow && note.flagData.allDay) {
+        const currentMinutes = currentDate.hour * 60 + currentDate.minute;
         const minutesInDay = 24 * 60;
-        const reminderMinutes = minutesInDay - (note.flagData.reminderOffset ?? 0);
-        return currentMinutes >= reminderMinutes;
+        const reminderMinutes = minutesInDay - offsetMinutes;
+        log(3, `  Day-before check: currentMinutes=${currentMinutes}, reminderMinutes=${reminderMinutes}, shouldFire=${currentMinutes >= reminderMinutes}`);
+        if (currentMinutes >= reminderMinutes) return true;
       }
 
-      if (occursToday) {
-        const components = game.time.components;
-        const currentMinutes = components.hour * 60 + components.minute;
-        const eventHour = note.flagData.allDay ? 0 : (startDate.hour ?? 0);
-        const eventMinute = note.flagData.allDay ? 0 : (startDate.minute ?? 0);
+      // For timed events occurring today, check if we're in the reminder window
+      if (occursToday && !note.flagData.allDay) {
+        const currentMinutes = currentDate.hour * 60 + currentDate.minute;
+        const eventHour = startDate.hour ?? 0;
+        const eventMinute = startDate.minute ?? 0;
         const eventMinutes = eventHour * 60 + eventMinute;
-        const reminderMinutes = eventMinutes - (note.flagData.reminderOffset ?? 0);
+        const reminderMinutes = eventMinutes - offsetMinutes;
+        log(3, `  Same-day check: currentMinutes=${currentMinutes}, eventMinutes=${eventMinutes}, reminderMinutes=${reminderMinutes}`);
         return currentMinutes >= reminderMinutes && currentMinutes < eventMinutes;
       }
 
       return false;
     }
 
-    const isSameDate = currentDate.year === startDate.year && currentDate.month === startDate.month && currentDate.day === startDate.day;
-    if (!isSameDate) return false;
-    const components = game.time.components;
-    const currentMinutes = components.hour * 60 + components.minute;
-    const eventHour = note.flagData.allDay ? 0 : (startDate.hour ?? 0);
-    const eventMinute = note.flagData.allDay ? 0 : (startDate.minute ?? 0);
-    const eventMinutes = eventHour * 60 + eventMinute;
-    const reminderMinutes = eventMinutes - (note.flagData.reminderOffset ?? 0);
-    return currentMinutes >= reminderMinutes && currentMinutes < eventMinutes;
+    // Non-recurring event - check if tomorrow falls within the event's date range (for multi-day events)
+    const endDate = note.flagData.endDate;
+    const tomorrow = this.#getNextDay(currentDate, calendar);
+    const tomorrowInRange = this.#isDateInRange(tomorrow, startDate, endDate);
+    const todayInRange = this.#isDateInRange(currentDate, startDate, endDate);
+
+    log(3, `  Non-recurring: todayInRange=${todayInRange}, tomorrowInRange=${tomorrowInRange}, allDay=${note.flagData.allDay}`);
+
+    // For all-day events, fire reminder the evening before each day of the event
+    if (note.flagData.allDay && offsetMinutes > 0 && tomorrowInRange) {
+      const currentMinutes = currentDate.hour * 60 + currentDate.minute;
+      const minutesInDay = 24 * 60;
+      const reminderMinutes = minutesInDay - offsetMinutes;
+      log(3, `  Multi-day before check: currentMinutes=${currentMinutes}, reminderMinutes=${reminderMinutes}, shouldFire=${currentMinutes >= reminderMinutes}`);
+      return currentMinutes >= reminderMinutes;
+    }
+
+    // For timed events or same-day check
+    if (todayInRange) {
+      const isFirstDay = currentDate.year === startDate.year && currentDate.month === startDate.month && currentDate.day === startDate.day;
+      const currentMinutes = currentDate.hour * 60 + currentDate.minute;
+      const eventHour = note.flagData.allDay ? 0 : (isFirstDay ? (startDate.hour ?? 0) : 0);
+      const eventMinute = note.flagData.allDay ? 0 : (isFirstDay ? (startDate.minute ?? 0) : 0);
+      const eventMinutes = eventHour * 60 + eventMinute;
+      const reminderMinutes = eventMinutes - offsetMinutes;
+      return currentMinutes >= reminderMinutes && currentMinutes < eventMinutes;
+    }
+
+    return false;
+  }
+
+  /**
+   * Check if a date falls within a date range (inclusive).
+   * @param {object} date - Date to check
+   * @param {object} startDate - Range start
+   * @param {object} endDate - Range end (optional)
+   * @returns {boolean} True if date is within range
+   * @private
+   */
+  static #isDateInRange(date, startDate, endDate) {
+    const dateVal = date.year * 10000 + date.month * 100 + date.day;
+    const startVal = startDate.year * 10000 + startDate.month * 100 + startDate.day;
+    if (dateVal < startVal) return false;
+    if (!endDate || !endDate.year) return dateVal === startVal;
+    const endVal = endDate.year * 10000 + endDate.month * 100 + endDate.day;
+    return dateVal <= endVal;
   }
 
   /**
@@ -180,6 +233,7 @@ export default class ReminderScheduler {
 
   /**
    * Fire a reminder notification.
+   * Broadcasts to all targeted users via socket for toast/dialog types.
    * @param {object} note - The note stub
    * @param {object} _currentDate - Current date components
    * @private
@@ -187,18 +241,29 @@ export default class ReminderScheduler {
   static #fireReminder(note, _currentDate) {
     const reminderType = note.flagData.reminderType || 'toast';
     const targets = this.#getTargetUsers(note);
-    if (!targets.includes(game.user.id)) return;
     const message = this.#formatReminderMessage(note);
 
     switch (reminderType) {
       case 'toast':
-        this.#showToast(note, message);
+      case 'dialog':
+        CalendariaSocket.emit(SOCKET_TYPES.REMINDER_NOTIFY, {
+          type: reminderType,
+          noteId: note.id,
+          noteName: note.name,
+          journalId: note.journalId,
+          message,
+          icon: note.flagData.icon,
+          iconType: note.flagData.iconType,
+          color: note.flagData.color,
+          targets
+        });
+        if (targets.includes(game.user.id)) {
+          if (reminderType === 'toast') this.#showToast(note, message);
+          else this.#showDialog(note, message);
+        }
         break;
       case 'chat':
         this.#sendChatReminder(note, message, targets);
-        break;
-      case 'dialog':
-        this.#showDialog(note, message);
         break;
     }
 
@@ -229,19 +294,14 @@ export default class ReminderScheduler {
 
   /**
    * Format the reminder message.
+   * Offset is stored in hours.
    * @param {object} note - The note stub
    * @returns {string} - Formatted message
    * @private
    */
   static #formatReminderMessage(note) {
-    const offset = note.flagData.reminderOffset;
-    let timeStr;
-    if (offset >= 60) {
-      const hours = Math.floor(offset / 60);
-      const mins = offset % 60;
-      if (mins > 0) timeStr = format('CALENDARIA.Reminder.HoursMinutes', { hours, mins });
-      else timeStr = hours > 1 ? format('CALENDARIA.Reminder.HoursPlural', { hours }) : format('CALENDARIA.Reminder.Hours', { hours });
-    } else timeStr = offset > 1 ? format('CALENDARIA.Reminder.MinutesPlural', { mins: offset }) : format('CALENDARIA.Reminder.Minutes', { mins: offset });
+    const hours = note.flagData.reminderOffset;
+    const timeStr = hours > 1 ? format('CALENDARIA.Reminder.HoursPlural', { hours }) : format('CALENDARIA.Reminder.Hours', { hours });
     return format('CALENDARIA.Reminder.StartsIn', { name: note.name, time: timeStr });
   }
 
@@ -343,5 +403,63 @@ export default class ReminderScheduler {
     if (!icon) return `<i class="fas fa-bell" style="color: ${color};"></i>`;
     if (icon.startsWith('fa') || note.flagData.iconType === 'fontawesome') return `<i class="${icon}" style="color: ${color};"></i>`;
     return `<img src="${icon}" alt="" style="width: 16px; height: 16px; vertical-align: middle;" />`;
+  }
+
+  /**
+   * Get icon HTML from raw data (for socket messages).
+   * @param {object} data - Socket data with icon, iconType, color
+   * @returns {string} - Icon HTML string
+   * @private
+   */
+  static #getIconHtmlFromData(data) {
+    const icon = data.icon;
+    const color = data.color || '#4a9eff';
+    if (!icon) return `<i class="fas fa-bell" style="color: ${color};"></i>`;
+    if (icon.startsWith('fa') || data.iconType === 'fontawesome') return `<i class="${icon}" style="color: ${color};"></i>`;
+    return `<img src="${icon}" alt="" style="width: 16px; height: 16px; vertical-align: middle;" />`;
+  }
+
+  /* -------------------------------------------- */
+  /*  Socket Message Handler                      */
+  /* -------------------------------------------- */
+
+  /**
+   * Handle incoming reminder notification from socket.
+   * Called by CalendariaSocket when a reminder broadcast is received.
+   * @param {object} data - The reminder data
+   * @param {string} data.type - 'toast' or 'dialog'
+   * @param {string} data.noteId - Note page ID
+   * @param {string} data.noteName - Note name
+   * @param {string} data.journalId - Parent journal ID
+   * @param {string} data.message - Formatted message
+   * @param {string[]} data.targets - Array of target user IDs
+   * @returns {void}
+   */
+  static handleReminderNotify(data) {
+    if (!data.targets.includes(game.user.id)) return;
+    const noteStub = { id: data.noteId, name: data.noteName, journalId: data.journalId, flagData: { icon: data.icon, iconType: data.iconType, color: data.color } };
+    const iconHtml = this.#getIconHtmlFromData(data);
+
+    if (data.type === 'toast') {
+      ui.notifications.info(`${iconHtml} ${data.message}`, { permanent: false });
+    } else if (data.type === 'dialog') {
+      foundry.applications.api.DialogV2.wait({
+        window: { title: localize('CALENDARIA.Reminder.Title'), icon: 'fas fa-bell' },
+        content: `<p>${iconHtml} ${data.message}</p>`,
+        buttons: [
+          {
+            action: 'open',
+            label: localize('CALENDARIA.Reminder.OpenNote'),
+            icon: 'fas fa-book-open',
+            callback: () => {
+              const page = NoteManager.getFullNote(data.noteId);
+              if (page) page.sheet.render(true, { mode: 'view' });
+            }
+          },
+          { action: 'dismiss', label: localize('CALENDARIA.Reminder.Dismiss'), icon: 'fas fa-times', default: true }
+        ],
+        rejectClose: false
+      });
+    }
   }
 }

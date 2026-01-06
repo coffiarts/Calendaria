@@ -110,19 +110,20 @@ export function formatWorldTime(worldTime) {
 }
 
 /**
- * Handle renderChatMessage hook for calendar announcements.
+ * Handle renderChatMessage hook for calendar announcements and reminders.
  * @param {object} message - The chat message document
  * @param {HTMLElement} html - The rendered HTML element
  * @param {object} _context - Render context
  */
 export function onRenderAnnouncementMessage(message, html, _context) {
-  if (!message.flags?.[MODULE.ID]?.isAnnouncement) return;
+  const flags = message.flags?.[MODULE.ID];
+  if (!flags?.isAnnouncement && !flags?.isReminder) return;
   const openLink = html.querySelector('.announcement-open');
   if (!openLink) return;
   openLink.addEventListener('click', async (event) => {
     event.preventDefault();
-    const noteId = openLink.dataset.noteId;
-    const journalId = openLink.dataset.journalId;
+    const noteId = openLink.dataset.noteId || flags?.noteId;
+    const journalId = openLink.dataset.journalId || flags?.journalId;
     if (!noteId) return;
     const page = NoteManager.getFullNote(noteId);
     if (page) {

@@ -147,6 +147,10 @@ export class CalendariaSocket {
         this.#handleWeatherChange(data);
         break;
 
+      case SOCKET_TYPES.REMINDER_NOTIFY:
+        this.#handleReminderNotify(data);
+        break;
+
       default:
         log(1, `Unknown socket message type: ${type}`);
     }
@@ -242,6 +246,18 @@ export class CalendariaSocket {
     const { weather } = data;
     log(3, `Handling remote weather change: ${weather?.id ?? 'cleared'}`);
     WeatherManager.handleRemoteWeatherChange(data);
+  }
+
+  /**
+   * Handle remote reminder notification messages.
+   * Emits a hook for ReminderScheduler to handle (avoids circular dependency).
+   * @private
+   * @param {object} data - The reminder notification data
+   * @returns {void}
+   */
+  static #handleReminderNotify(data) {
+    log(3, `Handling reminder notification for ${data.noteName}`);
+    Hooks.callAll(HOOKS.REMINDER_RECEIVED, data);
   }
 
   /* -------------------------------------------- */

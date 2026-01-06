@@ -191,6 +191,7 @@ export const HOOKS = {
   NOTE_DELETED: 'calendaria.noteDeleted',
   EVENT_TRIGGERED: 'calendaria.eventTriggered',
   EVENT_DAY_CHANGED: 'calendaria.eventDayChanged',
+  REMINDER_RECEIVED: 'calendaria.reminderReceived',
   PRE_RENDER_CALENDAR: 'calendaria.preRenderCalendar',
   RENDER_CALENDAR: 'calendaria.renderCalendar',
   IMPORT_STARTED: 'calendaria.importStarted',
@@ -215,5 +216,6 @@ export const SOCKET_TYPES = {
   DATE_CHANGE: 'dateChange',
   NOTE_UPDATE: 'noteUpdate',
   CALENDAR_SWITCH: 'calendarSwitch',
-  WEATHER_CHANGE: 'weatherChange'
+  WEATHER_CHANGE: 'weatherChange',
+  REMINDER_NOTIFY: 'reminderNotify'
 };

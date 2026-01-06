@@ -125,19 +125,21 @@ export default class NoteManager {
       log(3, `Updated note in index: ${page.name}`);
       Hooks.callAll(HOOKS.NOTE_UPDATED, stub);
 
-      if (changes.name !== undefined) {
-        const journal = page.parent;
-        if (journal?.getFlag(MODULE.ID, 'isCalendarNote') && journal.name !== page.name) {
-          await journal.update({ name: page.name });
+      if (game.user.isGM) {
+        if (changes.name !== undefined) {
+          const journal = page.parent;
+          if (journal?.getFlag(MODULE.ID, 'isCalendarNote') && journal.name !== page.name) {
+            await journal.update({ name: page.name });
+          }
         }
-      }
 
-      if (changes.system?.gmOnly !== undefined) {
-        const journal = page.parent;
-        if (journal?.getFlag(MODULE.ID, 'isCalendarNote')) {
-          const newOwnership = changes.system.gmOnly ? { default: 0 } : { default: 2 };
-          await journal.update({ ownership: newOwnership });
-          log(3, `Updated journal ownership for gmOnly change: ${changes.system.gmOnly}`);
+        if (changes.system?.gmOnly !== undefined) {
+          const journal = page.parent;
+          if (journal?.getFlag(MODULE.ID, 'isCalendarNote')) {
+            const newOwnership = changes.system.gmOnly ? { default: 0 } : { default: 2 };
+            await journal.update({ ownership: newOwnership });
+            log(3, `Updated journal ownership for gmOnly change: ${changes.system.gmOnly}`);
+          }
         }
       }
     } else {
@@ -148,7 +150,7 @@ export default class NoteManager {
       }
     }
 
-    if (page.getFlag(MODULE.ID, 'isDescriptionPage')) NoteManager.#syncDescriptionToCalendar(page);
+    if (game.user.isGM && page.getFlag(MODULE.ID, 'isDescriptionPage')) NoteManager.#syncDescriptionToCalendar(page);
   }
 
   /**
