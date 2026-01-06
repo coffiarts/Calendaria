@@ -19,12 +19,19 @@
         data-tooltip="{{festivalName}}">
         <div class="day-number">
           <span class="festival-name">{{festivalName}}</span>
-          {{#each moonPhases}}
-          <span class="moon-phase{{#if color}} tinted{{/if}}" data-tooltip="{{moonName}}: {{phaseName}}"
-            {{#if color}}style="--moon-color: {{color}}" {{/if}}>
-            <img src="{{icon}}" alt="{{phaseName}}">
+          {{#if moonPhases}}
+          <span class="day-moons">
+            {{#each moonPhases.visible}}
+            <span class="moon-phase{{#if color}} tinted{{/if}}" data-tooltip="{{moonName}}: {{phaseName}}"
+              {{#if color}}style="--moon-color: {{color}}" {{/if}}>
+              <img src="{{icon}}" alt="{{phaseName}}">
+            </span>
+            {{/each}}
+            {{#if moonPhases.overflow.length}}
+            <span class="moon-overflow" data-tooltip="{{{moonPhases.overflowTooltip}}}">+{{moonPhases.overflow.length}}</span>
+            {{/if}}
           </span>
-          {{/each}}
+          {{/if}}
         </div>
         {{#if notes.length}}
         <div class="day-notes">
@@ -70,12 +77,19 @@
           {{#if isFestival}}
           <i class="fas fa-star festival-icon" data-tooltip="{{festivalName}}"></i>
           {{/if}}
-          {{#each moonPhases}}
-          <span class="moon-phase{{#if color}} tinted{{/if}}" data-tooltip="{{moonName}}: {{phaseName}}"
-            {{#if color}}style="--moon-color: {{color}}" {{/if}}>
-            <img src="{{icon}}" alt="{{phaseName}}">
+          {{#if moonPhases}}
+          <span class="day-moons">
+            {{#each moonPhases.visible}}
+            <span class="moon-phase{{#if color}} tinted{{/if}}" data-tooltip="{{moonName}}: {{phaseName}}"
+              {{#if color}}style="--moon-color: {{color}}" {{/if}}>
+              <img src="{{icon}}" alt="{{phaseName}}">
+            </span>
+            {{/each}}
+            {{#if moonPhases.overflow.length}}
+            <span class="moon-overflow" data-tooltip="{{{moonPhases.overflowTooltip}}}">+{{moonPhases.overflow.length}}</span>
+            {{/if}}
           </span>
-          {{/each}}
+          {{/if}}
         </div>
         {{#if notes.length}}
         <div class="day-notes">

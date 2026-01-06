@@ -479,6 +479,15 @@
   background: var(--calendaria-button-bg);
 }
 
+.day-moons {
+  gap: 2px;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  max-height: 24px;
+  overflow: hidden;
+}
+
 .moon-phase {
   display: inline-flex;
   align-items: center;
@@ -497,6 +506,33 @@
     img {
       mix-blend-mode: multiply;
     }
+  }
+}
+
+.moon-overflow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: 3px;
+  color: var(--calendaria-text);
+  font-weight: 600;
+  font-size: 10px;
+  background: var(--calendaria-bg-lighter);
+  cursor: help;
+}
+
+.moon-tooltip-row {
+  gap: 6px;
+  display: flex;
+  align-items: center;
+  padding: 2px 0;
+
+  img {
+    width: 14px;
+    height: 14px;
   }
 }
 

@@ -22,6 +22,25 @@ import { SettingsPanel } from './settings/settings-panel.mjs';
 
 const { HandlebarsApplicationMixin, ApplicationV2 } = foundry.applications.api;
 
+/** Max moon icons visible per day cell before overflow. */
+const MAX_VISIBLE_MOONS = 3;
+
+/**
+ * Process moon phases array for display with overflow handling.
+ * @param {object[]|null} phases - Array of moon phase objects
+ * @returns {object|null} Processed object with visible, overflow, and overflowTooltip
+ */
+function processMoonPhases(phases) {
+  if (!phases?.length) return null;
+  if (phases.length <= MAX_VISIBLE_MOONS) return { visible: phases, overflow: [], overflowTooltip: '' };
+  const visible = phases.slice(0, MAX_VISIBLE_MOONS);
+  const overflow = phases.slice(MAX_VISIBLE_MOONS);
+  const overflowTooltip = overflow
+    .map((m) => `<div class='moon-tooltip-row'><img src='${m.icon}'><span>${m.moonName}: ${m.phaseName}</span></div>`)
+    .join('');
+  return { visible, overflow, overflowTooltip };
+}
+
 /**
  * Calendar Application - displays the calendar UI.
  * @extends ApplicationV2
@@ -254,6 +273,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
             return { moonName: localize(moon.name), phaseName: localize(phase.name), icon: phase.icon, color: moon.color || null };
           })
           .filter(Boolean);
+        moonPhases = processMoonPhases(moonPhases);
       }
 
       // Check if this is a non-counting festival (intercalary day)
@@ -418,6 +438,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
               return { moonName: localize(moon.name), phaseName: localize(phase.name), icon: phase.icon, color: moon.color || null };
             })
             .filter(Boolean);
+          moonPhases = processMoonPhases(moonPhases);
         }
 
         const weekdayData = calendar.days?.values?.[i % daysInWeek];
