@@ -28,6 +28,9 @@ export default class NoteManager {
   /** @type {string|null} Calendar notes folder ID */
   static #notesFolderId = null;
 
+  /** @type {boolean} Bypass flag for internal cleanup operations */
+  static #bypassDeleteProtection = false;
+
   /* -------------------------------------------- */
   /*  Initialization                              */
   /* -------------------------------------------- */
@@ -183,6 +186,7 @@ export default class NoteManager {
    */
   static onPreDeleteJournalEntry(journal, _options, _userId) {
     if (game.settings.get(MODULE.ID, SETTINGS.DEV_MODE)) return;
+    if (this.#bypassDeleteProtection) return;
     const isCalendarJournal = journal.getFlag(MODULE.ID, 'isCalendarJournal');
     if (isCalendarJournal) {
       ui.notifications.warn('CALENDARIA.Warning.CannotDeleteCalendarJournal', { localize: true });
@@ -549,6 +553,16 @@ export default class NoteManager {
       const calendarId = journal.getFlag(MODULE.ID, 'calendarId');
       if (!calendarId) continue;
       const calendar = CalendarManager.getCalendar(calendarId);
+      if (!calendar) {
+        // Delete orphaned legacy journals whose calendar no longer exists
+        if (game.user.isGM) {
+          log(3, `Deleting orphaned legacy journal "${journal.name}" - calendar ${calendarId} no longer exists`);
+          this.#bypassDeleteProtection = true;
+          await journal.delete();
+          this.#bypassDeleteProtection = false;
+        }
+        continue;
+      }
       const folder = await this.getCalendarFolder(calendarId, calendar);
       if (!folder) continue;
       const notePages = journal.pages.filter((p) => p.type === 'calendaria.calendarnote');
@@ -585,7 +599,7 @@ export default class NoteManager {
       }
     }
     await this.#buildIndex();
-    log(2, 'Calendar journal migration complete');
+    log(3, 'Calendar journal migration complete');
   }
 
   /**
