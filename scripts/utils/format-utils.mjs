@@ -53,12 +53,13 @@ export function toRomanNumeral(n) {
 export function dateFormattingParts(calendar, components) {
   const { year, month, dayOfMonth, hour = 0, minute = 0, second = 0 } = components;
   const displayYear = year;
-  const monthData = calendar?.months?.values?.[month];
-  const monthName = monthData ? localize(monthData.name) : `Month ${month + 1}`;
-  const monthAbbr = monthData?.abbreviation ? localize(monthData.abbreviation) : monthName.slice(0, 3);
+  const isMonthless = calendar?.isMonthless ?? false;
+  const monthData = isMonthless ? null : calendar?.months?.values?.[month];
+  const monthName = isMonthless ? '' : (monthData ? localize(monthData.name) : `Month ${month + 1}`);
+  const monthAbbr = isMonthless ? '' : (monthData?.abbreviation ? localize(monthData.abbreviation) : monthName.slice(0, 3));
   const weekdays = calendar?.days?.values || [];
-  const daysInMonthsBefore = (calendar?.months?.values || []).slice(0, month).reduce((sum, m) => sum + (m.days || 0), 0);
-  const dayOfYear = daysInMonthsBefore + dayOfMonth;
+  const daysInMonthsBefore = isMonthless ? 0 : (calendar?.months?.values || []).slice(0, month).reduce((sum, m) => sum + (m.days || 0), 0);
+  const dayOfYear = isMonthless ? dayOfMonth : daysInMonthsBefore + dayOfMonth;
   const yearZero = calendar?.years?.yearZero ?? 0;
   const internalYear = displayYear - yearZero;
   const daysPerYear = calendar?.days?.daysPerYear ?? 365;
@@ -102,17 +103,17 @@ export function dateFormattingParts(calendar, components) {
     yy: String(displayYear).slice(-2),
     yyyy: String(displayYear).padStart(4, '0'),
 
-    // Month
-    M: month + 1,
-    MM: String(month + 1).padStart(2, '0'),
+    // Month (empty for monthless calendars)
+    M: isMonthless ? '' : month + 1,
+    MM: isMonthless ? '' : String(month + 1).padStart(2, '0'),
     MMM: monthAbbr,
     MMMM: monthName,
-    Mo: ordinal(month + 1),
+    Mo: isMonthless ? '' : ordinal(month + 1),
 
-    // Day
-    D: dayOfMonth,
-    DD: String(dayOfMonth).padStart(2, '0'),
-    Do: ordinal(dayOfMonth),
+    // Day (for monthless calendars, D is day-of-year)
+    D: isMonthless ? dayOfYear : dayOfMonth,
+    DD: isMonthless ? String(dayOfYear).padStart(2, '0') : String(dayOfMonth).padStart(2, '0'),
+    Do: isMonthless ? ordinal(dayOfYear) : ordinal(dayOfMonth),
     DDD: String(dayOfYear).padStart(3, '0'),
 
     // Weekday

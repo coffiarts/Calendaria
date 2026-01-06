@@ -50,7 +50,11 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @override */
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
-    context.increments = Object.entries(getTimeIncrements()).map(([key, seconds]) => ({ key, label: this.#formatIncrementLabel(key), seconds, selected: key === TimeKeeper.incrementKey }));
+    const calendar = game.time?.calendar;
+    const isMonthless = calendar?.isMonthless ?? false;
+    context.increments = Object.entries(getTimeIncrements())
+      .filter(([key]) => !isMonthless || key !== 'month')
+      .map(([key, seconds]) => ({ key, label: this.#formatIncrementLabel(key), seconds, selected: key === TimeKeeper.incrementKey }));
     context.running = TimeKeeper.running;
     context.isGM = game.user.isGM;
     context.currentTime = this.#formatTime();

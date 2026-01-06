@@ -1,0 +1,102 @@
+{
+  "id": "traveller",
+  "name": "CALENDARIA.Calendar.Traveller.Name",
+  "years": {
+    "yearZero": 1105,
+    "firstWeekday": 0
+  },
+  "months": {
+    "values": []
+  },
+  "days": {
+    "values": [
+      {
+        "name": "CALENDARIA.Calendar.Traveller.Weekday.Wonday",
+        "abbreviation": "CALENDARIA.Calendar.Traveller.Weekday.WondayShort",
+        "ordinal": 1
+      },
+      {
+        "name": "CALENDARIA.Calendar.Traveller.Weekday.Tuday",
+        "abbreviation": "CALENDARIA.Calendar.Traveller.Weekday.TudayShort",
+        "ordinal": 2
+      },
+      {
+        "name": "CALENDARIA.Calendar.Traveller.Weekday.Thirday",
+        "abbreviation": "CALENDARIA.Calendar.Traveller.Weekday.ThirdayShort",
+        "ordinal": 3
+      },
+      {
+        "name": "CALENDARIA.Calendar.Traveller.Weekday.Forday",
+        "abbreviation": "CALENDARIA.Calendar.Traveller.Weekday.FordayShort",
+        "ordinal": 4
+      },
+      {
+        "name": "CALENDARIA.Calendar.Traveller.Weekday.Fiday",
+        "abbreviation": "CALENDARIA.Calendar.Traveller.Weekday.FidayShort",
+        "ordinal": 5
+      },
+      {
+        "name": "CALENDARIA.Calendar.Traveller.Weekday.Sixday",
+        "abbreviation": "CALENDARIA.Calendar.Traveller.Weekday.SixdayShort",
+        "ordinal": 6
+      },
+      {
+        "name": "CALENDARIA.Calendar.Traveller.Weekday.Senday",
+        "abbreviation": "CALENDARIA.Calendar.Traveller.Weekday.SendayShort",
+        "ordinal": 7,
+        "isRestDay": true
+      }
+    ],
+    "daysPerYear": 365,
+    "hoursPerDay": 24,
+    "minutesPerHour": 60,
+    "secondsPerMinute": 60
+  },
+  "seasons": {
+    "values": []
+  },
+  "eras": [
+    {
+      "name": "CALENDARIA.Calendar.Traveller.Era.ImperialCalendar",
+      "abbreviation": "CALENDARIA.Calendar.Traveller.Era.IC",
+      "startYear": 0,
+      "endYear": null,
+      "format": "suffix"
+    }
+  ],
+  "moons": [],
+  "festivals": [
+    {
+      "name": "CALENDARIA.Calendar.Traveller.Festival.Holiday",
+      "dayOfYear": 1,
+      "countsForWeekday": false
+    }
+  ],
+  "daylight": {
+    "enabled": false
+  },
+  "cycles": [],
+  "canonicalHours": [],
+  "weeks": {
+    "enabled": true,
+    "type": "year-based",
+    "names": []
+  },
+  "amPmNotation": {
+    "am": "AM",
+    "pm": "PM"
+  },
+  "dateFormats": {
+    "short": "DDD-yyyy",
+    "long": "DDD-yyyy [era]",
+    "full": "dddd, DDD-yyyy [era]",
+    "time": "HH:mm",
+    "time12": "h:mm a"
+  },
+  "metadata": {
+    "id": "traveller",
+    "description": "CALENDARIA.Calendar.Traveller.Description",
+    "author": "calendaria",
+    "system": "Traveller"
+  }
+}

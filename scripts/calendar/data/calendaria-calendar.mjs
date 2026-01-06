@@ -82,6 +82,18 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     return this.#epochOffset;
   }
 
+  /**
+   * Check if this calendar operates without named months (e.g., Traveller Imperial Calendar).
+   * Monthless calendars use day-of-year numbering instead of month/day.
+   * @returns {boolean} True if the calendar has no named months
+   */
+  get isMonthless() {
+    const months = this.months?.values ?? [];
+    if (months.length === 0) return true;
+    if (months.length === 1 && (!months[0].name || months[0].name === '')) return true;
+    return false;
+  }
+
   /** @override */
   timeToComponents(time) {
     return super.timeToComponents(time + CalendariaCalendar.epochOffset);
@@ -182,8 +194,9 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
       festivals: new ArrayField(
         new SchemaField({
           name: new StringField({ required: true }),
-          month: new NumberField({ required: true, nullable: false, min: 1, integer: true }),
-          day: new NumberField({ required: true, nullable: false, min: 1, integer: true }),
+          month: new NumberField({ required: false, nullable: true, min: 1, integer: true }),
+          day: new NumberField({ required: false, nullable: true, min: 1, integer: true }),
+          dayOfYear: new NumberField({ required: false, nullable: true, min: 1, max: 400, integer: true }),
           leapYearOnly: new BooleanField({ required: false, initial: false }),
           countsForWeekday: new BooleanField({ required: false, initial: true })
         })
@@ -372,6 +385,10 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
    * @returns {number} - Total days in the year
    */
   getDaysInYear(year) {
+    if (this.isMonthless) {
+      const base = this.days?.daysPerYear ?? 365;
+      return this.isLeapYear(year) ? base + 1 : base;
+    }
     const isLeap = this.isLeapYear(year);
     return (this.months?.values ?? []).reduce((sum, month) => {
       const days = isLeap && month.leapDays != null ? month.leapDays : month.days;
@@ -521,19 +538,34 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
   /**
    * Find festival day for current day.
    * @param {number|object} [time]  Time to use, by default the current world time.
-   * @returns {{name: string, month: number, day: number, leapYearOnly: boolean}|null} - Festival or null
+   * @returns {{name: string, month: number, day: number, dayOfYear: number, leapYearOnly: boolean}|null} - Festival or null
    */
   findFestivalDay(time = game.time.worldTime) {
     const components = typeof time === 'number' ? this.timeToComponents(time) : time;
     const displayYear = components.year + (this.years?.yearZero ?? 0);
     const isLeap = this.isLeapYear(displayYear);
+    const currentDayOfYear = this._calculateDayOfYear(components);
     return (
       this.festivals?.find((f) => {
-        if (f.month !== components.month + 1 || f.day !== components.dayOfMonth + 1) return false;
         if (f.leapYearOnly && !isLeap) return false;
-        return true;
+        if (f.dayOfYear != null) return f.dayOfYear === currentDayOfYear + 1;
+        if (f.month != null && f.day != null) return f.month === components.month + 1 && f.day === components.dayOfMonth + 1;
+        return false;
       }) ?? null
     );
+  }
+
+  /**
+   * Calculate day of year (0-indexed) from components.
+   * @param {object} components - Time components
+   * @returns {number} Day of year (0-indexed)
+   * @private
+   */
+  _calculateDayOfYear(components) {
+    if (this.isMonthless) return components.dayOfMonth;
+    let dayOfYear = components.dayOfMonth;
+    for (let i = 0; i < components.month; i++) dayOfYear += this.months?.values?.[i]?.days ?? 0;
+    return dayOfYear;
   }
 
   /**
@@ -547,7 +579,6 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
 
   /**
    * Count festival days that don't count for weekday calculation before a given date in the same year.
-   * Used to adjust weekday calculations for intercalary days.
    * @param {number|object} time  Time to check up to.
    * @returns {number} Number of non-counting festival days before this date in the year.
    */
@@ -556,14 +587,19 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     const components = typeof time === 'number' ? this.timeToComponents(time) : time;
     const displayYear = components.year + (this.years?.yearZero ?? 0);
     const isLeap = this.isLeapYear(displayYear);
+    const currentDayOfYear = this._calculateDayOfYear(components) + 1;
     const currentMonth = components.month + 1;
     const currentDay = components.dayOfMonth + 1;
     let count = 0;
     for (const festival of this.festivals) {
       if (festival.countsForWeekday !== false) continue;
       if (festival.leapYearOnly && !isLeap) continue;
-      if (festival.month < currentMonth) count++;
-      else if (festival.month === currentMonth && festival.day < currentDay) count++;
+      if (festival.dayOfYear != null) {
+        if (festival.dayOfYear < currentDayOfYear) count++;
+      } else if (festival.month != null && festival.day != null) {
+        if (festival.month < currentMonth) count++;
+        else if (festival.month === currentMonth && festival.day < currentDay) count++;
+      }
     }
 
     return count;
@@ -1055,7 +1091,7 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
   /**
    * Get the current 1-indexed cycle number for a specific cycle.
    * Cycle 1 is the first cycle; negative years return Cycle 1.
-   * @param {number} [cycleIndex=0] - Index of the cycle definition to use
+   * @param {number} [cycleIndex] - Index of the cycle definition to use
    * @param {number|object} [time] - Time to use, by default the current world time
    * @returns {number} - 1-indexed cycle number (minimum 1)
    */
@@ -1073,7 +1109,7 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
 
   /**
    * Get the current cycle entry (named entry) for a specific cycle.
-   * @param {number} [cycleIndex=0] - Index of the cycle definition to use
+   * @param {number} [cycleIndex] - Index of the cycle definition to use
    * @param {number|object} [time] - Time to use, by default the current world time
    * @returns {{name: string, index: number, cycleNumber: number}|null} - Entry data or null
    */

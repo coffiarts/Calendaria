@@ -30,7 +30,8 @@ export const BUNDLED_CALENDARS = [
   'krynn-elven',
   'krynn-solamnia',
   'renescara',
-  'thyatian'
+  'thyatian',
+  'traveller'
 ];
 
 /**

@@ -250,6 +250,7 @@
               </div>
             </div>
           </div>
+          {{#unless isMonthless}}
           <div class="range-component">
             <label>{{localize "CALENDARIA.Common.Month"}}</label>
             <div class="range-controls inline-form">
@@ -286,8 +287,9 @@
               </div>
             </div>
           </div>
+          {{/unless}}
           <div class="range-component">
-            <label>{{localize "CALENDARIA.Common.Day"}}</label>
+            <label>{{#if isMonthless}}{{localize "CALENDARIA.SetDate.DayOfYear"}}{{else}}{{localize "CALENDARIA.Common.Day"}}{{/if}}</label>
             <div class="range-controls inline-form">
               <select data-range-type="day">
                 {{#each rangeDayOptions}}

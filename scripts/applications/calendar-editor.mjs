@@ -1095,13 +1095,9 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   static async #onRemoveMonth(_event, target) {
     const idx = parseInt(target.dataset.index);
-    if (this.#calendarData.months.values.length > 1) {
-      this.#calendarData.months.values.splice(idx, 1);
-      this.#reindexArray(this.#calendarData.months.values);
-      this.render();
-    } else {
-      ui.notifications.warn('CALENDARIA.Editor.Error.MinOneMonth', { localize: true });
-    }
+    this.#calendarData.months.values.splice(idx, 1);
+    this.#reindexArray(this.#calendarData.months.values);
+    this.render();
   }
 
   /**

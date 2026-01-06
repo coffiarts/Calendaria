@@ -51,9 +51,6 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @type {boolean} Sticky position (immovable) */
   #stickyPosition = false;
 
-  /** @type {object|null} Active sticky options menu */
-  #stickyMenu = null;
-
   /** @type {number|null} Timeout ID for hiding controls */
   #hideTimeout = null;
 
@@ -112,7 +109,6 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
       reverse: MiniCalendar._onReverse,
       reverse5x: MiniCalendar._onReverse5x,
       setCurrentDate: MiniCalendar._onSetCurrentDate,
-      toggleLock: MiniCalendar._onToggleLock,
       viewNotes: MiniCalendar._onViewNotes,
       closeNotesPanel: MiniCalendar._onCloseNotesPanel,
       openNote: MiniCalendar._onOpenNote,
@@ -178,12 +174,12 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
       ? formatForLocation(calendar, { ...components, year: components.year + yearZero, dayOfMonth: (components.dayOfMonth ?? 0) + 1 }, 'miniCalendarTime')
       : TimeKeeper.getFormattedTime();
     context.currentDate = TimeKeeper.getFormattedDate();
-    context.increments = Object.entries(getTimeIncrements()).map(([key, seconds]) => ({ key, label: this.#formatIncrementLabel(key), seconds, selected: key === TimeKeeper.incrementKey }));
-
-    // Fetch notes once and reuse for calendar data and note count
+    const isMonthless = calendar?.isMonthless ?? false;
+    context.increments = Object.entries(getTimeIncrements())
+      .filter(([key]) => !isMonthless || key !== 'month')
+      .map(([key, seconds]) => ({ key, label: this.#formatIncrementLabel(key), seconds, selected: key === TimeKeeper.incrementKey }));
     const allNotes = ViewUtils.getCalendarNotes();
     const visibleNotes = ViewUtils.getVisibleNotes(allNotes);
-
     if (calendar) context.calendarData = this._generateMiniCalendarData(calendar, viewedDate, visibleNotes);
     context.showSetCurrentDate = false;
     if (game.user.isGM && this._selectedDate) {
@@ -253,6 +249,7 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
    * @returns {object} Calendar grid data
    */
   _generateMiniCalendarData(calendar, date, visibleNotes) {
+    if (calendar.isMonthless) return this._generateWeekViewData(calendar, date, visibleNotes);
     const { year, month } = date;
     const monthData = calendar.months?.values?.[month];
     if (!monthData) return null;
@@ -421,6 +418,91 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
       weeks,
       daysInWeek,
       weekdays: monthWeekdays.map((wd) => ({ name: localize(wd.name).substring(0, 2), isRestDay: wd.isRestDay || false }))
+    };
+  }
+
+  /**
+   * Generate week-based view data for monthless calendars.
+   * @param {object} calendar - The calendar
+   * @param {object} date - The viewed date (year, day for monthless)
+   * @param {object[]} visibleNotes - Pre-fetched visible notes
+   * @returns {object} Week view grid data
+   */
+  _generateWeekViewData(calendar, date, visibleNotes) {
+    const { year } = date;
+    const viewedDay = date.day || 1;
+    const daysInWeek = calendar.days?.values?.length || 7;
+    const daysInYear = calendar.getDaysInYear(year);
+    const yearZero = calendar.years?.yearZero ?? 0;
+    const weekNumber = Math.floor((viewedDay - 1) / daysInWeek);
+    const totalWeeks = Math.ceil(daysInYear / daysInWeek);
+    const weeks = [];
+    for (let weekOffset = -1; weekOffset <= 1; weekOffset++) {
+      const targetWeek = weekNumber + weekOffset;
+      const weekStartDay = targetWeek * daysInWeek + 1;
+      const currentWeek = [];
+      for (let i = 0; i < daysInWeek; i++) {
+        let dayNum = weekStartDay + i;
+        let dayYear = year;
+        const targetYearDays = calendar.getDaysInYear(dayYear);
+        if (dayNum > targetYearDays) {
+          dayNum -= targetYearDays;
+          dayYear++;
+        } else if (dayNum < 1) {
+          const prevYearDays = calendar.getDaysInYear(dayYear - 1);
+          dayNum += prevYearDays;
+          dayYear--;
+        }
+
+        const dayInternalYear = dayYear - yearZero;
+        const noteCount = this._countNotesOnDay(visibleNotes, dayYear, 0, dayNum);
+        const festivalDay = calendar.findFestivalDay({ year: dayInternalYear, month: 0, dayOfMonth: dayNum - 1 });
+        const moonData = ViewUtils.getFirstMoonPhase(calendar, dayYear, 0, dayNum);
+        const isIntercalary = festivalDay?.countsForWeekday === false;
+        const dayData = {
+          day: dayNum,
+          year: dayYear,
+          month: 0,
+          isToday: ViewUtils.isToday(dayYear, 0, dayNum, calendar),
+          isSelected: this._isSelected(dayYear, 0, dayNum),
+          hasNotes: noteCount > 0,
+          noteCount,
+          isFestival: !!festivalDay,
+          festivalName: festivalDay ? localize(festivalDay.name) : null,
+          moonIcon: moonData?.icon ?? null,
+          moonPhase: moonData?.tooltip ?? null,
+          moonColor: moonData?.color ?? null,
+          isFromOtherWeek: weekOffset !== 0
+        };
+
+        if (isIntercalary) dayData.isIntercalary = true;
+        currentWeek.push(dayData);
+      }
+
+      weeks.push(currentWeek);
+    }
+
+    const viewedComponents = { month: 0, dayOfMonth: viewedDay - 1 };
+    const currentSeason = ViewUtils.enrichSeasonData(calendar.getCurrentSeason?.(viewedComponents));
+    const currentEra = calendar.getCurrentEra?.();
+    const weekdayData = calendar.days?.values ?? [];
+    const displayWeek = weekNumber + 1;
+    const yearDisplay = calendar.formatYearWithEra?.(year) ?? String(year);
+    const formattedHeader = `${localize('CALENDARIA.Common.Week')} ${displayWeek}, ${yearDisplay}`;
+    return {
+      year,
+      month: 0,
+      monthName: '',
+      yearDisplay,
+      formattedHeader,
+      currentSeason,
+      currentEra,
+      weeks,
+      daysInWeek,
+      weekdays: weekdayData.map((wd) => ({ name: localize(wd.name).substring(0, 2), isRestDay: wd.isRestDay || false })),
+      isMonthless: true,
+      weekNumber: displayWeek,
+      totalWeeks
     };
   }
 
@@ -812,14 +894,6 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
       sidebar?.classList.remove('visible');
       this.#sidebarVisible = false;
     }
-    this._updatePinButtonState();
-  }
-
-  /**
-   * Save sticky states to settings.
-   */
-  async #saveStickyStates() {
-    await game.settings.set(MODULE.ID, SETTINGS.MINI_CALENDAR_STICKY_STATES, { timeControls: this.#stickyTimeControls, sidebar: this.#stickySidebar, position: this.#stickyPosition });
   }
 
   /**
@@ -926,7 +1000,7 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
   /* -------------------------------------------- */
 
   /**
-   * Navigate to the next or previous month.
+   * Navigate to the next or previous month (or week for monthless calendars).
    * @param {PointerEvent} _event - The click event
    * @param {HTMLElement} target - The clicked element
    */
@@ -934,6 +1008,25 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
     const direction = target.dataset.direction === 'next' ? 1 : -1;
     const current = this.viewedDate;
     const calendar = this.calendar;
+    if (calendar.isMonthless) {
+      const daysInWeek = calendar.days?.values?.length || 7;
+      const daysInYear = calendar.getDaysInYear(current.year);
+      let newDay = (current.day || 1) + direction * daysInWeek;
+      let newYear = current.year;
+      if (newDay > daysInYear) {
+        newDay -= daysInYear;
+        newYear++;
+      } else if (newDay < 1) {
+        const prevYearDays = calendar.getDaysInYear(newYear - 1);
+        newDay += prevYearDays;
+        newYear--;
+      }
+
+      this.viewedDate = { year: newYear, month: 0, day: newDay };
+      await this.render();
+      return;
+    }
+
     let newMonth = current.month + direction;
     let newYear = current.year;
     if (newMonth >= calendar.months.values.length) {
@@ -1095,109 +1188,6 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
     await ViewUtils.setDateTo(this._selectedDate.year, this._selectedDate.month, this._selectedDate.day, this.calendar);
     this._selectedDate = null;
     await this.render();
-  }
-
-  /**
-   * Show sticky options context menu.
-   * @param {PointerEvent} _event - The click event
-   * @param {HTMLElement} target - The clicked element
-   */
-  static _onToggleLock(_event, target) {
-    if (this.#stickyMenu) {
-      this.#stickyMenu.close();
-      this.#stickyMenu = null;
-      return;
-    }
-
-    const ContextMenu = foundry.applications.ux.ContextMenu.implementation;
-    const toggleTime = this._toggleStickyTimeControls.bind(this);
-    const toggleSidebar = this._toggleStickySidebar.bind(this);
-    const togglePosition = this._toggleStickyPosition.bind(this);
-    const menuItems = [
-      { name: 'CALENDARIA.MiniCalendar.StickyTimeControls', icon: `<i class="fas fa-clock"></i>`, callback: toggleTime, classes: this.#stickyTimeControls ? ['sticky-active'] : [] },
-      { name: 'CALENDARIA.MiniCalendar.StickySidebar', icon: `<i class="fas fa-bars"></i>`, callback: toggleSidebar, classes: this.#stickySidebar ? ['sticky-active'] : [] },
-      { name: 'CALENDARIA.MiniCalendar.StickyPosition', icon: `<i class="fas fa-lock"></i>`, callback: togglePosition, classes: this.#stickyPosition ? ['sticky-active'] : [] }
-    ];
-
-    this.#stickyMenu = new ContextMenu(this.element, '.pin-btn', menuItems, {
-      fixed: true,
-      jQuery: false,
-      onClose: () => {
-        this.#stickyMenu = null;
-      }
-    });
-    this.#stickyMenu.render(target);
-  }
-
-  /**
-   * Toggle sticky time controls.
-   */
-  _toggleStickyTimeControls() {
-    this.#stickyTimeControls = !this.#stickyTimeControls;
-    const timeControls = this.element.querySelector('.mini-time-controls');
-    if (this.#stickyTimeControls) {
-      clearTimeout(this.#hideTimeout);
-      timeControls?.classList.add('visible');
-      this.#controlsVisible = true;
-    } else {
-      const delay = game.settings.get(MODULE.ID, SETTINGS.MINI_CALENDAR_CONTROLS_DELAY) * 1000;
-      this.#hideTimeout = setTimeout(() => {
-        this.#controlsVisible = false;
-        timeControls?.classList.remove('visible');
-      }, delay);
-    }
-
-    this._updatePinButtonState();
-    this.#saveStickyStates();
-  }
-
-  /**
-   * Toggle sticky sidebar.
-   */
-  _toggleStickySidebar() {
-    this.#stickySidebar = !this.#stickySidebar;
-    const sidebar = this.element.querySelector('.mini-sidebar');
-    const shouldBeLocked = this.#stickySidebar || this.#sidebarLocked;
-    sidebar?.classList.toggle('locked', shouldBeLocked);
-    if (this.#stickySidebar) {
-      clearTimeout(this.#sidebarTimeout);
-      sidebar?.classList.add('visible');
-      this.#sidebarVisible = true;
-    } else if (!this.#sidebarLocked) {
-      const delay = game.settings.get(MODULE.ID, SETTINGS.MINI_CALENDAR_CONTROLS_DELAY) * 1000;
-      this.#sidebarTimeout = setTimeout(() => {
-        this.#sidebarVisible = false;
-        sidebar?.classList.remove('visible');
-      }, delay);
-    }
-
-    this._updatePinButtonState();
-    this.#saveStickyStates();
-  }
-
-  /**
-   * Toggle sticky position (locks calendar in place).
-   */
-  _toggleStickyPosition() {
-    this.#stickyPosition = !this.#stickyPosition;
-    this._updatePinButtonState();
-    this.#saveStickyStates();
-  }
-
-  /**
-   * Update pin button visual state based on active sticky modes.
-   */
-  _updatePinButtonState() {
-    const pinBtn = this.element.querySelector('.pin-btn');
-    const topRow = this.element.querySelector('.mini-top-row');
-    if (pinBtn) {
-      const hasAnySticky = this.#stickyTimeControls || this.#stickySidebar || this.#stickyPosition;
-      pinBtn.classList.toggle('has-sticky', hasAnySticky);
-      pinBtn.classList.toggle('sticky-time', this.#stickyTimeControls);
-      pinBtn.classList.toggle('sticky-sidebar', this.#stickySidebar);
-      pinBtn.classList.toggle('sticky-position', this.#stickyPosition);
-    }
-    if (topRow) topRow.classList.toggle('position-locked', this.#stickyPosition);
   }
 
   /**

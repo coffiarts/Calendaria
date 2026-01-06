@@ -60,11 +60,21 @@ export class SetDateDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     const components = game.time.components;
     const yearZero = calendar?.years?.yearZero ?? 0;
     const displayYear = components.year + yearZero;
+    const isMonthless = calendar?.isMonthless ?? false;
     context.year = displayYear;
-    context.months = calendar?.months?.values?.map((m, i) => ({ index: i, name: localize(m.name), selected: i === components.month })) || [];
-    const daysInMonth = calendar?.getDaysInMonth?.(components.month, displayYear) ?? 30;
-    context.days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-    context.currentDay = (components.dayOfMonth ?? 0) + 1;
+    context.isMonthless = isMonthless;
+    context.months = isMonthless ? [] : (calendar?.months?.values?.map((m, i) => ({ index: i, name: localize(m.name), selected: i === components.month })) || []);
+    if (isMonthless) {
+      const daysInYear = calendar?.getDaysInYear?.(displayYear) ?? 365;
+      context.days = Array.from({ length: daysInYear }, (_, i) => i + 1);
+      context.currentDay = (components.dayOfMonth ?? 0) + 1;
+      context.dayLabel = localize('CALENDARIA.SetDate.DayOfYear');
+    } else {
+      const daysInMonth = calendar?.getDaysInMonth?.(components.month, displayYear) ?? 30;
+      context.days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+      context.currentDay = (components.dayOfMonth ?? 0) + 1;
+      context.dayLabel = localize('CALENDARIA.Common.Day');
+    }
     context.hour = components.hour ?? 0;
     context.minute = components.minute ?? 0;
     context.timepointsExpanded = this.#timepointsExpanded;
@@ -133,17 +143,24 @@ export class SetDateDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     const yearInput = this.element.querySelector('input[name="year"]');
     const monthSelect = this.element.querySelector('select[name="month"]');
     const daySelect = this.element.querySelector('select[name="day"]');
-    if (!yearInput || !monthSelect || !daySelect) return;
+    if (!yearInput || !daySelect) return;
     const year = parseInt(yearInput.value);
-    const month = parseInt(monthSelect.value);
     const currentDay = parseInt(daySelect.value);
-    const daysInMonth = calendar.getDaysInMonth?.(month, year) ?? 30;
+    const isMonthless = calendar.isMonthless ?? false;
+    let maxDays;
+    if (isMonthless) {
+      maxDays = calendar.getDaysInYear?.(year) ?? 365;
+    } else {
+      if (!monthSelect) return;
+      const month = parseInt(monthSelect.value);
+      maxDays = calendar.getDaysInMonth?.(month, year) ?? 30;
+    }
     daySelect.innerHTML = '';
-    for (let i = 1; i <= daysInMonth; i++) {
+    for (let i = 1; i <= maxDays; i++) {
       const option = document.createElement('option');
       option.value = i;
       option.textContent = i;
-      if (i === currentDay || (currentDay > daysInMonth && i === daysInMonth)) option.selected = true;
+      if (i === currentDay || (currentDay > maxDays && i === maxDays)) option.selected = true;
       daySelect.appendChild(option);
     }
   }
@@ -267,13 +284,20 @@ export class SetDateDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     const yearZero = calendar.years?.yearZero ?? 0;
     const data = formData.object;
     const year = parseInt(data.year) - yearZero;
-    const month = parseInt(data.month);
     const day = parseInt(data.day);
     const hour = parseInt(data.hour) || 0;
     const minute = parseInt(data.minute) || 0;
     const skipTriggers = data.skipTriggers ?? true;
-    let dayOfYear = day - 1;
-    for (let i = 0; i < month; i++) dayOfYear += calendar.months.values[i]?.days ?? 30;
+    const isMonthless = calendar.isMonthless ?? false;
+    let dayOfYear;
+    let month = 0;
+    if (isMonthless) {
+      dayOfYear = day - 1;
+    } else {
+      month = parseInt(data.month);
+      dayOfYear = day - 1;
+      for (let i = 0; i < month; i++) dayOfYear += calendar.months.values[i]?.days ?? 30;
+    }
     const newTimeComponents = { year, month, day: dayOfYear, hour, minute, second: 0 };
     const newTime = calendar.componentsToTime(newTimeComponents);
     const delta = newTime - game.time.worldTime;

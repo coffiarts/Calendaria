@@ -227,7 +227,10 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     context.liveEvents = this.#liveEvents;
     context.firstEventColor = this.#liveEvents[0]?.color || null;
     context.currentEvent = this.#liveEvents.length > 0 ? this.#liveEvents[0] : null;
-    context.increments = Object.entries(getTimeIncrements()).map(([key, seconds]) => ({ key, label: this.#formatIncrementLabel(key), seconds, selected: key === appSettings.incrementKey }));
+    const isMonthless = calendar?.isMonthless ?? false;
+    context.increments = Object.entries(getTimeIncrements())
+      .filter(([key]) => !isMonthless || key !== 'month')
+      .map(([key, seconds]) => ({ key, label: this.#formatIncrementLabel(key), seconds, selected: key === appSettings.incrementKey }));
     const customJumps = game.settings.get(MODULE.ID, SETTINGS.CUSTOM_TIME_JUMPS) || {};
     const currentJumps = customJumps[appSettings.incrementKey] || {};
     context.customJumps = { dec2: currentJumps.dec2 || null, dec1: currentJumps.dec1 || null, inc1: currentJumps.inc1 || null, inc2: currentJumps.inc2 || null };

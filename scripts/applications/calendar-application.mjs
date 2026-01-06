@@ -183,13 +183,15 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
   }
 
   /**
-   * Generate calendar grid data for month view
+   * Generate calendar grid data for month view.
    * @param {object} calendar - The calendar configuration
    * @param {object} date - The date being viewed
    * @param {Array} notes - Calendar notes to display
    * @returns {object} Calendar grid data for rendering
    */
   _generateCalendarData(calendar, date, notes) {
+    if (calendar.isMonthless) return this._generateMonthlessWeekData(calendar, date, notes);
+
     const { year, month } = date;
     const monthData = calendar.months?.values?.[month];
     if (!monthData) return null;
@@ -364,6 +366,104 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
       daysInWeek,
       currentSeason,
       currentEra
+    };
+  }
+
+  /**
+   * Generate week-based view data for monthless calendars.
+   * @param {object} calendar - The calendar configuration
+   * @param {object} date - The date being viewed (year, day for monthless)
+   * @param {Array} notes - Calendar notes to display
+   * @returns {object} Week view data for rendering
+   */
+  _generateMonthlessWeekData(calendar, date, notes) {
+    const { year } = date;
+    const viewedDay = date.day || 1;
+    const daysInWeek = calendar.days?.values?.length || 7;
+    const daysInYear = calendar.getDaysInYear(year);
+    const yearZero = calendar.years?.yearZero ?? 0;
+    const showMoons = game.settings.get(MODULE.ID, SETTINGS.SHOW_MOON_PHASES) && calendar.moons?.length;
+    const weekNumber = Math.floor((viewedDay - 1) / daysInWeek);
+    const totalWeeks = Math.ceil(daysInYear / daysInWeek);
+    const weeks = [];
+    for (let weekOffset = -1; weekOffset <= 1; weekOffset++) {
+      const targetWeek = weekNumber + weekOffset;
+      const weekStartDay = targetWeek * daysInWeek + 1;
+      const currentWeek = [];
+      for (let i = 0; i < daysInWeek; i++) {
+        let dayNum = weekStartDay + i;
+        let dayYear = year;
+        const targetYearDays = calendar.getDaysInYear(dayYear);
+        if (dayNum > targetYearDays) {
+          dayNum -= targetYearDays;
+          dayYear++;
+        } else if (dayNum < 1) {
+          const prevYearDays = calendar.getDaysInYear(dayYear - 1);
+          dayNum += prevYearDays;
+          dayYear--;
+        }
+
+        const dayInternalYear = dayYear - yearZero;
+        const dayNotes = this._getNotesForDay(notes, dayYear, 0, dayNum);
+        const festivalDay = calendar.findFestivalDay({ year: dayInternalYear, month: 0, dayOfMonth: dayNum - 1 });
+        const isIntercalary = festivalDay?.countsForWeekday === false;
+        let moonPhases = null;
+        if (showMoons) {
+          const dayComponents = { year: dayInternalYear, month: 0, day: dayNum - 1, hour: 12, minute: 0, second: 0 };
+          const dayWorldTime = calendar.componentsToTime(dayComponents);
+          moonPhases = calendar.moons
+            .map((moon, index) => {
+              const phase = calendar.getMoonPhase(index, dayWorldTime);
+              if (!phase) return null;
+              return { moonName: localize(moon.name), phaseName: localize(phase.name), icon: phase.icon, color: moon.color || null };
+            })
+            .filter(Boolean);
+        }
+
+        const weekdayData = calendar.days?.values?.[i % daysInWeek];
+        const dayData = {
+          day: dayNum,
+          year: dayYear,
+          month: 0,
+          isToday: this._isToday(dayYear, 0, dayNum),
+          isSelected: this._isSelected(dayYear, 0, dayNum),
+          notes: dayNotes,
+          isFestival: !!festivalDay,
+          festivalName: festivalDay ? localize(festivalDay.name) : null,
+          moonPhases,
+          isRestDay: weekdayData?.isRestDay || false,
+          isFromOtherWeek: weekOffset !== 0,
+          isIntercalary
+        };
+
+        currentWeek.push(dayData);
+      }
+
+      weeks.push(currentWeek);
+    }
+
+    const viewedComponents = { month: 0, dayOfMonth: viewedDay - 1 };
+    const currentSeason = ViewUtils.enrichSeasonData(calendar.getCurrentSeason?.(viewedComponents));
+    const currentEra = calendar.getCurrentEra?.();
+    const weekdayData = calendar.days?.values ?? [];
+    const displayWeek = weekNumber + 1;
+    const yearDisplay = calendar.formatYearWithEra?.(year) ?? String(year);
+    const formattedHeader = `${localize('CALENDARIA.Common.Week')} ${displayWeek}, ${yearDisplay}`;
+
+    return {
+      year,
+      month: 0,
+      monthName: '',
+      yearDisplay,
+      formattedHeader,
+      weeks,
+      weekdays: weekdayData.map((wd) => ({ name: localize(wd.name), isRestDay: wd.isRestDay || false })),
+      daysInWeek,
+      currentSeason,
+      currentEra,
+      isMonthless: true,
+      weekNumber: displayWeek,
+      totalWeeks
     };
   }
 
@@ -1014,6 +1114,23 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
         break;
       }
       default: {
+        if (calendar.isMonthless) {
+          const daysInWeek = calendar.days?.values?.length || 7;
+          const daysInYear = calendar.getDaysInYear(current.year);
+          let newDay = (current.day || 1) + direction * daysInWeek;
+          let newYear = current.year;
+          if (newDay > daysInYear) {
+            newDay -= daysInYear;
+            newYear++;
+          } else if (newDay < 1) {
+            const prevYearDays = calendar.getDaysInYear(newYear - 1);
+            newDay += prevYearDays;
+            newYear--;
+          }
+          this.viewedDate = { year: newYear, month: 0, day: newDay };
+          break;
+        }
+
         let newMonth = current.month + direction;
         let newYear = current.year;
         if (newMonth >= calendar.months.values.length) {

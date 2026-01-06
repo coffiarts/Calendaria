@@ -272,11 +272,10 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       season: localize('CALENDARIA.Common.Season'),
       year: localize('CALENDARIA.Common.Year')
     };
-    context.timeSpeedIncrements = Object.keys(getTimeIncrements()).map((key) => ({
-      key,
-      label: incrementLabels[key] || key,
-      selected: key === currentIncrement
-    }));
+    const isMonthless = CalendarManager.getActiveCalendar()?.isMonthless ?? false;
+    context.timeSpeedIncrements = Object.keys(getTimeIncrements())
+      .filter((key) => !isMonthless || key !== 'month')
+      .map((key) => ({ key, label: incrementLabels[key] || key, selected: key === currentIncrement }));
   }
 
   /**
@@ -366,11 +365,10 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       season: localize('CALENDARIA.Common.Season'),
       year: localize('CALENDARIA.Common.Year')
     };
-    context.customTimeJumps = Object.keys(getTimeIncrements()).map((key) => ({
-      key,
-      label: incrementLabels[key] || key,
-      jumps: customJumps[key] || { dec2: null, dec1: null, inc1: null, inc2: null }
-    }));
+    const isMonthless = CalendarManager.getActiveCalendar()?.isMonthless ?? false;
+    context.customTimeJumps = Object.keys(getTimeIncrements())
+      .filter((key) => !isMonthless || key !== 'month')
+      .map((key) => ({ key, label: incrementLabels[key] || key, jumps: customJumps[key] || { dec2: null, dec1: null, inc1: null, inc2: null } }));
   }
 
   /**
@@ -424,14 +422,8 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
         ...loc,
         gmFormat: formats.gm,
         playerFormat: formats.player,
-        gmPresetOptions: locationPresets.map((o) => ({
-          ...o,
-          selected: isCustomGM ? o.value === 'custom' : o.value === formats.gm
-        })),
-        playerPresetOptions: locationPresets.map((o) => ({
-          ...o,
-          selected: isCustomPlayer ? o.value === 'custom' : o.value === formats.player
-        })),
+        gmPresetOptions: locationPresets.map((o) => ({ ...o, selected: isCustomGM ? o.value === 'custom' : o.value === formats.gm })),
+        playerPresetOptions: locationPresets.map((o) => ({ ...o, selected: isCustomPlayer ? o.value === 'custom' : o.value === formats.player })),
         isCustomGM,
         isCustomPlayer
       };
@@ -469,11 +461,10 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       season: localize('CALENDARIA.Common.Season'),
       year: localize('CALENDARIA.Common.Year')
     };
-    context.timeKeeperTimeJumps = Object.keys(getTimeIncrements()).map((key) => ({
-      key,
-      label: incrementLabels[key] || key,
-      jumps: timeKeeperJumps[key] || { dec2: null, dec1: null, inc1: null, inc2: null }
-    }));
+    const isMonthless = CalendarManager.getActiveCalendar()?.isMonthless ?? false;
+    context.timeKeeperTimeJumps = Object.keys(getTimeIncrements())
+      .filter((key) => !isMonthless || key !== 'month')
+      .map((key) => ({ key, label: incrementLabels[key] || key, jumps: timeKeeperJumps[key] || { dec2: null, dec1: null, inc1: null, inc2: null } }));
   }
 
   /**

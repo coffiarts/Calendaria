@@ -227,9 +227,15 @@ export function isValidDate(date) {
   if (typeof date.day !== 'number') return false;
   const calendar = CalendarManager.getActiveCalendar();
   if (!calendar) return true;
-  if (date.month < 0 || date.month >= calendar.months.length) return false;
-  const maxDays = calendar.getDaysInMonth(date.month, date.year);
-  if (date.day < 1 || date.day > maxDays) return false;
+  if (calendar.isMonthless) {
+    if (date.month !== 0) return false;
+    const maxDays = calendar.getDaysInYear(date.year);
+    if (date.day < 1 || date.day > maxDays) return false;
+  } else {
+    if (date.month < 0 || date.month >= calendar.months.values.length) return false;
+    const maxDays = calendar.getDaysInMonth(date.month, date.year);
+    if (date.day < 1 || date.day > maxDays) return false;
+  }
   if (date.hour !== undefined) {
     const hoursPerDay = calendar.hours ?? 24;
     if (date.hour < 0 || date.hour >= hoursPerDay) return false;

@@ -280,7 +280,10 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
     context.endTimeValue = `${endHour}:${endMinute}`;
     const repeatType = this.document.system.repeat;
     const hasLinkedEvent = !!this.document.system.linkedEvent?.noteId;
-    context.repeatOptions = getRepeatOptions(repeatType);
+    const isMonthless = calendar?.isMonthless ?? false;
+    const allRepeatOptions = getRepeatOptions(repeatType);
+    context.repeatOptions = isMonthless ? allRepeatOptions.filter((opt) => !['monthly', 'weekOfMonth'].includes(opt.value)) : allRepeatOptions;
+    context.isMonthless = isMonthless;
     context.showRepeatOptions = repeatType !== 'never';
     context.moons =
       calendar?.moons?.map((moon, index) => ({
@@ -640,6 +643,8 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
    * @private
    */
   _formatDateDisplay(calendar, year, month, day) {
+    const isMonthless = calendar?.isMonthless ?? false;
+    if (isMonthless) return `${localize('CALENDARIA.Common.Day')} ${day}, ${year}`;
     if (!calendar?.months?.values) return `${day} / ${month + 1} / ${year}`;
     const monthData = calendar.months.values[month];
     const monthName = monthData?.name ? localize(monthData.name) : `Month ${month + 1}`;
@@ -676,9 +681,14 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
     if (dayInput) dayInput.value = result.day;
     const displaySpan = target.querySelector('.date-display');
     if (displaySpan) {
-      const monthData = calendar.months.values[result.month];
-      const monthName = monthData?.name ? localize(monthData.name) : `Month ${result.month + 1}`;
-      displaySpan.textContent = `${result.day} ${monthName}, ${result.year}`;
+      const isMonthless = calendar?.isMonthless ?? false;
+      if (isMonthless) {
+        displaySpan.textContent = `${localize('CALENDARIA.Common.Day')} ${result.day}, ${result.year}`;
+      } else {
+        const monthData = calendar.months.values[result.month];
+        const monthName = monthData?.name ? localize(monthData.name) : `Month ${result.month + 1}`;
+        displaySpan.textContent = `${result.day} ${monthName}, ${result.year}`;
+      }
     }
 
     const changeEvent = new Event('change', { bubbles: true });
@@ -695,12 +705,14 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
    * @private
    */
   static async _showDatePickerDialog(calendar, currentYear, currentMonth, currentDay) {
-    const daysInMonth = calendar.getDaysInMonth(currentMonth, currentYear);
+    const isMonthless = calendar?.isMonthless ?? false;
+    const maxDays = isMonthless ? (calendar.getDaysInYear?.(currentYear) ?? 365) : (calendar.getDaysInMonth?.(currentMonth, currentYear) ?? 30);
     const content = await foundry.applications.handlebars.renderTemplate(TEMPLATES.PARTIALS.DATE_PICKER, {
       formClass: '',
       year: currentYear,
-      months: calendar.months.values.map((m, i) => ({ index: i, name: localize(m.name), selected: i === currentMonth })),
-      days: Array.from({ length: daysInMonth }, (_, i) => i + 1),
+      isMonthless,
+      months: isMonthless ? [] : calendar.months.values.map((m, i) => ({ index: i, name: localize(m.name), selected: i === currentMonth })),
+      days: Array.from({ length: maxDays }, (_, i) => i + 1),
       currentDay
     });
 
@@ -709,13 +721,16 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
       content,
       ok: {
         callback: (_event, button) => {
-          return { year: parseInt(button.form.elements.year.value), month: parseInt(button.form.elements.month.value), day: parseInt(button.form.elements.day.value) };
+          const month = isMonthless ? 0 : parseInt(button.form.elements.month?.value ?? 0);
+          return { year: parseInt(button.form.elements.year.value), month, day: parseInt(button.form.elements.day.value) };
         }
       },
       render: (_event, dialog) => {
+        if (isMonthless) return;
         const html = dialog.element;
         const monthSelect = html.querySelector('#month-select');
         const daySelect = html.querySelector('#day-select');
+        if (!monthSelect || !daySelect) return;
         monthSelect.addEventListener('change', () => {
           const selectedMonth = parseInt(monthSelect.value);
           const daysInSelectedMonth = calendar.months.values[selectedMonth]?.days || 30;

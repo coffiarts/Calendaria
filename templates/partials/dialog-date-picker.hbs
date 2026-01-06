@@ -2,6 +2,7 @@
   <label>{{localize "CALENDARIA.Common.Year"}}</label>
   <input type="number" name="year" value="{{year}}" step="1">
 </div>
+{{#unless isMonthless}}
 <div class="form-group">
   <label>{{localize "CALENDARIA.Common.Month"}}</label>
   <select name="month" id="month-select">
@@ -10,8 +11,9 @@
     {{/each}}
   </select>
 </div>
+{{/unless}}
 <div class="form-group">
-  <label>{{localize "CALENDARIA.Common.Day"}}</label>
+  <label>{{#if isMonthless}}{{localize "CALENDARIA.SetDate.DayOfYear"}}{{else}}{{localize "CALENDARIA.Common.Day"}}{{/if}}</label>
   <select name="day" id="day-select">
     {{#each days}}
     <option value="{{this}}" {{#if (eq this ../currentDay)}}selected{{/if}}>{{this}}</option>

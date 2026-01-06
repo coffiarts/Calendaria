@@ -236,7 +236,7 @@ export function pinToZone(element, zoneId) {
  * @param {HTMLElement} element - The element to unpin
  */
 export function unpinFromZone(element) {
-  if (!element.classList.contains(PINNED_CLASS)) return;
+  if (!element?.classList?.contains(PINNED_CLASS)) return;
   element.classList.remove(PINNED_CLASS);
   element.style.position = 'fixed';
   document.body.appendChild(element);

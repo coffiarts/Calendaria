@@ -1,4 +1,19 @@
 <section class="tab {{tab.cssClass}}" data-tab="{{tab.id}}" data-group="{{tab.group}}">
+  {{#unless monthsWithNav.length}}
+  <div class="monthless-notice notification info">
+    <i class="fas fa-info-circle"></i>
+    <div class="notice-content">
+      <strong>{{localize "CALENDARIA.Editor.MonthlessMode.Title"}}</strong>
+      <p>{{localize "CALENDARIA.Editor.MonthlessMode.Description"}}</p>
+      <ul>
+        <li>{{localize "CALENDARIA.Editor.MonthlessMode.BulletNavigation"}}</li>
+        <li>{{localize "CALENDARIA.Editor.MonthlessMode.BulletFormat"}}</li>
+        <li>{{localize "CALENDARIA.Editor.MonthlessMode.BulletSeasons"}}</li>
+      </ul>
+      <p class="hint">{{localize "CALENDARIA.Editor.MonthlessMode.Hint"}}</p>
+    </div>
+  </div>
+  {{/unless}}
   <div class="items-list months-list">
     <div class="list-header flexrow">
       <span class="col-name"
@@ -75,4 +90,11 @@
       </div>
     {{/each}}
   </div>
+  {{#unless monthsWithNav.length}}
+  <div class="add-first-item">
+    <button type="button" data-action="addMonth" data-index="-1" class="add-month-btn">
+      <i class="fas fa-plus"></i> {{localize "CALENDARIA.Editor.Tooltip.AddMonth"}}
+    </button>
+  </div>
+  {{/unless}}
 </section>
