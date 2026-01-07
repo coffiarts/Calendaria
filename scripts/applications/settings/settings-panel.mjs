@@ -377,14 +377,16 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
 
     // Get active calendar name for "Calendar Default" option
     const calendar = CalendarManager.getActiveCalendar();
-    const calendarName = calendar?.metadata?.id
-      ? localize(
-          `CALENDARIA.Calendar.${calendar.metadata.id
-            .split('-')
-            .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
-            .join('')}.Name`
-        )
-      : localize('CALENDARIA.Common.Calendar');
+    let calendarName = localize('CALENDARIA.Common.Calendar');
+    if (calendar?.metadata?.id) {
+      const locKey = `CALENDARIA.Calendar.${calendar.metadata.id
+        .split('-')
+        .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
+        .join('')}.Name`;
+      const localized = localize(locKey);
+      // Fall back to calendar.name if localization key doesn't exist (custom calendars)
+      calendarName = localized !== locKey ? localized : calendar.name || localize('CALENDARIA.Common.Calendar');
+    }
     const calendarDefaultLabel = format('CALENDARIA.Format.Preset.CalendarDefault', { calendar: calendarName });
 
     const presetOptions = [
@@ -1242,10 +1244,17 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
           if (customInput) {
             if (event.target.value === 'custom') {
               customInput.classList.remove('hidden');
-              // Pre-populate with current format string if empty (fixes #199)
+              // Pre-populate with current format string if empty (fixes #199, #210)
               if (!customInput.value.trim()) {
                 const savedFormats = game.settings.get(MODULE.ID, SETTINGS.DISPLAY_FORMATS);
-                const currentFormat = savedFormats[locationId]?.[role] || 'long';
+                let currentFormat = savedFormats[locationId]?.[role] || 'long';
+                // Resolve calendarDefault to actual format string from calendar
+                if (currentFormat === 'calendarDefault') {
+                  const locationFormatKeys = { hudDate: 'long', hudTime: 'time', timekeeperDate: 'long', timekeeperTime: 'time', miniCalendarHeader: 'long', miniCalendarTime: 'time', fullCalendarHeader: 'full', chatTimestamp: 'long' };
+                  const formatKey = locationFormatKeys[locationId] || 'long';
+                  const calendar = CalendarManager.getActiveCalendar();
+                  currentFormat = calendar?.dateFormats?.[formatKey] || formatKey;
+                }
                 // Convert preset name to format string, or use as-is if already custom
                 customInput.value = DEFAULT_FORMAT_PRESETS[currentFormat] || currentFormat;
               }
