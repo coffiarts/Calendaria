@@ -361,7 +361,7 @@ export const CalendariaAPI = {
 
   /**
    * Get available format tokens and their descriptions.
-   * @returns {Array<{token: string, description: string, type: string}>}
+   * @returns {Array<{token: string, descriptionKey: string, type: string}>}
    */
   getFormatTokens() {
     return getAvailableTokens();

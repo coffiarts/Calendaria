@@ -66,7 +66,10 @@ export function dateFormattingParts(calendar, components) {
   const daysPerYear = calendar?.days?.daysPerYear ?? 365;
   const firstWeekday = calendar?.years?.firstWeekday ?? 0;
   const totalDays = internalYear * daysPerYear + dayOfYear - 1;
-  const weekday = weekdays.length > 0 ? (((totalDays + firstWeekday) % weekdays.length) + weekdays.length) % weekdays.length : 0;
+  const nonCountingInYear = calendar?.countNonWeekdayFestivalsBefore?.({ year: internalYear, month, dayOfMonth: dayOfMonth - 1 }) ?? 0;
+  const nonCountingFromPriorYears = calendar?.countNonWeekdayFestivalsBeforeYear?.(internalYear) ?? 0;
+  const countingDays = totalDays - nonCountingFromPriorYears - nonCountingInYear;
+  const weekday = weekdays.length > 0 ? (((countingDays + firstWeekday) % weekdays.length) + weekdays.length) % weekdays.length : 0;
   const weekdayData = weekdays[weekday];
   const weekdayName = weekdayData ? localize(weekdayData.name) : '';
   const weekdayAbbr = weekdayData?.abbreviation ? localize(weekdayData.abbreviation) : weekdayName.slice(0, 3);
@@ -878,73 +881,71 @@ export function timeSince(targetDate, currentDate) {
 
 /**
  * Get all available tokens with descriptions.
- * @returns {Array<{token: string, description: string, type: string}>} Array of token definitions
+ * @returns {Array<{token: string, descriptionKey: string, type: string}>} Array of token definitions
  */
 export function getAvailableTokens() {
   return [
     // Year tokens
-    { token: 'YYYY', description: '4-digit year', type: 'standard' },
-    { token: 'YY', description: '2-digit year', type: 'standard' },
-    { token: 'Y', description: 'Year (no padding)', type: 'standard' },
+    { token: 'Y', descriptionKey: 'CALENDARIA.Format.Token.Y', type: 'standard' },
+    { token: 'YY', descriptionKey: 'CALENDARIA.Format.Token.YY', type: 'standard' },
+    { token: 'YYYY', descriptionKey: 'CALENDARIA.Format.Token.YYYY', type: 'standard' },
     // Month tokens
-    { token: 'MMMM', description: 'Full month name', type: 'standard' },
-    { token: 'MMM', description: 'Month abbreviation', type: 'standard' },
-    { token: 'MM', description: 'Month (01-12)', type: 'standard' },
-    { token: 'M', description: 'Month (1-12)', type: 'standard' },
+    { token: 'M', descriptionKey: 'CALENDARIA.Format.Token.M', type: 'standard' },
+    { token: 'MM', descriptionKey: 'CALENDARIA.Format.Token.MM', type: 'standard' },
+    { token: 'MMM', descriptionKey: 'CALENDARIA.Format.Token.MMM', type: 'standard' },
+    { token: 'MMMM', descriptionKey: 'CALENDARIA.Format.Token.MMMM', type: 'standard' },
+    { token: 'Mo', descriptionKey: 'CALENDARIA.Format.Token.Mo', type: 'standard' },
     // Day tokens
-    { token: 'DD', description: 'Day (01-31)', type: 'standard' },
-    { token: 'D', description: 'Day (1-31)', type: 'standard' },
-    { token: 'Do', description: 'Day ordinal (1st)', type: 'standard' },
-    { token: 'DDD', description: 'Day of year (001-366)', type: 'standard' },
+    { token: 'D', descriptionKey: 'CALENDARIA.Format.Token.D', type: 'standard' },
+    { token: 'DD', descriptionKey: 'CALENDARIA.Format.Token.DD', type: 'standard' },
+    { token: 'Do', descriptionKey: 'CALENDARIA.Format.Token.Do', type: 'standard' },
+    { token: 'DDD', descriptionKey: 'CALENDARIA.Format.Token.DDD', type: 'standard' },
     // Weekday tokens
-    { token: 'EEEE', description: 'Full weekday', type: 'standard' },
-    { token: 'EEE', description: 'Weekday abbr', type: 'standard' },
-    { token: 'EEEEE', description: 'Weekday narrow (M)', type: 'standard' },
-    { token: 'e', description: 'Weekday number (0-6)', type: 'standard' },
-    // Weekday tokens (deprecated - use E tokens)
-    { token: 'dddd', description: 'Full weekday (deprecated)', type: 'deprecated' },
-    { token: 'ddd', description: 'Weekday abbr (deprecated)', type: 'deprecated' },
-    { token: 'dd', description: 'Weekday 2-char (deprecated)', type: 'deprecated' },
-    { token: 'd', description: 'Weekday number (deprecated)', type: 'deprecated' },
+    { token: 'EEEE', descriptionKey: 'CALENDARIA.Format.Token.EEEE', type: 'standard' },
+    { token: 'EEE', descriptionKey: 'CALENDARIA.Format.Token.EEE', type: 'standard' },
+    { token: 'EE', descriptionKey: 'CALENDARIA.Format.Token.EE', type: 'standard' },
+    { token: 'E', descriptionKey: 'CALENDARIA.Format.Token.E', type: 'standard' },
+    { token: 'EEEEE', descriptionKey: 'CALENDARIA.Format.Token.EEEEE', type: 'standard' },
+    { token: 'e', descriptionKey: 'CALENDARIA.Format.Token.e', type: 'standard' },
     // Week tokens
-    { token: 'w', description: 'Week of year (1-53)', type: 'standard' },
-    { token: 'ww', description: 'Week of year (01-53)', type: 'standard' },
-    { token: 'W', description: 'Week of month (1-5)', type: 'standard' },
+    { token: 'w', descriptionKey: 'CALENDARIA.Format.Token.w', type: 'standard' },
+    { token: 'ww', descriptionKey: 'CALENDARIA.Format.Token.ww', type: 'standard' },
+    { token: 'W', descriptionKey: 'CALENDARIA.Format.Token.W', type: 'standard' },
     // Era tokens
-    { token: 'GGGG', description: 'Era full name', type: 'standard' },
-    { token: 'G', description: 'Era abbreviation', type: 'standard' },
+    { token: 'GGGG', descriptionKey: 'CALENDARIA.Format.Token.GGGG', type: 'standard' },
+    { token: 'GGG', descriptionKey: 'CALENDARIA.Format.Token.GGG', type: 'standard' },
+    { token: 'GG', descriptionKey: 'CALENDARIA.Format.Token.GG', type: 'standard' },
+    { token: 'G', descriptionKey: 'CALENDARIA.Format.Token.G', type: 'standard' },
+    { token: '[yearInEra]', descriptionKey: 'CALENDARIA.Format.Token.yearInEra', type: 'custom' },
     // Season/Quarter tokens
-    { token: 'QQQQ', description: 'Season full name', type: 'standard' },
-    { token: 'QQQ', description: 'Season abbreviation', type: 'standard' },
-    { token: 'Q', description: 'Season number (1-4)', type: 'standard' },
+    { token: 'QQQQ', descriptionKey: 'CALENDARIA.Format.Token.QQQQ', type: 'standard' },
+    { token: 'QQQ', descriptionKey: 'CALENDARIA.Format.Token.QQQ', type: 'standard' },
+    { token: 'QQ', descriptionKey: 'CALENDARIA.Format.Token.QQ', type: 'standard' },
+    { token: 'Q', descriptionKey: 'CALENDARIA.Format.Token.Q', type: 'standard' },
     // Climate zone tokens
-    { token: 'zzzz', description: 'Climate zone name', type: 'standard' },
-    { token: 'z', description: 'Climate zone abbr', type: 'standard' },
+    { token: 'zzzz', descriptionKey: 'CALENDARIA.Format.Token.zzzz', type: 'standard' },
+    { token: 'z', descriptionKey: 'CALENDARIA.Format.Token.z', type: 'standard' },
     // Time tokens
-    { token: 'HH', description: 'Hour 24h (00-23)', type: 'standard' },
-    { token: 'H', description: 'Hour 24h (0-23)', type: 'standard' },
-    { token: 'hh', description: 'Hour 12h (01-12)', type: 'standard' },
-    { token: 'h', description: 'Hour 12h (1-12)', type: 'standard' },
-    { token: 'mm', description: 'Minute (00-59)', type: 'standard' },
-    { token: 'ss', description: 'Second (00-59)', type: 'standard' },
-    { token: 'A', description: 'AM/PM', type: 'standard' },
-    { token: 'a', description: 'am/pm', type: 'standard' },
-    // Custom tokens (bracket syntax) - deprecated, use standard tokens
-    { token: '[era]', description: 'Era name (use GGGG)', type: 'deprecated' },
-    { token: '[eraAbbr]', description: 'Era abbr (use G)', type: 'deprecated' },
-    { token: '[yearInEra]', description: 'Year within era', type: 'custom' },
-    { token: '[season]', description: 'Season name (use QQQQ)', type: 'deprecated' },
-    { token: '[seasonAbbr]', description: 'Season abbr (use QQQ)', type: 'deprecated' },
+    { token: 'H', descriptionKey: 'CALENDARIA.Format.Token.H', type: 'standard' },
+    { token: 'HH', descriptionKey: 'CALENDARIA.Format.Token.HH', type: 'standard' },
+    { token: 'h', descriptionKey: 'CALENDARIA.Format.Token.h', type: 'standard' },
+    { token: 'hh', descriptionKey: 'CALENDARIA.Format.Token.hh', type: 'standard' },
+    { token: 'm', descriptionKey: 'CALENDARIA.Format.Token.m', type: 'standard' },
+    { token: 'mm', descriptionKey: 'CALENDARIA.Format.Token.mm', type: 'standard' },
+    { token: 's', descriptionKey: 'CALENDARIA.Format.Token.s', type: 'standard' },
+    { token: 'ss', descriptionKey: 'CALENDARIA.Format.Token.ss', type: 'standard' },
+    { token: 'A', descriptionKey: 'CALENDARIA.Format.Token.A', type: 'standard' },
+    { token: 'a', descriptionKey: 'CALENDARIA.Format.Token.a', type: 'standard' },
     // Custom tokens (bracket syntax)
-    { token: '[moon]', description: 'Moon phase', type: 'custom' },
-    { token: '[moonIcon]', description: 'Moon phase icon', type: 'custom' },
-    { token: '[ch]', description: 'Canonical hour', type: 'custom' },
-    { token: '[chAbbr]', description: 'Canonical hour abbr', type: 'custom' },
-    { token: '[cycle]', description: 'Cycle number (1-indexed)', type: 'custom' },
-    { token: '[cycleName]', description: 'Cycle entry name', type: 'custom' },
-    { token: '[cycleRoman]', description: 'Cycle number (Roman)', type: 'custom' },
-    { token: '[approxTime]', description: 'Approx time (Noon)', type: 'custom' },
-    { token: '[approxDate]', description: 'Approx date (Early Spring)', type: 'custom' }
+    { token: '[moon]', descriptionKey: 'CALENDARIA.Format.Token.moon', type: 'custom' },
+    { token: '[moonIcon]', descriptionKey: 'CALENDARIA.Format.Token.moonIcon', type: 'custom' },
+    { token: '[ch]', descriptionKey: 'CALENDARIA.Format.Token.ch', type: 'custom' },
+    { token: '[chAbbr]', descriptionKey: 'CALENDARIA.Format.Token.chAbbr', type: 'custom' },
+    { token: '[cycle]', descriptionKey: 'CALENDARIA.Format.Token.cycle', type: 'custom' },
+    { token: '[cycleName]', descriptionKey: 'CALENDARIA.Format.Token.cycleName', type: 'custom' },
+    { token: '[cycleRoman]', descriptionKey: 'CALENDARIA.Format.Token.cycleRoman', type: 'custom' },
+    { token: '[approxTime]', descriptionKey: 'CALENDARIA.Format.Token.approxTime', type: 'custom' },
+    { token: '[approxDate]', descriptionKey: 'CALENDARIA.Format.Token.approxDate', type: 'custom' }
   ];
 }
 
