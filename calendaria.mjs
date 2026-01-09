@@ -25,12 +25,12 @@ import EventScheduler from './scripts/time/event-scheduler.mjs';
 import ReminderScheduler from './scripts/time/reminder-scheduler.mjs';
 import TimeKeeper from './scripts/time/time-keeper.mjs';
 import TimeTracker from './scripts/time/time-tracker.mjs';
+import { migrateAllDeprecatedTokens, migrateCustomCalendars } from './scripts/utils/format-utils.mjs';
 import { registerKeybindings, toggleCalendarVisibility } from './scripts/utils/keybinds.mjs';
 import { initializeLogger, log } from './scripts/utils/logger.mjs';
 import { CalendariaSocket } from './scripts/utils/socket.mjs';
 import * as StickyZones from './scripts/utils/sticky-zones.mjs';
 import { initializeTheme } from './scripts/utils/theme-utils.mjs';
-import { migrateCustomCalendars } from './scripts/utils/format-utils.mjs';
 import WeatherManager from './scripts/weather/weather-manager.mjs';
 
 Hooks.once('init', async () => {
@@ -60,6 +60,7 @@ Hooks.once('ready', async () => {
   registerReadySettings();
   await CalendarManager.initialize();
   await migrateCustomCalendars();
+  await migrateAllDeprecatedTokens(CalendarManager.getAllCalendars());
   await NoteManager.initialize();
   TimeTracker.initialize();
   TimeKeeper.initialize();
@@ -69,13 +70,8 @@ Hooks.once('ready', async () => {
   await WeatherManager.initialize();
   TimeKeeperHUD.updateIdleOpacity();
   if (game.user.isGM && game.settings.get(MODULE.ID, SETTINGS.SHOW_TIME_KEEPER)) TimeKeeperHUD.show();
-  // Force display settings override user preferences for non-GMs
-  if (game.settings.get(MODULE.ID, SETTINGS.FORCE_MINI_CALENDAR)) {
-    await game.settings.set(MODULE.ID, SETTINGS.SHOW_MINI_CALENDAR, true);
-  }
-  if (game.settings.get(MODULE.ID, SETTINGS.FORCE_HUD)) {
-    await game.settings.set(MODULE.ID, SETTINGS.SHOW_CALENDAR_HUD, true);
-  }
+  if (game.settings.get(MODULE.ID, SETTINGS.FORCE_MINI_CALENDAR)) await game.settings.set(MODULE.ID, SETTINGS.SHOW_MINI_CALENDAR, true);
+  if (game.settings.get(MODULE.ID, SETTINGS.FORCE_HUD)) await game.settings.set(MODULE.ID, SETTINGS.SHOW_CALENDAR_HUD, true);
   if (game.settings.get(MODULE.ID, SETTINGS.SHOW_MINI_CALENDAR)) MiniCalendar.show();
   if (game.system.id === 'dnd5e') {
     const calendarConfig = game.settings.get('dnd5e', 'calendarConfig');
@@ -86,13 +82,9 @@ Hooks.once('ready', async () => {
   }
   if (game.settings.get(MODULE.ID, SETTINGS.SHOW_CALENDAR_HUD)) CalendariaHUD.show();
   if (game.settings.get(MODULE.ID, SETTINGS.DEV_MODE)) StickyZones.showDebugZones();
-
-  // Update below-controls zone when scene controls re-render
   Hooks.on('renderSceneControls', () => StickyZones.updateZonePositions('below-controls'));
-
   Hooks.callAll(HOOKS.READY, { api: CalendariaAPI, calendar: CalendarManager.getActiveCalendar(), version: game.modules.get('calendaria')?.version });
 });
-
 Hooks.once('setup', () => {
   CONFIG.time.worldCalendarClass = CalendariaCalendar;
 });

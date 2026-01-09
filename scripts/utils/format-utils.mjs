@@ -5,6 +5,7 @@
  */
 
 import { format, localize } from './localization.mjs';
+import { log } from './logger.mjs';
 
 /* -------------------------------------------- */
 /*  Ordinal Suffix Helper                       */
@@ -97,6 +98,17 @@ export function dateFormattingParts(calendar, components) {
     seasonIndex = seasonsArray.indexOf(currentSeason);
   }
 
+  const daysPerWeek = weekdays.length || 7;
+  const weekOfYear = Math.ceil(dayOfYear / daysPerWeek);
+  const weekOfMonth = Math.ceil(dayOfMonth / daysPerWeek);
+  let climateZoneName = '';
+  let climateZoneAbbr = '';
+  const activeZone = calendar?.getActiveClimateZone?.();
+  if (activeZone) {
+    climateZoneName = activeZone.name ? localize(activeZone.name) : activeZone.id || '';
+    climateZoneAbbr = climateZoneName.slice(0, 3);
+  }
+
   return {
     // Year
     y: displayYear,
@@ -116,11 +128,22 @@ export function dateFormattingParts(calendar, components) {
     Do: isMonthless ? ordinal(dayOfYear) : ordinal(dayOfMonth),
     DDD: String(dayOfYear).padStart(3, '0'),
 
-    // Weekday
+    // Weekday (E tokens are UTS #35 standard, d tokens deprecated)
+    E: weekdayAbbr,
+    EE: weekdayAbbr,
+    EEE: weekdayAbbr,
+    EEEE: weekdayName,
+    EEEEE: weekdayName?.charAt(0) || '',
+    e: weekday,
     d: weekday,
     dd: weekdayAbbr?.slice(0, 2) || '',
     ddd: weekdayAbbr,
     dddd: weekdayName,
+
+    // Week
+    w: weekOfYear,
+    ww: String(weekOfYear).padStart(2, '0'),
+    W: weekOfMonth,
 
     // Hour
     H: hour,
@@ -140,17 +163,29 @@ export function dateFormattingParts(calendar, components) {
     A: ampm,
     a: ampm.toLowerCase(),
 
-    // Era
+    // Era (G tokens are UTS #35 standard, era* tokens deprecated)
+    G: eraAbbr,
+    GG: eraAbbr,
+    GGG: eraAbbr,
+    GGGG: eraName,
     era: eraName,
     eraAbbr: eraAbbr,
     eraYear: eraYear,
 
-    // Season
+    // Season/Quarter (Q tokens mapped to season, season* tokens deprecated)
+    Q: seasonIndex >= 0 ? seasonIndex + 1 : '',
+    QQ: seasonIndex >= 0 ? String(seasonIndex + 1).padStart(2, '0') : '',
+    QQQ: seasonAbbr,
+    QQQQ: seasonName,
     season: seasonName,
     seasonAbbr: seasonAbbr,
     seasonIndex: seasonIndex,
 
-    // Day of year (for calculations)
+    // Climate zone
+    z: climateZoneAbbr,
+    zzzz: climateZoneName,
+
+    // Day of year
     dayOfYear: dayOfYear
   };
 }
@@ -364,7 +399,7 @@ export function formatApproximateDate(calendar, components) {
  * Token regex pattern for custom format strings.
  * Matches standard tokens (longest first) and custom tokens in brackets.
  */
-const TOKEN_REGEX = /\[([^\]]+)]|YYYY|YY|MMMM|MMM|MM|Mo|M|dddd|ddd|dd|Do|DDD|DD|D|d|HH|H|hh|h|mm|m|ss|s|WW|W|A|a/g;
+const TOKEN_REGEX = /\[([^\]]+)]|YYYY|YY|Y|MMMM|MMM|MM|Mo|M|EEEEE|EEEE|EEE|EE|E|dddd|ddd|dd|Do|DDD|DD|D|d|e|GGGG|GGG|GG|G|QQQQ|QQQ|QQ|Q|zzzz|z|ww|w|W|HH|H|hh|h|mm|m|ss|s|A|a/g;
 
 /**
  * Format a date using a custom format string with tokens.
@@ -402,21 +437,50 @@ export function formatCustom(calendar, components, formatStr) {
 
     // Standard token - map to parts
     const tokenMap = {
+      // Year
       YYYY: parts.yyyy,
       YY: parts.yy,
+      Y: parts.y,
+      // Month
       MMMM: parts.MMMM,
       MMM: parts.MMM,
       MM: parts.MM,
       Mo: parts.Mo,
       M: parts.M,
+      // Weekday
+      EEEEE: parts.EEEEE,
+      EEEE: parts.EEEE,
+      EEE: parts.EEE,
+      EE: parts.EE,
+      E: parts.E,
+      e: parts.e,
       dddd: parts.dddd,
       ddd: parts.ddd,
       dd: parts.dd,
+      d: parts.d,
+      // Day
       Do: parts.Do,
       DDD: parts.DDD,
       DD: parts.DD,
       D: parts.D,
-      d: parts.d,
+      // Era
+      GGGG: parts.GGGG,
+      GGG: parts.GGG,
+      GG: parts.GG,
+      G: parts.G,
+      // Season/Quarter
+      QQQQ: parts.QQQQ,
+      QQQ: parts.QQQ,
+      QQ: parts.QQ,
+      Q: parts.Q,
+      // Climate zone
+      zzzz: parts.zzzz,
+      z: parts.z,
+      // Week
+      ww: parts.ww,
+      w: parts.w,
+      W: parts.W,
+      // Time
       HH: parts.HH,
       H: parts.H,
       hh: parts.hh,
@@ -662,9 +726,9 @@ export const PRESET_FORMATTERS = {
 export const DEFAULT_FORMAT_PRESETS = {
   short: 'D MMM',
   long: 'D MMMM, YYYY',
-  full: 'dddd, D MMMM YYYY',
-  ordinal: 'Do of MMMM, [era]',
-  fantasy: 'Do of MMMM, YYYY [era]',
+  full: 'EEEE, D MMMM YYYY',
+  ordinal: 'Do of MMMM, GGGG',
+  fantasy: 'Do of MMMM, YYYY GGGG',
   time: 'HH:mm',
   time12: 'h:mm A',
   approxTime: '[approxTime]',
@@ -818,18 +882,44 @@ export function timeSince(targetDate, currentDate) {
  */
 export function getAvailableTokens() {
   return [
-    // Date tokens
+    // Year tokens
     { token: 'YYYY', description: '4-digit year', type: 'standard' },
     { token: 'YY', description: '2-digit year', type: 'standard' },
+    { token: 'Y', description: 'Year (no padding)', type: 'standard' },
+    // Month tokens
     { token: 'MMMM', description: 'Full month name', type: 'standard' },
     { token: 'MMM', description: 'Month abbreviation', type: 'standard' },
     { token: 'MM', description: 'Month (01-12)', type: 'standard' },
     { token: 'M', description: 'Month (1-12)', type: 'standard' },
+    // Day tokens
     { token: 'DD', description: 'Day (01-31)', type: 'standard' },
     { token: 'D', description: 'Day (1-31)', type: 'standard' },
     { token: 'Do', description: 'Day ordinal (1st)', type: 'standard' },
-    { token: 'dddd', description: 'Full weekday', type: 'standard' },
-    { token: 'ddd', description: 'Weekday abbr', type: 'standard' },
+    { token: 'DDD', description: 'Day of year (001-366)', type: 'standard' },
+    // Weekday tokens
+    { token: 'EEEE', description: 'Full weekday', type: 'standard' },
+    { token: 'EEE', description: 'Weekday abbr', type: 'standard' },
+    { token: 'EEEEE', description: 'Weekday narrow (M)', type: 'standard' },
+    { token: 'e', description: 'Weekday number (0-6)', type: 'standard' },
+    // Weekday tokens (deprecated - use E tokens)
+    { token: 'dddd', description: 'Full weekday (deprecated)', type: 'deprecated' },
+    { token: 'ddd', description: 'Weekday abbr (deprecated)', type: 'deprecated' },
+    { token: 'dd', description: 'Weekday 2-char (deprecated)', type: 'deprecated' },
+    { token: 'd', description: 'Weekday number (deprecated)', type: 'deprecated' },
+    // Week tokens
+    { token: 'w', description: 'Week of year (1-53)', type: 'standard' },
+    { token: 'ww', description: 'Week of year (01-53)', type: 'standard' },
+    { token: 'W', description: 'Week of month (1-5)', type: 'standard' },
+    // Era tokens
+    { token: 'GGGG', description: 'Era full name', type: 'standard' },
+    { token: 'G', description: 'Era abbreviation', type: 'standard' },
+    // Season/Quarter tokens
+    { token: 'QQQQ', description: 'Season full name', type: 'standard' },
+    { token: 'QQQ', description: 'Season abbreviation', type: 'standard' },
+    { token: 'Q', description: 'Season number (1-4)', type: 'standard' },
+    // Climate zone tokens
+    { token: 'zzzz', description: 'Climate zone name', type: 'standard' },
+    { token: 'z', description: 'Climate zone abbr', type: 'standard' },
     // Time tokens
     { token: 'HH', description: 'Hour 24h (00-23)', type: 'standard' },
     { token: 'H', description: 'Hour 24h (0-23)', type: 'standard' },
@@ -839,12 +929,13 @@ export function getAvailableTokens() {
     { token: 'ss', description: 'Second (00-59)', type: 'standard' },
     { token: 'A', description: 'AM/PM', type: 'standard' },
     { token: 'a', description: 'am/pm', type: 'standard' },
-    // Custom tokens
-    { token: '[era]', description: 'Era name', type: 'custom' },
-    { token: '[eraAbbr]', description: 'Era abbreviation', type: 'custom' },
-    { token: '[eraYear]', description: 'Year within era', type: 'custom' },
-    { token: '[season]', description: 'Season name', type: 'custom' },
-    { token: '[seasonAbbr]', description: 'Season abbreviation', type: 'custom' },
+    // Custom tokens (bracket syntax) - deprecated, use standard tokens
+    { token: '[era]', description: 'Era name (use GGGG)', type: 'deprecated' },
+    { token: '[eraAbbr]', description: 'Era abbr (use G)', type: 'deprecated' },
+    { token: '[yearInEra]', description: 'Year within era', type: 'custom' },
+    { token: '[season]', description: 'Season name (use QQQQ)', type: 'deprecated' },
+    { token: '[seasonAbbr]', description: 'Season abbr (use QQQ)', type: 'deprecated' },
+    // Custom tokens (bracket syntax)
     { token: '[moon]', description: 'Moon phase', type: 'custom' },
     { token: '[moonIcon]', description: 'Moon phase icon', type: 'custom' },
     { token: '[ch]', description: 'Canonical hour', type: 'custom' },
@@ -855,6 +946,184 @@ export function getAvailableTokens() {
     { token: '[approxTime]', description: 'Approx time (Noon)', type: 'custom' },
     { token: '[approxDate]', description: 'Approx date (Early Spring)', type: 'custom' }
   ];
+}
+
+/**
+ * Deprecated tokens that will be removed in 0.7.0.
+ * Maps deprecated token to its replacement.
+ */
+const DEPRECATED_TOKENS = {
+  dddd: 'EEEE',
+  ddd: 'EEE',
+  dd: 'EE',
+  d: 'e',
+  '[era]': 'GGGG',
+  '[eraAbbr]': 'G',
+  '[season]': 'QQQQ',
+  '[seasonAbbr]': 'QQQ'
+};
+
+/**
+ * Replace deprecated tokens in a format string with their replacements.
+ * @param {string} formatStr - Format string to migrate
+ * @returns {{migrated: string, changes: Array<{from: string, to: string}>}} Migrated string and list of changes
+ */
+export function migrateDeprecatedTokens(formatStr) {
+  if (!formatStr || typeof formatStr !== 'string') return { migrated: formatStr, changes: [] };
+  let migrated = formatStr;
+  const changes = [];
+  const sortedTokens = Object.entries(DEPRECATED_TOKENS).sort((a, b) => b[0].length - a[0].length);
+  for (const [token, replacement] of sortedTokens) {
+    if (token.startsWith('[')) {
+      if (migrated.includes(token)) {
+        migrated = migrated.split(token).join(replacement);
+        changes.push({ from: token, to: replacement });
+      }
+    } else {
+      const regex = new RegExp(`(?<![a-zA-Z])${token}(?![a-zA-Z])`, 'g');
+      if (regex.test(migrated)) {
+        migrated = migrated.replace(regex, replacement);
+        changes.push({ from: token, to: replacement });
+      }
+    }
+  }
+  return { migrated, changes };
+}
+
+/**
+ * Migrate deprecated tokens in calendar data and save changes.
+ * @param {object} calendar - Calendar data to migrate
+ * @param {string} calendarId - Calendar ID for saving
+ * @param {string} calendarName - Display name for notifications
+ * @returns {Promise<Array<{from: string, to: string}>>} List of all token changes made
+ */
+export async function migrateCalendarDeprecatedTokens(calendar, calendarId, calendarName) {
+  if (!game.user?.isGM) return [];
+  const allChanges = [];
+  let modified = false;
+  if (calendar?.dateFormats) {
+    for (const [key, fmt] of Object.entries(calendar.dateFormats)) {
+      if (typeof fmt === 'string') {
+        const { migrated, changes } = migrateDeprecatedTokens(fmt);
+        if (changes.length) {
+          calendar.dateFormats[key] = migrated;
+          allChanges.push(...changes);
+          modified = true;
+        }
+      }
+    }
+  }
+
+  const eras = Array.isArray(calendar?.eras) ? calendar.eras : calendar?.eras?.values;
+  if (eras?.length) {
+    for (const era of eras) {
+      if (era.template) {
+        const { migrated, changes } = migrateDeprecatedTokens(era.template);
+        if (changes.length) {
+          era.template = migrated;
+          allChanges.push(...changes);
+          modified = true;
+        }
+      }
+    }
+  }
+
+  if (calendar?.cycleFormat) {
+    const { migrated, changes } = migrateDeprecatedTokens(calendar.cycleFormat);
+    if (changes.length) {
+      calendar.cycleFormat = migrated;
+      allChanges.push(...changes);
+      modified = true;
+    }
+  }
+
+  if (modified && calendarId) {
+    try {
+      const MODULE_ID = 'calendaria';
+      const customCalendars = game.settings.get(MODULE_ID, 'customCalendars') || {};
+      if (customCalendars[calendarId]) {
+        customCalendars[calendarId] = calendar;
+        await game.settings.set(MODULE_ID, 'customCalendars', customCalendars);
+      }
+    } catch (e) {
+      log(2, `Could not save migrated calendar "${calendarName}"`, e);
+    }
+  }
+
+  if (allChanges.length > 0) {
+    const uniqueChanges = [...new Map(allChanges.map((c) => [`${c.from}→${c.to}`, c])).values()];
+    const changeList = uniqueChanges.map((c) => `${c.from} → ${c.to}`).join(', ');
+    log(3, `Migrated deprecated tokens in calendar "${calendarName}": ${changeList}`);
+  }
+
+  return allChanges;
+}
+
+/**
+ * Migrate deprecated tokens in display format settings.
+ * @returns {Promise<Array<{from: string, to: string}>>} List of all token changes made
+ */
+export async function migrateDisplayFormatsDeprecatedTokens() {
+  if (!game.user?.isGM) return [];
+  const MODULE_ID = 'calendaria';
+  const SETTINGS_KEY = 'displayFormats';
+  const allChanges = [];
+
+  try {
+    const formats = game.settings.get(MODULE_ID, SETTINGS_KEY);
+    if (!formats || typeof formats !== 'object') return [];
+    let modified = false;
+    for (const [, locationFormats] of Object.entries(formats)) {
+      if (locationFormats?.gm) {
+        const { migrated, changes } = migrateDeprecatedTokens(locationFormats.gm);
+        if (changes.length) {
+          locationFormats.gm = migrated;
+          allChanges.push(...changes);
+          modified = true;
+        }
+      }
+      if (locationFormats?.player) {
+        const { migrated, changes } = migrateDeprecatedTokens(locationFormats.player);
+        if (changes.length) {
+          locationFormats.player = migrated;
+          allChanges.push(...changes);
+          modified = true;
+        }
+      }
+    }
+
+    if (modified) {
+      await game.settings.set(MODULE_ID, SETTINGS_KEY, formats);
+      const uniqueChanges = [...new Map(allChanges.map((c) => [`${c.from}→${c.to}`, c])).values()];
+      const changeList = uniqueChanges.map((c) => `${c.from} → ${c.to}`).join(', ');
+      log(3, `Migrated deprecated tokens in display formats: ${changeList}`);
+    }
+  } catch {}
+  return allChanges;
+}
+
+/**
+ * Run all deprecated token migrations and notify GM of changes.
+ * @param {Map<string, object>} calendars - Map of calendar ID to calendar data
+ * @returns {Promise<void>}
+ */
+export async function migrateAllDeprecatedTokens(calendars) {
+  if (!game.user?.isGM) return;
+  const allChanges = [];
+  for (const [id, calendar] of calendars) {
+    const rawName = calendar?.metadata?.name || calendar?.name || id;
+    const name = game.i18n?.localize(rawName) || rawName;
+    const changes = await migrateCalendarDeprecatedTokens(calendar, id, name);
+    allChanges.push(...changes);
+  }
+
+  const displayChanges = await migrateDisplayFormatsDeprecatedTokens();
+  allChanges.push(...displayChanges);
+  if (allChanges.length > 0) {
+    const uniqueChanges = [...new Map(allChanges.map((c) => [`${c.from}→${c.to}`, c])).values()];
+    const changeList = uniqueChanges.map((c) => `${c.from} → ${c.to}`).join(', ');
+    ui.notifications?.info(`Calendaria: Auto-migrated deprecated format tokens: ${changeList}`, { permanent: true });
+  }
 }
 
 /* -------------------------------------------- */
@@ -926,12 +1195,12 @@ export async function migrateCustomCalendars() {
 
     if (migrated) {
       await game.settings.set(MODULE_ID, SETTINGS_KEY, updatedCalendars);
-      console.log('Calendaria: Migrated custom calendar formats to new bracket token syntax');
+      log(3, 'Migrated custom calendar formats to new bracket token syntax');
     }
 
     await game.settings.set(MODULE_ID, MIGRATION_KEY, true);
   } catch (e) {
-    console.warn('Calendaria: Could not migrate custom calendars', e);
+    log(2, 'Could not migrate custom calendars', e);
   }
 }
 
@@ -994,11 +1263,11 @@ export async function migrateIntercalaryFestivals() {
 
     if (migrated) {
       await game.settings.set(MODULE_ID, SETTINGS_KEY, updatedCalendars);
-      console.log('Calendaria: Migrated Harptos festivals to set countsForWeekday: false');
+      log(3, 'Migrated Harptos festivals to set countsForWeekday: false');
     }
 
     await game.settings.set(MODULE_ID, MIGRATION_KEY, true);
   } catch (e) {
-    console.warn('Calendaria: Could not migrate intercalary festivals', e);
+    log(2, 'Could not migrate intercalary festivals', e);
   }
 }
