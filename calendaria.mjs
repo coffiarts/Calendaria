@@ -60,7 +60,7 @@ Hooks.once('ready', async () => {
   registerReadySettings();
   await CalendarManager.initialize();
   await migrateCustomCalendars();
-  await migrateAllDeprecatedTokens(CalendarManager.getAllCalendars());
+  await migrateAllDeprecatedTokens();
   await NoteManager.initialize();
   TimeTracker.initialize();
   TimeKeeper.initialize();

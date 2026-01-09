@@ -88,8 +88,8 @@
   },
   "dateFormats": {
     "short": "DDD-yyyy",
-    "long": "DDD-yyyy [era]",
-    "full": "dddd, DDD-yyyy [era]",
+    "long": "DDD-yyyy GGGG",
+    "full": "EEEE, DDD-yyyy GGGG",
     "time": "HH:mm",
     "time12": "h:mm a"
   },

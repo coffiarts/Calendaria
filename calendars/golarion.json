@@ -375,7 +375,7 @@
   },
   "dateFormats": {
     "short": "D MMM",
-    "long": "D MMMM, YYYY [era]",
+    "long": "D MMMM, YYYY GGGG",
     "full": "MMMM D, YYYY",
     "time": "HH:mm",
     "time12": "h:mm a"

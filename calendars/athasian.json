@@ -294,7 +294,7 @@
   "dateFormats": {
     "short": "D MMM",
     "long": "D MMMM, YYYY",
-    "full": "dddd, MMMM D, YYYY",
+    "full": "EEEE, MMMM D, YYYY",
     "time": "HH:mm",
     "time12": "h:mm a"
   },
