@@ -177,7 +177,7 @@
   "moons": [
     {
       "name": "CALENDARIA.Moon.Gregorian.Luna",
-      "cycleLength": 30,
+      "cycleLength": 29.53059,
       "color": "#C0C0C0",
       "phases": [
         {

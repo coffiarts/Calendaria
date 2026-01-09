@@ -947,7 +947,7 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
       const moonColor = rawColor.toLowerCase() === '#b8b8b8' ? '' : rawColor;
       const moon = {
         name: data[`moons.${moonIdx}.name`] || '',
-        cycleLength: parseInt(data[`moons.${moonIdx}.cycleLength`]) || 28,
+        cycleLength: parseFloat(data[`moons.${moonIdx}.cycleLength`]) || 28,
         cycleDayAdjust: this.#parseOptionalInt(data[`moons.${moonIdx}.cycleDayAdjust`]) ?? existingMoon?.cycleDayAdjust ?? 0,
         color: moonColor,
         hidden: data[`moons.${moonIdx}.hidden`] === 'true' || data[`moons.${moonIdx}.hidden`] === true || existingMoon?.hidden || false,

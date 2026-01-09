@@ -218,7 +218,7 @@
   "moons": [
     {
       "name": "CALENDARIA.Moon.Harptos.Selune",
-      "cycleLength": 30,
+      "cycleLength": 30.4375,
       "color": "#C0C0C0",
       "phases": [
         {
