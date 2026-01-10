@@ -937,34 +937,67 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
       const start = note.system.startDate;
       const end = note.system.endDate;
       const allDay = note.system.allDay;
-      const dayMatch = days.find((d) => d.year === start.year && d.month === start.month && d.day === start.day);
-      if (!dayMatch) return;
-      const startHour = allDay ? 0 : (start.hour ?? 0);
-      let hourSpan = 1;
-      if (allDay) {
-        hourSpan = 24;
-      } else if (end && end.year === start.year && end.month === start.month && end.day === start.day) {
-        const endHour = end.hour ?? startHour;
-        hourSpan = Math.max(endHour - startHour, 1);
-      }
+      const hasValidEnd = end && end.year != null && end.month != null && end.day != null;
+      const isSameDay = !hasValidEnd || (end.year === start.year && end.month === start.month && end.day === start.day);
 
-      const startTime = allDay ? 'All Day' : `${startHour.toString().padStart(2, '0')}:${(start.minute ?? 0).toString().padStart(2, '0')}`;
-      const endTime = end && !allDay ? `${(end.hour ?? 0).toString().padStart(2, '0')}:${(end.minute ?? 0).toString().padStart(2, '0')}` : null;
-      blocks.push({
-        id: note.id,
-        name: note.name,
-        color: note.system.color || '#4a86e8',
-        icon: note.system.icon,
-        iconType: note.system.iconType,
-        day: start.day,
-        month: start.month,
-        year: start.year,
-        startHour,
-        hourSpan,
-        startTime,
-        endTime,
-        allDay
-      });
+      if (isSameDay) {
+        const dayMatch = days.find((d) => d.year === start.year && d.month === start.month && d.day === start.day);
+        if (!dayMatch) return;
+        const startHour = allDay ? 0 : (start.hour ?? 0);
+        let hourSpan = 1;
+        if (allDay) {
+          hourSpan = 24;
+        } else if (hasValidEnd) {
+          const endHour = end.hour ?? startHour;
+          hourSpan = Math.max(endHour - startHour, 1);
+        }
+        const startTime = allDay ? 'All Day' : `${startHour.toString().padStart(2, '0')}:${(start.minute ?? 0).toString().padStart(2, '0')}`;
+        const endTime = hasValidEnd && !allDay ? `${(end.hour ?? 0).toString().padStart(2, '0')}:${(end.minute ?? 0).toString().padStart(2, '0')}` : null;
+        blocks.push({
+          id: note.id,
+          name: note.name,
+          color: note.system.color || '#4a86e8',
+          icon: note.system.icon,
+          iconType: note.system.iconType,
+          day: start.day,
+          month: start.month,
+          year: start.year,
+          startHour,
+          hourSpan,
+          startTime,
+          endTime,
+          allDay
+        });
+      } else {
+        const eventStartHour = allDay ? 0 : (start.hour ?? 0);
+        const eventEndHour = allDay ? 24 : (end.hour ?? eventStartHour);
+        const eventHourSpan = allDay ? 24 : Math.max(eventEndHour - eventStartHour, 1);
+        const eventStartTime = allDay ? 'All Day' : `${eventStartHour.toString().padStart(2, '0')}:${(start.minute ?? 0).toString().padStart(2, '0')}`;
+        const eventEndTime = allDay ? null : `${eventEndHour.toString().padStart(2, '0')}:${(end.minute ?? 0).toString().padStart(2, '0')}`;
+        for (const dayData of days) {
+          const dayDate = { year: dayData.year, month: dayData.month, day: dayData.day };
+          const afterStart =
+            dayDate.year > start.year || (dayDate.year === start.year && dayDate.month > start.month) || (dayDate.year === start.year && dayDate.month === start.month && dayDate.day >= start.day);
+          const beforeEnd = dayDate.year < end.year || (dayDate.year === end.year && dayDate.month < end.month) || (dayDate.year === end.year && dayDate.month === end.month && dayDate.day <= end.day);
+          if (!afterStart || !beforeEnd) continue;
+          blocks.push({
+            id: note.id,
+            name: note.name,
+            color: note.system.color || '#4a86e8',
+            icon: note.system.icon,
+            iconType: note.system.iconType,
+            day: dayData.day,
+            month: dayData.month,
+            year: dayData.year,
+            startHour: eventStartHour,
+            hourSpan: eventHourSpan,
+            startTime: eventStartTime,
+            endTime: eventEndTime,
+            allDay,
+            isMultiDay: true
+          });
+        }
+      }
     });
 
     return blocks;
