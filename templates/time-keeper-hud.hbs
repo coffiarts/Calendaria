@@ -14,23 +14,31 @@
 
   {{#if isGM}}
   <div class="time-keeper-controls">
+    {{#if showDec2}}
     <button type="button" class="time-btn" data-action="dec2" data-tooltip="{{dec2Tooltip}}">
       <i class="fa-solid fa-backward-fast"></i>
     </button>
+    {{/if}}
+    {{#if showDec1}}
     <button type="button" class="time-btn" data-action="dec1" data-tooltip="{{dec1Tooltip}}">
       <i class="fa-solid fa-backward"></i>
     </button>
+    {{/if}}
     <select class="increment-select" data-action="increment">
       {{#each increments}}
       <option value="{{key}}" {{#if selected}}selected{{/if}}>{{label}}</option>
       {{/each}}
     </select>
+    {{#if showInc1}}
     <button type="button" class="time-btn" data-action="inc1" data-tooltip="{{inc1Tooltip}}">
       <i class="fa-solid fa-forward"></i>
     </button>
+    {{/if}}
+    {{#if showInc2}}
     <button type="button" class="time-btn" data-action="inc2" data-tooltip="{{inc2Tooltip}}">
       <i class="fa-solid fa-forward-fast"></i>
     </button>
+    {{/if}}
   </div>
   {{else}}
   <div class="time-keeper-controls">

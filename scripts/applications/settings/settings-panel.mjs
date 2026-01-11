@@ -727,6 +727,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
         };
       }
       await game.settings.set(MODULE.ID, SETTINGS.CUSTOM_TIME_JUMPS, jumps);
+      foundry.applications.instances.get('calendaria-hud')?.render({ parts: ['bar'] });
     }
 
     // TimeKeeper time jumps
@@ -741,6 +742,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
         };
       }
       await game.settings.set(MODULE.ID, SETTINGS.TIMEKEEPER_TIME_JUMPS, jumps);
+      foundry.applications.instances.get('time-keeper-hud')?.render();
     }
     if ('primaryGM' in data) await game.settings.set(MODULE.ID, SETTINGS.PRIMARY_GM, data.primaryGM || '');
     if ('loggingLevel' in data) await game.settings.set(MODULE.ID, SETTINGS.LOGGING_LEVEL, data.loggingLevel);

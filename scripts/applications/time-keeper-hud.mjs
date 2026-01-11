@@ -25,6 +25,9 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @type {number|null} Hook ID for clock state changes */
   #clockHookId = null;
 
+  /** @type {number|null} Hook ID for display format changes */
+  #formatsHookId = null;
+
   /** @type {object|null} Currently active sticky zone during drag */
   #activeSnapZone = null;
 
@@ -66,6 +69,10 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     context.dec1Tooltip = tooltips.dec1Tooltip;
     context.inc1Tooltip = tooltips.inc1Tooltip;
     context.inc2Tooltip = tooltips.inc2Tooltip;
+    context.showDec2 = tooltips.dec2 !== null;
+    context.showDec1 = tooltips.dec1 !== null;
+    context.showInc1 = tooltips.inc1 !== null;
+    context.showInc2 = tooltips.inc2 !== null;
     return context;
   }
 
@@ -76,11 +83,12 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     this.#enableDragging();
     this.element.querySelector('[data-action="increment"]')?.addEventListener('change', (e) => {
       TimeKeeper.setIncrement(e.target.value);
-      this.#updateJumpTooltips();
+      this.render();
     });
 
     if (!this.#clockHookId) this.#clockHookId = Hooks.on(HOOKS.CLOCK_START_STOP, this.#onClockStateChange.bind(this));
     if (!this.#timeHookId) this.#timeHookId = Hooks.on('updateWorldTime', this.#onUpdateWorldTime.bind(this));
+    if (!this.#formatsHookId) this.#formatsHookId = Hooks.on('calendaria.displayFormatsChanged', () => this.render());
     new foundry.applications.ux.ContextMenu.implementation(
       this.element,
       '.time-keeper-content',
@@ -206,6 +214,10 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
       Hooks.off(HOOKS.CLOCK_START_STOP, this.#clockHookId);
       this.#clockHookId = null;
     }
+    if (this.#formatsHookId) {
+      Hooks.off('calendaria.displayFormatsChanged', this.#formatsHookId);
+      this.#formatsHookId = null;
+    }
   }
 
   /* -------------------------------------------- */
@@ -327,35 +339,19 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Get tooltip strings for time jump buttons based on current increment and jump settings.
-   * @returns {{dec2Tooltip: string, dec1Tooltip: string, inc1Tooltip: string, inc2Tooltip: string}} Tooltip strings
+   * @returns {{dec2Tooltip: string|null, dec1Tooltip: string|null, inc1Tooltip: string|null, inc2Tooltip: string|null, dec2: number|null, dec1: number|null, inc1: number|null, inc2: number|null}} Tooltip strings and values
    * @private
    */
   #getJumpTooltips() {
     const jumps = game.settings.get(MODULE.ID, SETTINGS.TIMEKEEPER_TIME_JUMPS) || {};
-    const currentJumps = jumps[TimeKeeper.incrementKey] || { dec2: -5, dec1: -1, inc1: 1, inc2: 5 };
-    const dec2 = currentJumps.dec2 || -5;
-    const dec1 = currentJumps.dec1 || -1;
-    const inc1 = currentJumps.inc1 || 1;
-    const inc2 = currentJumps.inc2 || 5;
+    const currentJumps = jumps[TimeKeeper.incrementKey] || {};
+    const dec2 = currentJumps.dec2 ?? null;
+    const dec1 = currentJumps.dec1 ?? null;
+    const inc1 = currentJumps.inc1 ?? null;
+    const inc2 = currentJumps.inc2 ?? null;
     const unitLabel = this.#formatIncrementLabel(TimeKeeper.incrementKey);
-    const formatTooltip = (val) => `${val > 0 ? '+' : ''}${val} ${unitLabel}`;
-    return { dec2Tooltip: formatTooltip(dec2), dec1Tooltip: formatTooltip(dec1), inc1Tooltip: formatTooltip(inc1), inc2Tooltip: formatTooltip(inc2) };
-  }
-
-  /**
-   * Update the time jump button tooltips after increment change.
-   * @private
-   */
-  #updateJumpTooltips() {
-    const tooltips = this.#getJumpTooltips();
-    const dec2Btn = this.element.querySelector('[data-action="dec2"]');
-    const dec1Btn = this.element.querySelector('[data-action="dec1"]');
-    const inc1Btn = this.element.querySelector('[data-action="inc1"]');
-    const inc2Btn = this.element.querySelector('[data-action="inc2"]');
-    if (dec2Btn) dec2Btn.dataset.tooltip = tooltips.dec2Tooltip;
-    if (dec1Btn) dec1Btn.dataset.tooltip = tooltips.dec1Tooltip;
-    if (inc1Btn) inc1Btn.dataset.tooltip = tooltips.inc1Tooltip;
-    if (inc2Btn) inc2Btn.dataset.tooltip = tooltips.inc2Tooltip;
+    const formatTooltip = (val) => val !== null ? `${val > 0 ? '+' : ''}${val} ${unitLabel}` : null;
+    return { dec2Tooltip: formatTooltip(dec2), dec1Tooltip: formatTooltip(dec1), inc1Tooltip: formatTooltip(inc1), inc2Tooltip: formatTooltip(inc2), dec2, dec1, inc1, inc2 };
   }
 
   /* -------------------------------------------- */

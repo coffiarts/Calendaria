@@ -237,7 +237,7 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
       .map(([key, seconds]) => ({ key, label: this.#formatIncrementLabel(key), seconds, selected: key === appSettings.incrementKey }));
     const customJumps = game.settings.get(MODULE.ID, SETTINGS.CUSTOM_TIME_JUMPS) || {};
     const currentJumps = customJumps[appSettings.incrementKey] || {};
-    context.customJumps = { dec2: currentJumps.dec2 || null, dec1: currentJumps.dec1 || null, inc1: currentJumps.inc1 || null, inc2: currentJumps.inc2 || null };
+    context.customJumps = { dec2: currentJumps.dec2 ?? null, dec1: currentJumps.dec1 ?? null, inc1: currentJumps.inc1 ?? null, inc2: currentJumps.inc2 ?? null };
     context.searchOpen = this.#searchOpen;
     context.searchTerm = this.#searchTerm;
     context.searchResults = this.#searchResults || [];
