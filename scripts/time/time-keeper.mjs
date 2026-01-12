@@ -5,9 +5,10 @@
  * @author Tyler
  */
 
-import { HOOKS, MODULE, SETTINGS } from '../constants.mjs';
+import { HOOKS, MODULE, SETTINGS, SOCKET_TYPES } from '../constants.mjs';
 import { localize } from '../utils/localization.mjs';
 import { log } from '../utils/logger.mjs';
+import { canChangeDateTime } from '../utils/permissions.mjs';
 import { CalendariaSocket } from '../utils/socket.mjs';
 
 /**
@@ -56,10 +57,6 @@ export default class TimeKeeper {
   /** @type {Map<string, {incrementKey: string, multiplier: number}>} Per-app settings */
   static #appSettings = new Map();
 
-  /* -------------------------------------------- */
-  /*  Getters                                     */
-  /* -------------------------------------------- */
-
   /** @returns {boolean} Whether the clock is running */
   static get running() {
     return this.#running;
@@ -80,9 +77,13 @@ export default class TimeKeeper {
     return this.#realTimeSpeed;
   }
 
-  /* -------------------------------------------- */
-  /*  Initialization                              */
-  /* -------------------------------------------- */
+  /**
+   * Check if the current user can adjust time.
+   * @returns {boolean} True if user has permission to adjust time
+   */
+  static canAdjustTime() {
+    return canChangeDateTime();
+  }
 
   /**
    * Initialize the TimeKeeper and register socket listeners.
@@ -136,9 +137,9 @@ export default class TimeKeeper {
 
   /**
    * Handle combat start to pause clock.
-   * @param {Combat} combat - The combat that started
+   * @param {object} _combat - The combat that started
    */
-  static #onCombatStart(combat) {
+  static #onCombatStart(_combat) {
     if (!game.settings.get(MODULE.ID, SETTINGS.SYNC_CLOCK_PAUSE)) return;
     if (!game.user.isGM) return;
 
@@ -150,9 +151,9 @@ export default class TimeKeeper {
 
   /**
    * Handle combat end to resume clock.
-   * @param {Combat} combat - The combat that ended
+   * @param {object} _combat - The combat that ended
    */
-  static #onCombatEnd(combat) {
+  static #onCombatEnd(_combat) {
     if (!game.settings.get(MODULE.ID, SETTINGS.SYNC_CLOCK_PAUSE)) return;
     if (!game.user.isGM) return;
 
@@ -162,10 +163,6 @@ export default class TimeKeeper {
     }
   }
 
-  /* -------------------------------------------- */
-  /*  Clock Control                               */
-  /* -------------------------------------------- */
-
   /**
    * Start the real-time clock.
    * @param {object} [options] - Start options
@@ -173,8 +170,8 @@ export default class TimeKeeper {
    */
   static start({ broadcast = true } = {}) {
     if (this.#running) return;
-    if (!game.user.isGM) {
-      ui.notifications.warn('CALENDARIA.TimeKeeper.GMOnly', { localize: true });
+    if (!this.canAdjustTime()) {
+      ui.notifications.warn('CALENDARIA.TimeKeeper.NoPermission', { localize: true });
       return;
     }
 
@@ -216,10 +213,6 @@ export default class TimeKeeper {
     else this.start();
   }
 
-  /* -------------------------------------------- */
-  /*  Time Increment                              */
-  /* -------------------------------------------- */
-
   /**
    * Set the time increment for manual advancement.
    * Does not affect real-time clock speed (controlled by settings).
@@ -232,10 +225,6 @@ export default class TimeKeeper {
     this.#increment = increments[key];
     log(3, `TimeKeeper manual increment set to: ${key} (${this.#increment}s)`);
   }
-
-  /* -------------------------------------------- */
-  /*  Per-App Settings                            */
-  /* -------------------------------------------- */
 
   /**
    * Get settings for a specific application.
@@ -279,11 +268,15 @@ export default class TimeKeeper {
    * @param {string} appId - Application identifier
    */
   static async forwardFor(appId) {
-    if (!game.user.isGM) return;
+    if (!this.canAdjustTime()) return;
     const settings = this.getAppSettings(appId);
     const increments = getTimeIncrements();
     const increment = increments[settings.incrementKey] ?? 60;
     const amount = increment * settings.multiplier;
+    if (!game.user.isGM) {
+      CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta: amount });
+      return;
+    }
     await game.time.advance(amount);
     log(3, `Time advanced by ${amount}s for ${appId}`);
   }
@@ -293,26 +286,30 @@ export default class TimeKeeper {
    * @param {string} appId - Application identifier
    */
   static async reverseFor(appId) {
-    if (!game.user.isGM) return;
+    if (!this.canAdjustTime()) return;
     const settings = this.getAppSettings(appId);
     const increments = getTimeIncrements();
     const increment = increments[settings.incrementKey] ?? 60;
     const amount = increment * settings.multiplier;
+    if (!game.user.isGM) {
+      CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta: -amount });
+      return;
+    }
     await game.time.advance(-amount);
     log(3, `Time reversed by ${amount}s for ${appId}`);
   }
-
-  /* -------------------------------------------- */
-  /*  Manual Time Control                         */
-  /* -------------------------------------------- */
 
   /**
    * Advance time by the current increment.
    * @param {number} [multiplier] - Multiplier for the increment
    */
   static async forward(multiplier = 1) {
-    if (!game.user.isGM) return;
+    if (!this.canAdjustTime()) return;
     const amount = this.#increment * multiplier;
+    if (!game.user.isGM) {
+      CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta: amount });
+      return;
+    }
     await game.time.advance(amount);
     log(3, `Time advanced by ${amount}s (${multiplier}x)`);
   }
@@ -322,8 +319,12 @@ export default class TimeKeeper {
    * @param {number} [multiplier] - Multiplier for the increment
    */
   static async reverse(multiplier = 1) {
-    if (!game.user.isGM) return;
+    if (!this.canAdjustTime()) return;
     const amount = this.#increment * multiplier;
+    if (!game.user.isGM) {
+      CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta: -amount });
+      return;
+    }
     await game.time.advance(-amount);
     log(3, `Time reversed by ${amount}s (${multiplier}x)`);
   }
@@ -333,14 +334,14 @@ export default class TimeKeeper {
    * @param {number} seconds - Seconds to advance (negative to reverse)
    */
   static async advance(seconds) {
-    if (!game.user.isGM) return;
+    if (!this.canAdjustTime()) return;
+    if (!game.user.isGM) {
+      CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta: seconds });
+      return;
+    }
     await game.time.advance(seconds);
     log(3, `Time advanced by ${seconds}s`);
   }
-
-  /* -------------------------------------------- */
-  /*  Private Methods                             */
-  /* -------------------------------------------- */
 
   /**
    * Get the smooth animation unit based on real-time speed.
@@ -421,10 +422,6 @@ export default class TimeKeeper {
       Hooks.callAll(HOOKS.CLOCK_START_STOP, { running: false, increment: this.#increment });
     }
   }
-
-  /* -------------------------------------------- */
-  /*  Time Display                                */
-  /* -------------------------------------------- */
 
   /**
    * Get the current time formatted as HH:MM:SS.

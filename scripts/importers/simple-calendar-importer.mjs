@@ -18,10 +18,6 @@ import BaseImporter from './base-importer.mjs';
  * @extends BaseImporter
  */
 export default class SimpleCalendarImporter extends BaseImporter {
-  /* -------------------------------------------- */
-  /*  Static Properties                           */
-  /* -------------------------------------------- */
-
   static id = 'simple-calendar';
   static label = 'CALENDARIA.Importer.SimpleCalendar.Name';
   static icon = 'fa-calendar-alt';
@@ -30,10 +26,6 @@ export default class SimpleCalendarImporter extends BaseImporter {
   static supportsLiveImport = true;
   static moduleId = 'foundryvtt-simple-calendar';
   static fileExtensions = ['.json'];
-
-  /* -------------------------------------------- */
-  /*  Data Loading                                */
-  /* -------------------------------------------- */
 
   /**
    * Load calendar data from installed Simple Calendar module.
@@ -58,10 +50,6 @@ export default class SimpleCalendarImporter extends BaseImporter {
 
     return { calendars, notes, exportVersion: 2 };
   }
-
-  /* -------------------------------------------- */
-  /*  Transformation                              */
-  /* -------------------------------------------- */
 
   /**
    * Transform Simple Calendar data into CalendariaCalendar format.
@@ -96,10 +84,6 @@ export default class SimpleCalendarImporter extends BaseImporter {
       metadata: { description: `Imported from Simple Calendar`, system: calendar.name || 'Unknown', importedFrom: 'simple-calendar', originalId: calendar.id }
     };
   }
-
-  /* -------------------------------------------- */
-  /*  Transform Helpers                           */
-  /* -------------------------------------------- */
 
   /**
    * Transform SC time configuration.
@@ -331,10 +315,6 @@ export default class SimpleCalendarImporter extends BaseImporter {
     return { enabled: true, shortestDay: Math.round(shortestDaylight), longestDay: Math.round(longestDaylight) };
   }
 
-  /* -------------------------------------------- */
-  /*  Note Extraction                             */
-  /* -------------------------------------------- */
-
   /**
    * Extract notes from SC export data.
    * @param {object} data - Raw SC export data
@@ -461,10 +441,6 @@ export default class SimpleCalendarImporter extends BaseImporter {
     const rules = ['never', 'weekly', 'monthly', 'yearly'];
     return rules[repeats] || 'never';
   }
-
-  /* -------------------------------------------- */
-  /*  Preview                                     */
-  /* -------------------------------------------- */
 
   /**
    * Count notes in raw SC data.

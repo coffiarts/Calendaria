@@ -21,10 +21,6 @@ import BaseImporter from './base-importer.mjs';
  * @extends BaseImporter
  */
 export default class SimpleTimekeepingImporter extends BaseImporter {
-  /* -------------------------------------------- */
-  /*  Static Properties                           */
-  /* -------------------------------------------- */
-
   static id = 'simple-timekeeping';
   static label = 'CALENDARIA.Importer.SimpleTimekeeping.Name';
   static icon = 'fa-clock';
@@ -33,10 +29,6 @@ export default class SimpleTimekeepingImporter extends BaseImporter {
   static supportsLiveImport = true;
   static moduleId = 'simple-timekeeping';
   static fileExtensions = [];
-
-  /* -------------------------------------------- */
-  /*  STK Calendar Data Access                    */
-  /* -------------------------------------------- */
 
   /** @type {object[]|null} Cached STK calendars after dynamic import. */
   static #stkCalendarsCache = null;
@@ -76,10 +68,6 @@ export default class SimpleTimekeepingImporter extends BaseImporter {
     if (!calendars) return null;
     return calendars.find((c) => c.id === calendarId) || null;
   }
-
-  /* -------------------------------------------- */
-  /*  Data Loading                                */
-  /* -------------------------------------------- */
 
   /**
    * Load calendar data from installed Simple Timekeeping module.
@@ -168,10 +156,6 @@ export default class SimpleTimekeepingImporter extends BaseImporter {
     return null;
   }
 
-  /* -------------------------------------------- */
-  /*  Transformation                              */
-  /* -------------------------------------------- */
-
   /**
    * Transform Simple Timekeeping data into CalendariaCalendar format.
    * @param {object} data - Raw STK data from loadFromModule
@@ -206,10 +190,6 @@ export default class SimpleTimekeepingImporter extends BaseImporter {
       weather: { activeZone: 'temperate', autoGenerate: false, zones: [getDefaultZoneConfig('temperate')] }
     };
   }
-
-  /* -------------------------------------------- */
-  /*  Transform Helpers                           */
-  /* -------------------------------------------- */
 
   /**
    * Transform STK weekdays to Calendaria format.
@@ -380,10 +360,6 @@ export default class SimpleTimekeepingImporter extends BaseImporter {
     return festivals;
   }
 
-  /* -------------------------------------------- */
-  /*  Note Extraction                             */
-  /* -------------------------------------------- */
-
   /**
    * Extract notes/events from STK data.
    * @param {object} data - Raw STK data.
@@ -501,10 +477,6 @@ export default class SimpleTimekeepingImporter extends BaseImporter {
     return { success: errors.length === 0, count, errors };
   }
 
-  /* -------------------------------------------- */
-  /*  Scene & Weather Import                      */
-  /* -------------------------------------------- */
-
   /**
    * Import scene darkness sync settings.
    * @param {object[]} sceneFlags - Scene flag data from extraction
@@ -546,10 +518,6 @@ export default class SimpleTimekeepingImporter extends BaseImporter {
       return false;
     }
   }
-
-  /* -------------------------------------------- */
-  /*  Preview                                     */
-  /* -------------------------------------------- */
 
   /**
    * Count notes in raw STK data.

@@ -7,10 +7,6 @@
 
 import { MODULE, SETTINGS } from '../constants.mjs';
 
-/* -------------------------------------------- */
-/*  Default Colors & Presets                    */
-/* -------------------------------------------- */
-
 /**
  * Default color values for Calendaria theme (Dark).
  * @type {Object<string, string>}
@@ -107,10 +103,6 @@ export const THEME_PRESETS = {
   highContrast: { name: 'CALENDARIA.ThemeEditor.Presets.HighContrast', colors: HIGH_CONTRAST_COLORS }
 };
 
-/* -------------------------------------------- */
-/*  Color Definitions (Hierarchical)            */
-/* -------------------------------------------- */
-
 /**
  * Color categories with labels.
  * @type {Object<string, string>}
@@ -205,10 +197,6 @@ export function getColorsByComponent() {
   return grouped;
 }
 
-/* -------------------------------------------- */
-/*  Theme Preset Class                          */
-/* -------------------------------------------- */
-
 /**
  * Theme preset for import/export functionality.
  */
@@ -229,12 +217,16 @@ export class ThemePreset {
    * @returns {string} - JSON string
    */
   toJSON() {
-    return JSON.stringify({
-      name: this.name,
-      colors: this.colors,
-      version: this.version,
-      createdAt: this.createdAt
-    }, null, 2);
+    return JSON.stringify(
+      {
+        name: this.name,
+        colors: this.colors,
+        version: this.version,
+        createdAt: this.createdAt
+      },
+      null,
+      2
+    );
   }
 
   /**
@@ -284,10 +276,6 @@ export class ThemePreset {
     }
   }
 }
-
-/* -------------------------------------------- */
-/*  Derived Color Generation                    */
-/* -------------------------------------------- */
 
 /**
  * Convert hex color to RGB object.
@@ -390,10 +378,6 @@ export function generateDerivedColors(colors) {
 
   return derived;
 }
-
-/* -------------------------------------------- */
-/*  Theme Application                           */
-/* -------------------------------------------- */
 
 /**
  * CSS variable mapping from color keys to CSS variable names.

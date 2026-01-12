@@ -13,7 +13,9 @@ import NoteManager from './notes/note-manager.mjs';
 import SearchManager from './search/search-manager.mjs';
 import { DEFAULT_FORMAT_PRESETS, formatCustom, getAvailableTokens, PRESET_FORMATTERS, timeSince } from './utils/format-utils.mjs';
 import { log } from './utils/logger.mjs';
+import { canAddNotes, canChangeActiveCalendar, canChangeDateTime, canEditCalendars, canEditNotes } from './utils/permissions.mjs';
 import { CalendariaSocket } from './utils/socket.mjs';
+import { SOCKET_TYPES } from './constants.mjs';
 import WeatherManager from './weather/weather-manager.mjs';
 
 /**
@@ -21,10 +23,6 @@ import WeatherManager from './weather/weather-manager.mjs';
  * Provides access to calendar data, time management, moon phases, and more.
  */
 export const CalendariaAPI = {
-  /* -------------------------------------------- */
-  /*  Time Management                             */
-  /* -------------------------------------------- */
-
   /**
    * Get the current date and time components.
    * @returns {object} Current time components (year, month, day, hour, minute, second, etc.)
@@ -38,12 +36,17 @@ export const CalendariaAPI = {
 
   /**
    * Advance the current time by a delta.
-   * @param {object} delta - Time delta to advance (e.g., {day: 1, hour: 2})
+   * @param {number} delta - Time delta in seconds to advance
    * @returns {Promise<number>} New world time after advancement
    */
   async advanceTime(delta) {
+    if (!canChangeDateTime()) {
+      ui.notifications.error('CALENDARIA.Permissions.NoAccess', { localize: true });
+      return game.time.worldTime;
+    }
+    // Non-GM users with permission must request via socket
     if (!game.user.isGM) {
-      ui.notifications.error('CALENDARIA.Error.GMOnly.AdvanceTime', { localize: true });
+      CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta });
       return game.time.worldTime;
     }
     return await game.time.advance(delta);
@@ -55,8 +58,8 @@ export const CalendariaAPI = {
    * @returns {Promise<number>} New world time after setting
    */
   async setDateTime(components) {
-    if (!game.user.isGM) {
-      ui.notifications.error('CALENDARIA.Error.GMOnly.SetDateTime', { localize: true });
+    if (!canChangeDateTime()) {
+      ui.notifications.error('CALENDARIA.Permissions.NoAccess', { localize: true });
       return game.time.worldTime;
     }
     const internalComponents = { ...components };
@@ -64,6 +67,11 @@ export const CalendariaAPI = {
       const calendar = CalendarManager.getActiveCalendar();
       const yearZero = calendar?.years?.yearZero ?? 0;
       internalComponents.year = components.year - yearZero;
+    }
+    // Non-GM users with permission must request via socket
+    if (!game.user.isGM) {
+      CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'set', components: internalComponents });
+      return game.time.worldTime;
     }
     return await game.time.set(internalComponents);
   },
@@ -77,8 +85,8 @@ export const CalendariaAPI = {
    * @returns {Promise<void>}
    */
   async jumpToDate({ year, month, day }) {
-    if (!game.user.isGM) {
-      ui.notifications.error('CALENDARIA.Error.GMOnly.JumpToDate', { localize: true });
+    if (!canChangeDateTime()) {
+      ui.notifications.error('CALENDARIA.Permissions.NoAccess', { localize: true });
       return;
     }
     const calendar = CalendarManager.getActiveCalendar();
@@ -86,13 +94,13 @@ export const CalendariaAPI = {
       ui.notifications.warn('CALENDARIA.Error.NoActiveCalendar', { localize: true });
       return;
     }
-
+    // Non-GM users with permission must request via socket
+    if (!game.user.isGM) {
+      CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'jump', date: { year, month, day } });
+      return;
+    }
     await calendar.jumpToDate({ year, month, day });
   },
-
-  /* -------------------------------------------- */
-  /*  Calendar Access                             */
-  /* -------------------------------------------- */
 
   /**
    * Get the currently active calendar.
@@ -133,16 +141,17 @@ export const CalendariaAPI = {
    * @returns {Promise<boolean>} True if calendar was switched successfully
    */
   async switchCalendar(id) {
-    if (!game.user.isGM) {
-      ui.notifications.error('CALENDARIA.Error.GMOnly.SwitchCalendar', { localize: true });
+    if (!canChangeActiveCalendar()) {
+      ui.notifications.error('CALENDARIA.Permissions.NoAccess', { localize: true });
       return false;
+    }
+    // Non-GM users with permission must request via socket
+    if (!game.user.isGM) {
+      CalendariaSocket.emit(SOCKET_TYPES.CALENDAR_REQUEST, { calendarId: id });
+      return true;
     }
     return await CalendarManager.switchCalendar(id);
   },
-
-  /* -------------------------------------------- */
-  /*  Moon Phases                                 */
-  /* -------------------------------------------- */
 
   /**
    * Get the current phase of a specific moon.
@@ -160,10 +169,6 @@ export const CalendariaAPI = {
   getAllMoonPhases() {
     return CalendarManager.getAllCurrentMoonPhases();
   },
-
-  /* -------------------------------------------- */
-  /*  Seasons & Sun Position                      */
-  /* -------------------------------------------- */
 
   /**
    * Get the current season.
@@ -282,10 +287,6 @@ export const CalendariaAPI = {
     return this.getTimeUntilTarget(hoursPerDay / 2);
   },
 
-  /* -------------------------------------------- */
-  /*  Weekdays & Rest Days                        */
-  /* -------------------------------------------- */
-
   /**
    * Get the current weekday information including rest day status.
    * Respects per-month custom weekdays if defined.
@@ -308,10 +309,6 @@ export const CalendariaAPI = {
     return weekday?.isRestDay ?? false;
   },
 
-  /* -------------------------------------------- */
-  /*  Festivals & Special Days                    */
-  /* -------------------------------------------- */
-
   /**
    * Get the festival for the current date, if any.
    * @returns {object|null} Festival data with name, month, and day
@@ -329,10 +326,6 @@ export const CalendariaAPI = {
     if (!calendar) return false;
     return calendar.isFestivalDay();
   },
-
-  /* -------------------------------------------- */
-  /*  Formatters                                  */
-  /* -------------------------------------------- */
 
   /**
    * Format date and time components as a string.
@@ -381,10 +374,6 @@ export const CalendariaAPI = {
     return { ...DEFAULT_FORMAT_PRESETS };
   },
 
-  /* -------------------------------------------- */
-  /*  Notes Management                            */
-  /* -------------------------------------------- */
-
   /**
    * Get all calendar notes.
    * @returns {object[]} Array of note stubs with id, name, flagData, etc.
@@ -419,10 +408,6 @@ export const CalendariaAPI = {
     return await NoteManager.deleteAllNotes();
   },
 
-  /* -------------------------------------------- */
-  /*  Search                                      */
-  /* -------------------------------------------- */
-
   /**
    * Search all content including notes and dates.
    * Returns results with type information for categorized display.
@@ -435,10 +420,6 @@ export const CalendariaAPI = {
   search(term, options = {}) {
     return SearchManager.search(term, options);
   },
-
-  /* -------------------------------------------- */
-  /*  Note Creation & Management                  */
-  /* -------------------------------------------- */
 
   /**
    * Create a new calendar note.
@@ -456,8 +437,8 @@ export const CalendariaAPI = {
    * @returns {Promise<object>} Created note page
    */
   async createNote({ name, content = '', startDate, endDate, allDay = true, repeat = 'never', categories = [], icon, color, gmOnly = false }) {
-    if (!game.user.isGM) {
-      ui.notifications.error('CALENDARIA.Error.GMOnly.CreateNotes', { localize: true });
+    if (!canAddNotes()) {
+      ui.notifications.error('CALENDARIA.Permissions.NoAccess', { localize: true });
       return null;
     }
     const calendar = CalendarManager.getActiveCalendar();
@@ -488,8 +469,8 @@ export const CalendariaAPI = {
    * @returns {Promise<object>} Updated note page
    */
   async updateNote(pageId, updates) {
-    if (!game.user.isGM) {
-      ui.notifications.error('CALENDARIA.Error.GMOnly.UpdateNotes', { localize: true });
+    if (!canEditNotes()) {
+      ui.notifications.error('CALENDARIA.Permissions.NoAccess', { localize: true });
       return null;
     }
     const calendar = CalendarManager.getActiveCalendar();
@@ -521,10 +502,6 @@ export const CalendariaAPI = {
     }
     page.sheet.render(true, { mode: options.mode ?? 'view' });
   },
-
-  /* -------------------------------------------- */
-  /*  Note Queries                                */
-  /* -------------------------------------------- */
 
   /**
    * Get all notes for a specific date.
@@ -609,10 +586,6 @@ export const CalendariaAPI = {
     return NoteManager.getCategoryDefinitions();
   },
 
-  /* -------------------------------------------- */
-  /*  UI & Application                            */
-  /* -------------------------------------------- */
-
   /**
    * Open the main calendar application.
    * @param {object} [options] - Open options
@@ -631,8 +604,8 @@ export const CalendariaAPI = {
    * @returns {Promise<object>} The editor application
    */
   async openCalendarEditor(calendarId) {
-    if (!game.user.isGM) {
-      ui.notifications.error('CALENDARIA.Error.GMOnly.EditCalendars', { localize: true });
+    if (!canEditCalendars()) {
+      ui.notifications.error('CALENDARIA.Permissions.NoAccess', { localize: true });
       return null;
     }
     const app = new CalendarEditor({ calendarId });
@@ -660,10 +633,6 @@ export const CalendariaAPI = {
   async toggleMiniCalendar() {
     MiniCalendar.toggle();
   },
-
-  /* -------------------------------------------- */
-  /*  Date/Time Conversion                        */
-  /* -------------------------------------------- */
 
   /**
    * Convert a timestamp (world time in seconds) to date components.
@@ -713,10 +682,6 @@ export const CalendariaAPI = {
     return this.timestampToDate(randomTimestamp);
   },
 
-  /* -------------------------------------------- */
-  /*  Time-of-Day Utilities                       */
-  /* -------------------------------------------- */
-
   /**
    * Check if it's currently daytime.
    * @returns {boolean} True if between sunrise and sunset
@@ -745,8 +710,8 @@ export const CalendariaAPI = {
    * @returns {Promise<number>} New world time
    */
   async advanceTimeToPreset(preset) {
-    if (!game.user.isGM) {
-      ui.notifications.error('CALENDARIA.Error.GMOnly.AdvanceTime', { localize: true });
+    if (!canChangeDateTime()) {
+      ui.notifications.error('CALENDARIA.Permissions.NoAccess', { localize: true });
       return game.time.worldTime;
     }
     const components = game.time.components;
@@ -777,12 +742,13 @@ export const CalendariaAPI = {
     let hoursUntil = targetHour - currentHour;
     if (hoursUntil <= 0) hoursUntil += hoursPerDay;
     const secondsUntil = Math.floor(hoursUntil * secondsPerHour);
+    // Non-GM users with permission must request via socket
+    if (!game.user.isGM) {
+      CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta: secondsUntil });
+      return game.time.worldTime;
+    }
     return await game.time.advance(secondsUntil);
   },
-
-  /* -------------------------------------------- */
-  /*  Multiplayer & Permissions                   */
-  /* -------------------------------------------- */
 
   /**
    * Check if the current user is the primary GM.
@@ -798,7 +764,7 @@ export const CalendariaAPI = {
    * @returns {boolean} True if user can advance/set time
    */
   canModifyTime() {
-    return game.user.isGM;
+    return canChangeDateTime();
   },
 
   /**
@@ -806,12 +772,8 @@ export const CalendariaAPI = {
    * @returns {boolean} True if user can manage notes
    */
   canManageNotes() {
-    return game.user.isGM;
+    return canAddNotes();
   },
-
-  /* -------------------------------------------- */
-  /*  Weather System                              */
-  /* -------------------------------------------- */
 
   /**
    * Get the current weather.
@@ -931,10 +893,6 @@ export const CalendariaAPI = {
   async removeWeatherPreset(presetId) {
     return WeatherManager.removeCustomPreset(presetId);
   },
-
-  /* -------------------------------------------- */
-  /*  Hook Constants                              */
-  /* -------------------------------------------- */
 
   /**
    * Get all available Calendaria hook names.

@@ -40,7 +40,7 @@
       <div class="calendaria-hud-divider"></div>
 
       <div class="calendaria-hud-info-panel">
-        <span class="calendaria-hud-date"{{#if isGM}} data-action="setDate"
+        <span class="calendaria-hud-date"{{#if canChangeDateTime}} data-action="setDate"
           data-tooltip="{{dateDisplay}} (Click to set date)"{{else}} data-tooltip="{{dateDisplay}}"{{/if}}>{{dateDisplay}}</span>
         {{#if hasEvents}}
         <div class="calendaria-hud-events">
@@ -57,7 +57,7 @@
 
     <div class="calendaria-hud-center">
       {{#if useSliceMode}}
-      <div class="calendaria-hud-slice" {{#if isGM}}role="button" tabindex="0" data-action="openTimeDial"
+      <div class="calendaria-hud-slice" {{#if canChangeDateTime}}role="button" tabindex="0" data-action="openTimeDial"
         data-tooltip="{{localize 'CALENDARIA.HUD.ClickToSetTime'}}"{{/if}}>
         <div class="calendaria-slice-sky"></div>
         <div class="calendaria-slice-track">
@@ -66,7 +66,7 @@
         </div>
         <div class="calendaria-slice-time-overlay">
           <span class="calendaria-hud-time">{{time}}</span>
-          {{#if isGM}}
+          {{#if canChangeDateTime}}
           <button type="button" class="calendaria-hud-play-btn" data-action="toggleTimeFlow"
             aria-pressed="{{isPlaying}}"
             data-tooltip="{{#if isPlaying}}{{localize 'CALENDARIA.HUD.PauseTime'}}{{else}}{{localize 'CALENDARIA.TimeKeeper.Start'}}{{/if}}">
@@ -78,7 +78,7 @@
       {{else}}
       <div class="calendaria-hud-time-wrapper">
         <span class="calendaria-hud-time">{{time}}</span>
-        {{#if isGM}}
+        {{#if canChangeDateTime}}
         <button type="button" class="calendaria-hud-play-btn" data-action="toggleTimeFlow"
           aria-pressed="{{isPlaying}}"
           data-tooltip="{{#if isPlaying}}{{localize 'CALENDARIA.HUD.PauseTime'}}{{else}}{{localize 'CALENDARIA.TimeKeeper.Start'}}{{/if}}">
@@ -92,14 +92,14 @@
     <div class="calendaria-hud-section right">
       <div class="calendaria-hud-indicators">
         {{#if weather}}
-        <span class="weather-indicator{{#if isGM}} clickable{{/if}} weather-mode-{{weatherDisplayMode}}" {{#if isGM}}data-action="openWeatherPicker" {{/if}}
+        <span class="weather-indicator{{#if canChangeWeather}} clickable{{/if}} weather-mode-{{weatherDisplayMode}}" {{#if canChangeWeather}}data-action="openWeatherPicker" {{/if}}
             style="--weather-color: {{weather.color}}" data-tooltip="{{weather.tooltip}}">
           {{#if showWeatherIcon}}<i class="{{weather.icon}}"></i>{{/if}}
           {{#if showWeatherLabel}}<span class="weather-label">{{weather.label}}</span>{{/if}}
           {{#if showWeatherTemp}}<span class="weather-temp">{{weather.temp}}</span>{{/if}}
         </span>
         {{else if showWeatherBlock}}
-        {{#if isGM}}
+        {{#if canChangeWeather}}
         <span class="weather-indicator clickable no-weather" data-action="openWeatherPicker"
           data-tooltip="{{localize 'CALENDARIA.Weather.ClickToGenerate'}}">
           <i class="fas fa-cloud"></i>
@@ -140,7 +140,7 @@
     </div>
   </div>
 
-  {{#if isGM}}
+  {{#if canChangeDateTime}}
   <div class="calendaria-hud-tray{{#if stickyTray}} visible{{/if}}">
     <button type="button" class="calendaria-hud-time-btn time-shortcut" data-action="toSunrise"
       data-tooltip="{{localize 'CALENDARIA.HUD.Sunrise'}}">

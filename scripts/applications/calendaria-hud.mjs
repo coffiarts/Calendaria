@@ -6,13 +6,15 @@
  */
 
 import CalendarManager from '../calendar/calendar-manager.mjs';
-import { HOOKS, MODULE, SETTINGS, TEMPLATES } from '../constants.mjs';
+import { HOOKS, MODULE, SETTINGS, SOCKET_TYPES, TEMPLATES } from '../constants.mjs';
 import NoteManager from '../notes/note-manager.mjs';
 import SearchManager from '../search/search-manager.mjs';
 import TimeKeeper, { getTimeIncrements } from '../time/time-keeper.mjs';
 import { formatForLocation } from '../utils/format-utils.mjs';
 import { localize } from '../utils/localization.mjs';
 import { log } from '../utils/logger.mjs';
+import { canChangeDateTime, canChangeWeather } from '../utils/permissions.mjs';
+import { CalendariaSocket } from '../utils/socket.mjs';
 import * as StickyZones from '../utils/sticky-zones.mjs';
 import WeatherManager from '../weather/weather-manager.mjs';
 import { openWeatherPicker } from '../weather/weather-picker.mjs';
@@ -139,10 +141,6 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     bar: { template: TEMPLATES.CALENDAR_HUD_BAR, container: '.calendaria-hud' }
   };
 
-  /* -------------------------------------------- */
-  /*  Properties                                  */
-  /* -------------------------------------------- */
-
   /**
    * Get the active calendar.
    * @returns {object} The active calendar instance
@@ -180,16 +178,14 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     return false;
   }
 
-  /* -------------------------------------------- */
-  /*  Rendering                                   */
-  /* -------------------------------------------- */
-
   /** @override */
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     const calendar = this.calendar;
     const components = game.time.components;
     context.isGM = game.user.isGM;
+    context.canChangeDateTime = canChangeDateTime();
+    context.canChangeWeather = canChangeWeather();
     context.locked = this.isLocked;
     context.isPlaying = TimeKeeper.running;
     const stickyStates = game.settings.get(MODULE.ID, SETTINGS.HUD_STICKY_STATES) || {};
@@ -359,10 +355,6 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     await super._onClose(options);
   }
 
-  /* -------------------------------------------- */
-  /*  Event Listeners                             */
-  /* -------------------------------------------- */
-
   /**
    * Setup event listeners for the HUD.
    */
@@ -414,10 +406,6 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
       { fixed: true, jQuery: false }
     );
   }
-
-  /* -------------------------------------------- */
-  /*  Sticky States                               */
-  /* -------------------------------------------- */
 
   /**
    * Restore sticky states from settings.
@@ -482,10 +470,6 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     pinBtn.classList.toggle('sticky-tray', this.#stickyTray);
     pinBtn.classList.toggle('sticky-position', this.#stickyPosition);
   }
-
-  /* -------------------------------------------- */
-  /*  Position & Dragging                         */
-  /* -------------------------------------------- */
 
   /**
    * Restore saved position from settings.
@@ -646,10 +630,6 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     };
   }
 
-  /* -------------------------------------------- */
-  /*  Dome Visibility                             */
-  /* -------------------------------------------- */
-
   /**
    * Update dome visibility based on viewport position.
    * Fades dome as it approaches top of viewport, hides if not enough space.
@@ -672,10 +652,6 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
       dome.style.opacity = '';
     }
   }
-
-  /* -------------------------------------------- */
-  /*  Celestial Display                           */
-  /* -------------------------------------------- */
 
   /**
    * Update the sundial dome display (sky gradient, sun/moon positions, stars).
@@ -891,10 +867,6 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     return `rgb(${r}, ${g}, ${b})`;
   }
 
-  /* -------------------------------------------- */
-  /*  Time Updates                                */
-  /* -------------------------------------------- */
-
   /**
    * Handle world time updates - update display without full re-render.
    */
@@ -941,10 +913,6 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
       }
     }
   }
-
-  /* -------------------------------------------- */
-  /*  Formatting Helpers                          */
-  /* -------------------------------------------- */
 
   /**
    * Get decimal hour from time components.
@@ -1007,10 +975,6 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     return labels[key] || key;
   }
 
-  /* -------------------------------------------- */
-  /*  Context Helpers                             */
-  /* -------------------------------------------- */
-
   /**
    * Get weather context for template.
    * @returns {object|null} Weather data object or null if no weather
@@ -1058,10 +1022,6 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
       return { id: note.id, parentId: note.parent.id, name: note.name, icon: note.system.icon || 'fas fa-star', color: note.system.color || '#e88', tooltip };
     });
   }
-
-  /* -------------------------------------------- */
-  /*  Time Dial                                   */
-  /* -------------------------------------------- */
 
   /**
    * Open the circular time rotation dial.
@@ -1389,15 +1349,16 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     if (timeDiff !== 0) {
+      if (!game.user.isGM) {
+        CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta: timeDiff });
+        this._dialState.initialTime = initialTime + timeDiff;
+        return;
+      }
       await game.time.advance(timeDiff);
       log(3, `Time adjusted by ${timeDiff} seconds to ${this.#formatDialTime(currentHours, currentMinutes)}`);
     }
     this._dialState.initialTime = initialTime + timeDiff;
   }
-
-  /* -------------------------------------------- */
-  /*  Time Shortcuts                              */
-  /* -------------------------------------------- */
 
   /**
    * Advance time to a specific hour of day.
@@ -1405,7 +1366,7 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {boolean} [nextDay] - Always advance to next day
    */
   async #advanceToHour(targetHour, nextDay = false) {
-    if (!game.user.isGM) return;
+    if (!canChangeDateTime()) return;
     const cal = game.time.calendar;
     if (!cal) return;
     const days = cal.days ?? {};
@@ -1419,12 +1380,14 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     if (nextDay || currentHour >= targetHour) hoursUntil = hoursPerDay - currentHour + targetHour;
     else hoursUntil = targetHour - currentHour;
     const secondsToAdvance = Math.round(hoursUntil * secondsPerHour);
-    if (secondsToAdvance > 0) await game.time.advance(secondsToAdvance);
+    if (secondsToAdvance > 0) {
+      if (!game.user.isGM) {
+        CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta: secondsToAdvance });
+        return;
+      }
+      await game.time.advance(secondsToAdvance);
+    }
   }
-
-  /* -------------------------------------------- */
-  /*  Action Handlers                             */
-  /* -------------------------------------------- */
 
   /**
    * Handle click on dome to open time dial.
@@ -1432,7 +1395,7 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {HTMLElement} _target - Target element
    */
   static async #onOpenTimeDial(_event, _target) {
-    if (!game.user.isGM) return;
+    if (!canChangeDateTime()) return;
     await this.#openTimeRotationDial();
   }
 
@@ -1482,8 +1445,8 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {HTMLElement} _target - Target element
    */
   static async #onSetDate(_event, _target) {
-    if (!game.user.isGM) {
-      ui.notifications.warn('CALENDARIA.Common.GMOnly', { localize: true });
+    if (!canChangeDateTime()) {
+      ui.notifications.warn('CALENDARIA.Permissions.NoAccess', { localize: true });
       return;
     }
     SetDateDialog.open();
@@ -1682,7 +1645,7 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {HTMLElement} _target - Target element
    */
   static async #onOpenWeatherPicker(_event, _target) {
-    if (!game.user.isGM) return;
+    if (!canChangeWeather()) return;
     await openWeatherPicker();
   }
 
@@ -1781,7 +1744,7 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {string} jumpKey - The jump key (dec2, dec1, inc1, inc2)
    */
   static #applyCustomJump(jumpKey) {
-    if (!game.user.isGM) return;
+    if (!canChangeDateTime()) return;
     const appSettings = TimeKeeper.getAppSettings('calendaria-hud');
     const incrementKey = appSettings.incrementKey || 'minute';
     const customJumps = game.settings.get(MODULE.ID, SETTINGS.CUSTOM_TIME_JUMPS) || {};
@@ -1791,12 +1754,12 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     const increments = getTimeIncrements();
     const secondsPerUnit = increments[incrementKey] || 60;
     const totalSeconds = amount * secondsPerUnit;
+    if (!game.user.isGM) {
+      CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta: totalSeconds });
+      return;
+    }
     game.time.advance(totalSeconds);
   }
-
-  /* -------------------------------------------- */
-  /*  Static Methods                              */
-  /* -------------------------------------------- */
 
   /**
    * Show the HUD.

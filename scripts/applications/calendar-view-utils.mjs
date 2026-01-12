@@ -6,10 +6,11 @@
  */
 
 import CalendarManager from '../calendar/calendar-manager.mjs';
-import { MODULE, SETTINGS } from '../constants.mjs';
+import { MODULE, SETTINGS, SOCKET_TYPES } from '../constants.mjs';
 import NoteManager from '../notes/note-manager.mjs';
 import { isRecurringMatch } from '../notes/utils/recurrence.mjs';
 import { format, localize } from '../utils/localization.mjs';
+import { CalendariaSocket } from '../utils/socket.mjs';
 
 const ContextMenu = foundry.applications.ux.ContextMenu.implementation;
 
@@ -218,10 +219,6 @@ export function getAllMoonPhases(calendar, year, month, day) {
     .filter(Boolean);
 }
 
-/* -------------------------------------------- */
-/*  Shared Day Cell Interactions                */
-/* -------------------------------------------- */
-
 /**
  * Get notes on a specific day for context menu display.
  * @param {number} year - Display year
@@ -270,7 +267,12 @@ export async function setDateTo(year, month, day, calendar = null) {
   const currentComponents = game.time.components;
   const newComponents = { year: internalYear, month, day: dayOfYear, hour: currentComponents.hour, minute: currentComponents.minute, second: currentComponents.second };
   const newWorldTime = calendar.componentsToTime(newComponents);
-  await game.time.advance(newWorldTime - game.time.worldTime);
+  const delta = newWorldTime - game.time.worldTime;
+  if (!game.user.isGM) {
+    CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta });
+    return;
+  }
+  await game.time.advance(delta);
 }
 
 /**

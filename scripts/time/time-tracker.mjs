@@ -326,10 +326,6 @@ export default class TimeTracker {
     return dayOfYear;
   }
 
-  /* -------------------------------------------- */
-  /*  Moon Phase Tracking                         */
-  /* -------------------------------------------- */
-
   /**
    * Get the current moon phase indices for all moons.
    * @returns {Map<number, number>|null} Map of moonIndex -> phaseIndex, or null if no calendar
@@ -381,10 +377,6 @@ export default class TimeTracker {
       this.#executeMoonPhaseMacros(changedMoons);
     }
   }
-
-  /* -------------------------------------------- */
-  /*  Global Macro Execution                      */
-  /* -------------------------------------------- */
 
   /**
    * Get the macro trigger configuration.
@@ -469,10 +461,6 @@ export default class TimeTracker {
       for (const trigger of matchingTriggers) executeMacroById(trigger.macroId, { trigger: 'moonPhaseChange', moon: changed });
     }
   }
-
-  /* -------------------------------------------- */
-  /*  Rest Day Tracking                           */
-  /* -------------------------------------------- */
 
   /**
    * Check if the current day is a rest day.

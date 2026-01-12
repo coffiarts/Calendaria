@@ -2,7 +2,7 @@
   <div class="time-display">
     <div class="time-display-time-wrapper">
       <span class="time-display-time">{{currentTime}}</span>
-      {{#if isGM}}
+      {{#if canChangeDateTime}}
       <button type="button" class="time-display-play-btn" data-action="toggle"
         data-tooltip="{{#if running}}{{localize 'CALENDARIA.TimeKeeper.Stop'}}{{else}}{{localize 'CALENDARIA.TimeKeeper.Start'}}{{/if}}">
         <i class="fas {{#if running}}fa-pause{{else}}fa-play{{/if}}"></i>
@@ -12,7 +12,7 @@
     {{#if showDate}}<span class="time-display-date">{{currentDate}}</span>{{/if}}
   </div>
 
-  {{#if isGM}}
+  {{#if canChangeDateTime}}
   <div class="time-keeper-controls">
     {{#if showDec2}}
     <button type="button" class="time-btn" data-action="dec2" data-tooltip="{{dec2Tooltip}}">

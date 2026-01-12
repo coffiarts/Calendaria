@@ -55,10 +55,6 @@ const PHASE_NAMES_8 = [
  * @extends BaseImporter
  */
 export default class FantasyCalendarImporter extends BaseImporter {
-  /* -------------------------------------------- */
-  /*  Static Properties                           */
-  /* -------------------------------------------- */
-
   static id = 'fantasy-calendar';
   static label = 'CALENDARIA.Importer.FantasyCalendar.Name';
   static icon = 'fa-globe';
@@ -66,10 +62,6 @@ export default class FantasyCalendarImporter extends BaseImporter {
   static supportsFileUpload = true;
   static supportsLiveImport = false;
   static fileExtensions = ['.json'];
-
-  /* -------------------------------------------- */
-  /*  Detection                                   */
-  /* -------------------------------------------- */
 
   /**
    * Check if data is a Fantasy-Calendar export.
@@ -79,10 +71,6 @@ export default class FantasyCalendarImporter extends BaseImporter {
   static isFantasyCalendarExport(data) {
     return !!(data.static_data && data.dynamic_data && data.static_data.year_data);
   }
-
-  /* -------------------------------------------- */
-  /*  Transformation                              */
-  /* -------------------------------------------- */
 
   /**
    * Transform Fantasy-Calendar data into CalendariaCalendar format.
@@ -119,10 +107,6 @@ export default class FantasyCalendarImporter extends BaseImporter {
       currentDate: this.#transformCurrentDate(data.dynamic_data)
     };
   }
-
-  /* -------------------------------------------- */
-  /*  Transform Helpers                           */
-  /* -------------------------------------------- */
 
   /**
    * Transform FC dynamic_data to current date.
@@ -356,10 +340,6 @@ export default class FantasyCalendarImporter extends BaseImporter {
     }
     return map;
   }
-
-  /* -------------------------------------------- */
-  /*  Note Extraction                             */
-  /* -------------------------------------------- */
 
   /**
    * Extract notes from FC events.
@@ -1070,10 +1050,6 @@ export default class FantasyCalendarImporter extends BaseImporter {
 
     return { year, month, day };
   }
-
-  /* -------------------------------------------- */
-  /*  Preview                                     */
-  /* -------------------------------------------- */
 
   /** @override */
   getPreviewData(rawData, transformedData) {

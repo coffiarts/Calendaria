@@ -127,11 +127,11 @@
     </button>
   </div>
 
-  {{#if (or calendarData.currentSeason calendarData.currentEra cycleText weather isGM)}}
+  {{#if (or calendarData.currentSeason calendarData.currentEra cycleText weather canChangeWeather)}}
     <div class="calendar-indicators">
       {{#if weather}}
-        <span class="weather-indicator{{#if isGM}} clickable{{/if}}"
-          data-action="{{#if isGM}}openWeatherPicker{{else}}{{/if}}" style="--weather-color: {{weather.color}}"
+        <span class="weather-indicator{{#if canChangeWeather}} clickable{{/if}}"
+          data-action="{{#if canChangeWeather}}openWeatherPicker{{else}}{{/if}}" style="--weather-color: {{weather.color}}"
           data-tooltip="{{weather.tooltip}}">
           <i class="fas {{weather.icon}}"></i>
           {{weather.label}}
@@ -139,7 +139,7 @@
             <span class="weather-temp">{{weather.temperature}}</span>
           {{/if}}
         </span>
-      {{else if isGM}}
+      {{else if canChangeWeather}}
         <span class="weather-indicator clickable no-weather" data-action="openWeatherPicker"
           data-tooltip="{{localize 'CALENDARIA.Weather.ClickToGenerate'}}">
           <i class="fas fa-cloud"></i>
@@ -234,10 +234,10 @@
     </div>
   </div>
 
-  <div class="mini-time-display" {{#if isGM}}data-action="toggle" {{/if}}>
+  <div class="mini-time-display" {{#if canChangeDateTime}}data-action="toggle" {{/if}}>
     <span class="time-value">{{currentTime}}</span>
     <span class="date-value hidden">{{currentDate}}</span>
-    {{#if isGM}}
+    {{#if canChangeDateTime}}
       <div class="time-toggle {{#if running}}active{{/if}}"
         data-tooltip="{{#if running}}{{localize 'CALENDARIA.TimeKeeper.Stop'}}{{else}}{{localize 'CALENDARIA.TimeKeeper.Start'}}{{/if}}">
         <i class="fas {{#if running}}fa-pause{{else}}fa-play{{/if}}"></i>
@@ -245,7 +245,7 @@
     {{/if}}
   </div>
 
-  {{#if isGM}}
+  {{#if canChangeDateTime}}
     <div class="mini-time-controls{{#if controlsVisible}} visible{{/if}}">
       <div class="controls-group">
         <button type="button" class="time-btn time-shortcut" data-action="toSunrise"

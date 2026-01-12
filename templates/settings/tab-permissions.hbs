@@ -1,0 +1,159 @@
+<section class="tab {{tab.cssClass}}" data-tab="{{tab.id}}" data-group="{{tab.group}}">
+
+  <p class="hint">{{localize "CALENDARIA.SettingsPanel.Permissions.Note"}}</p>
+
+  <div class="permissions-table">
+    <header class="permissions-header">
+      <span>{{localize "PERMISSION.Permission"}}</span>
+      <span>{{localize "USER.RolePlayer"}}</span>
+      <span>{{localize "USER.RoleTrusted"}}</span>
+      <span>{{localize "USER.RoleAssistant"}}</span>
+      <span>{{localize "USER.RoleGamemaster"}}</span>
+    </header>
+
+    <ul class="permissions-list">
+      {{!-- View Full Calendar --}}
+      <li class="permission-row">
+        <span class="permission-name">{{localize "CALENDARIA.Permissions.ViewFullCalendar"}}</span>
+        <input type="checkbox" name="permissions.viewFullCalendar.player" data-tooltip="{{localize 'USER.RolePlayer'}}"
+          {{#if permissions.viewFullCalendar.player}}checked{{/if}} />
+        <input type="checkbox" name="permissions.viewFullCalendar.trusted"
+          data-tooltip="{{localize 'USER.RoleTrusted'}}" {{#if permissions.viewFullCalendar.trusted}}checked{{/if}} />
+        <input type="checkbox" name="permissions.viewFullCalendar.assistant"
+          data-tooltip="{{localize 'USER.RoleAssistant'}}"
+          {{#if permissions.viewFullCalendar.assistant}}checked{{/if}} />
+        <input type="checkbox" data-tooltip="{{localize 'USER.RoleGamemaster'}}" checked disabled />
+        <p class="permission-hint">{{localize "CALENDARIA.Permissions.ViewFullCalendarHint"}}</p>
+      </li>
+
+      {{!-- View MiniCalendar --}}
+      <li class="permission-row">
+        <span class="permission-name">{{localize "CALENDARIA.Permissions.ViewMiniCalendar"}}</span>
+        <input type="checkbox" name="permissions.viewMiniCalendar.player" data-tooltip="{{localize 'USER.RolePlayer'}}"
+          {{#if permissions.viewMiniCalendar.player}}checked{{/if}} />
+        <input type="checkbox" name="permissions.viewMiniCalendar.trusted"
+          data-tooltip="{{localize 'USER.RoleTrusted'}}" {{#if permissions.viewMiniCalendar.trusted}}checked{{/if}} />
+        <input type="checkbox" name="permissions.viewMiniCalendar.assistant"
+          data-tooltip="{{localize 'USER.RoleAssistant'}}"
+          {{#if permissions.viewMiniCalendar.assistant}}checked{{/if}} />
+        <input type="checkbox" data-tooltip="{{localize 'USER.RoleGamemaster'}}" checked disabled />
+        <p class="permission-hint">{{localize "CALENDARIA.Permissions.ViewMiniCalendarHint"}}</p>
+      </li>
+
+      {{!-- View TimeKeeper --}}
+      <li class="permission-row">
+        <span class="permission-name">{{localize "CALENDARIA.Permissions.ViewTimeKeeper"}}</span>
+        <input type="checkbox" name="permissions.viewTimeKeeper.player" data-tooltip="{{localize 'USER.RolePlayer'}}"
+          {{#if permissions.viewTimeKeeper.player}}checked{{/if}} />
+        <input type="checkbox" name="permissions.viewTimeKeeper.trusted" data-tooltip="{{localize 'USER.RoleTrusted'}}"
+          {{#if permissions.viewTimeKeeper.trusted}}checked{{/if}} />
+        <input type="checkbox" name="permissions.viewTimeKeeper.assistant"
+          data-tooltip="{{localize 'USER.RoleAssistant'}}" {{#if permissions.viewTimeKeeper.assistant}}checked{{/if}} />
+        <input type="checkbox" data-tooltip="{{localize 'USER.RoleGamemaster'}}" checked disabled />
+        <p class="permission-hint">{{localize "CALENDARIA.Permissions.ViewTimeKeeperHint"}}</p>
+      </li>
+
+      {{!-- Add Notes --}}
+      <li class="permission-row">
+        <span class="permission-name">{{localize "CALENDARIA.Permissions.AddNotes"}}</span>
+        <input type="checkbox" name="permissions.addNotes.player" data-tooltip="{{localize 'USER.RolePlayer'}}"
+          {{#if permissions.addNotes.player}}checked{{/if}} />
+        <input type="checkbox" name="permissions.addNotes.trusted" data-tooltip="{{localize 'USER.RoleTrusted'}}"
+          {{#if permissions.addNotes.trusted}}checked{{/if}} />
+        <input type="checkbox" name="permissions.addNotes.assistant" data-tooltip="{{localize 'USER.RoleAssistant'}}"
+          {{#if permissions.addNotes.assistant}}checked{{/if}} />
+        <input type="checkbox" data-tooltip="{{localize 'USER.RoleGamemaster'}}" checked disabled />
+        <p class="permission-hint">{{localize "CALENDARIA.Permissions.AddNotesHint"}}</p>
+      </li>
+
+      {{!-- Edit Notes --}}
+      <li class="permission-row">
+        <span class="permission-name">{{localize "CALENDARIA.Permissions.EditNotes"}}</span>
+        <input type="checkbox" name="permissions.editNotes.player"
+          data-tooltip="{{localize 'USER.RolePlayer'}}" {{#if permissions.editNotes.player}}checked{{/if}} />
+        <input type="checkbox" name="permissions.editNotes.trusted"
+          data-tooltip="{{localize 'USER.RoleTrusted'}}"
+          {{#if permissions.editNotes.trusted}}checked{{/if}} />
+        <input type="checkbox" name="permissions.editNotes.assistant"
+          data-tooltip="{{localize 'USER.RoleAssistant'}}"
+          {{#if permissions.editNotes.assistant}}checked{{/if}} />
+        <input type="checkbox" data-tooltip="{{localize 'USER.RoleGamemaster'}}" checked disabled />
+        <p class="permission-hint">{{localize "CALENDARIA.Permissions.EditNotesHint"}}</p>
+      </li>
+
+      {{!-- Delete Notes --}}
+      <li class="permission-row">
+        <span class="permission-name">{{localize "CALENDARIA.Permissions.DeleteNotes"}}</span>
+        <input type="checkbox" name="permissions.deleteNotes.player"
+          data-tooltip="{{localize 'USER.RolePlayer'}}" {{#if permissions.deleteNotes.player}}checked{{/if}} />
+        <input type="checkbox" name="permissions.deleteNotes.trusted"
+          data-tooltip="{{localize 'USER.RoleTrusted'}}"
+          {{#if permissions.deleteNotes.trusted}}checked{{/if}} />
+        <input type="checkbox" name="permissions.deleteNotes.assistant"
+          data-tooltip="{{localize 'USER.RoleAssistant'}}"
+          {{#if permissions.deleteNotes.assistant}}checked{{/if}} />
+        <input type="checkbox" data-tooltip="{{localize 'USER.RoleGamemaster'}}" checked disabled />
+        <p class="permission-hint">{{localize "CALENDARIA.Permissions.DeleteNotesHint"}}</p>
+      </li>
+
+      {{!-- Change Date/Time --}}
+      <li class="permission-row">
+        <span class="permission-name">{{localize "CALENDARIA.Permissions.ChangeDateTime"}}</span>
+        <input type="checkbox" name="permissions.changeDateTime.player" data-tooltip="{{localize 'USER.RolePlayer'}}"
+          {{#if permissions.changeDateTime.player}}checked{{/if}} />
+        <input type="checkbox" name="permissions.changeDateTime.trusted" data-tooltip="{{localize 'USER.RoleTrusted'}}"
+          {{#if permissions.changeDateTime.trusted}}checked{{/if}} />
+        <input type="checkbox" name="permissions.changeDateTime.assistant"
+          data-tooltip="{{localize 'USER.RoleAssistant'}}" {{#if permissions.changeDateTime.assistant}}checked{{/if}} />
+        <input type="checkbox" data-tooltip="{{localize 'USER.RoleGamemaster'}}" checked disabled />
+        <p class="permission-hint">{{localize "CALENDARIA.Permissions.ChangeDateTimeHint"}}</p>
+      </li>
+
+      {{!-- Change Weather --}}
+      <li class="permission-row">
+        <span class="permission-name">{{localize "CALENDARIA.Permissions.ChangeWeather"}}</span>
+        <input type="checkbox" name="permissions.changeWeather.player"
+          data-tooltip="{{localize 'USER.RolePlayer'}}" {{#if permissions.changeWeather.player}}checked{{/if}} />
+        <input type="checkbox" name="permissions.changeWeather.trusted"
+          data-tooltip="{{localize 'USER.RoleTrusted'}}"
+          {{#if permissions.changeWeather.trusted}}checked{{/if}} />
+        <input type="checkbox" name="permissions.changeWeather.assistant"
+          data-tooltip="{{localize 'USER.RoleAssistant'}}"
+          {{#if permissions.changeWeather.assistant}}checked{{/if}} />
+        <input type="checkbox" data-tooltip="{{localize 'USER.RoleGamemaster'}}" checked disabled />
+        <p class="permission-hint">{{localize "CALENDARIA.Permissions.ChangeWeatherHint"}}</p>
+      </li>
+
+      {{!-- Change Active Calendar --}}
+      <li class="permission-row">
+        <span class="permission-name">{{localize "CALENDARIA.Permissions.ChangeActiveCalendar"}}</span>
+        <input type="checkbox" name="permissions.changeActiveCalendar.player"
+          data-tooltip="{{localize 'USER.RolePlayer'}}" {{#if permissions.changeActiveCalendar.player}}checked{{/if}} />
+        <input type="checkbox" name="permissions.changeActiveCalendar.trusted"
+          data-tooltip="{{localize 'USER.RoleTrusted'}}"
+          {{#if permissions.changeActiveCalendar.trusted}}checked{{/if}} />
+        <input type="checkbox" name="permissions.changeActiveCalendar.assistant"
+          data-tooltip="{{localize 'USER.RoleAssistant'}}"
+          {{#if permissions.changeActiveCalendar.assistant}}checked{{/if}} />
+        <input type="checkbox" data-tooltip="{{localize 'USER.RoleGamemaster'}}" checked disabled />
+        <p class="permission-hint">{{localize "CALENDARIA.Permissions.ChangeActiveCalendarHint"}}</p>
+      </li>
+
+      {{!-- Edit Calendars --}}
+      <li class="permission-row">
+        <span class="permission-name">{{localize "CALENDARIA.Permissions.EditCalendars"}}</span>
+        <input type="checkbox" name="permissions.editCalendars.player"
+          data-tooltip="{{localize 'USER.RolePlayer'}}" {{#if permissions.editCalendars.player}}checked{{/if}} />
+        <input type="checkbox" name="permissions.editCalendars.trusted"
+          data-tooltip="{{localize 'USER.RoleTrusted'}}"
+          {{#if permissions.editCalendars.trusted}}checked{{/if}} />
+        <input type="checkbox" name="permissions.editCalendars.assistant"
+          data-tooltip="{{localize 'USER.RoleAssistant'}}"
+          {{#if permissions.editCalendars.assistant}}checked{{/if}} />
+        <input type="checkbox" data-tooltip="{{localize 'USER.RoleGamemaster'}}" checked disabled />
+        <p class="permission-hint">{{localize "CALENDARIA.Permissions.EditCalendarsHint"}}</p>
+      </li>
+    </ul>
+  </div>
+
+</section>

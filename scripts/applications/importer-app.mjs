@@ -41,10 +41,6 @@ export class ImporterApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @override */
   static PARTS = { form: { template: TEMPLATES.IMPORTER.APP, scrollable: [''] } };
 
-  /* -------------------------------------------- */
-  /*  Instance Properties                         */
-  /* -------------------------------------------- */
-
   /** @type {string|null} Currently selected importer ID */
   #selectedImporterId = null;
 
@@ -74,10 +70,6 @@ export class ImporterApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /** @type {boolean} Whether data was loaded from module */
   #loadedFromModule = false;
-
-  /* -------------------------------------------- */
-  /*  Rendering                                   */
-  /* -------------------------------------------- */
 
   /** @override */
   async _prepareContext(options) {
@@ -118,10 +110,6 @@ export class ImporterApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const fileInput = this.element.querySelector('input[type="file"]');
     if (fileInput) fileInput.addEventListener('change', this.#onFileSelected.bind(this));
   }
-
-  /* -------------------------------------------- */
-  /*  Helpers                                     */
-  /* -------------------------------------------- */
 
   /**
    * Get the currently selected importer instance.
@@ -212,10 +200,6 @@ export class ImporterApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.#loadedFromModule = false;
   }
 
-  /* -------------------------------------------- */
-  /*  Event Handlers                              */
-  /* -------------------------------------------- */
-
   /**
    * Handle source selection change.
    * @param {Event} event - Change event
@@ -288,10 +272,6 @@ export class ImporterApp extends HandlebarsApplicationMixin(ApplicationV2) {
       this.render();
     }
   }
-
-  /* -------------------------------------------- */
-  /*  Action Handlers                             */
-  /* -------------------------------------------- */
 
   /**
    * Handle upload file button click.
@@ -404,10 +384,6 @@ export class ImporterApp extends HandlebarsApplicationMixin(ApplicationV2) {
     CalendarEditor.createFromData(this.#transformedData, { suggestedId: calendarId });
     ui.notifications.info('CALENDARIA.Importer.OpeningEditor', { localize: true });
   }
-
-  /* -------------------------------------------- */
-  /*  Static API                                  */
-  /* -------------------------------------------- */
 
   /**
    * Open the importer application.

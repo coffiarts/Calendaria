@@ -16,10 +16,6 @@ import { log } from '../utils/logger.mjs';
  * Provides common functionality for parsing, transforming, and importing calendars.
  */
 export default class BaseImporter {
-  /* -------------------------------------------- */
-  /*  Static Properties                           */
-  /* -------------------------------------------- */
-
   /** @type {string} Unique importer identifier */
   static id = 'base';
 
@@ -44,16 +40,8 @@ export default class BaseImporter {
   /** @type {string[]} Accepted file extensions */
   static fileExtensions = ['.json'];
 
-  /* -------------------------------------------- */
-  /*  Instance Properties                         */
-  /* -------------------------------------------- */
-
   /** @type {object[]} Undated events to migrate to journal entries */
   _undatedEvents = [];
-
-  /* -------------------------------------------- */
-  /*  Detection                                   */
-  /* -------------------------------------------- */
 
   /**
    * Check if the source module is installed and active.
@@ -63,10 +51,6 @@ export default class BaseImporter {
     if (!this.moduleId) return false;
     return game.modules.get(this.moduleId)?.active ?? false;
   }
-
-  /* -------------------------------------------- */
-  /*  Data Loading                                */
-  /* -------------------------------------------- */
 
   /**
    * Load calendar data from an installed module's settings.
@@ -87,10 +71,6 @@ export default class BaseImporter {
     const text = await file.text();
     return JSON.parse(text);
   }
-
-  /* -------------------------------------------- */
-  /*  Transformation                              */
-  /* -------------------------------------------- */
 
   /**
    * Transform raw source data into CalendariaCalendar format.
@@ -114,10 +94,6 @@ export default class BaseImporter {
     log(1, `${this.constructor.name}.extractNotes() not implemented`, { data });
     return null;
   }
-
-  /* -------------------------------------------- */
-  /*  Validation                                  */
-  /* -------------------------------------------- */
 
   /**
    * Validate transformed data against CalendariaCalendar schema.
@@ -144,10 +120,6 @@ export default class BaseImporter {
 
     return { valid: errors.length === 0, errors };
   }
-
-  /* -------------------------------------------- */
-  /*  Import                                      */
-  /* -------------------------------------------- */
 
   /**
    * Import a calendar into Calendaria.
@@ -230,10 +202,6 @@ export default class BaseImporter {
     return { count };
   }
 
-  /* -------------------------------------------- */
-  /*  Preview                                     */
-  /* -------------------------------------------- */
-
   /**
    * Generate preview data for the import UI.
    * @param {object} rawData - Raw source data
@@ -256,10 +224,6 @@ export default class BaseImporter {
       daysPerYear: this.#calculateDaysPerYear(transformedData)
     };
   }
-
-  /* -------------------------------------------- */
-  /*  Private Helpers                             */
-  /* -------------------------------------------- */
 
   /**
    * Generate a URL-safe ID from a name.

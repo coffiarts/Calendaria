@@ -30,13 +30,8 @@ export class CalendariaSocket {
     CALENDAR_SWITCH: 'calendarSwitch'
   };
 
-  /* -------------------------------------------- */
-  /*  Initialization                              */
-  /* -------------------------------------------- */
-
   /**
    * Initialize the socket system and register message handlers.
-   * Called automatically during module initialization.
    * @returns {void}
    */
   static initialize() {
@@ -44,14 +39,8 @@ export class CalendariaSocket {
     log(3, 'Socket system initialized');
   }
 
-  /* -------------------------------------------- */
-  /*  Emit Methods                                */
-  /* -------------------------------------------- */
-
   /**
    * Emit a raw socket message to all connected clients.
-   * Prefer using the typed emit methods (emitCalendarSwitch, emitNoteUpdate, etc.)
-   * for better type safety and validation.
    * @param {string} type - The message type from CalendariaSocket.TYPES
    * @param {object} data - The data payload to send
    * @returns {void}
@@ -63,7 +52,6 @@ export class CalendariaSocket {
 
   /**
    * Emit a calendar switch message to all connected clients.
-   * Should only be called by GM when switching the active calendar.
    * @param {string} calendarId - The ID of the calendar to switch to
    * @returns {void}
    */
@@ -74,7 +62,6 @@ export class CalendariaSocket {
 
   /**
    * Emit a date/time change message to all connected clients.
-   * Should only be called by primary GM to prevent duplicate broadcasts.
    * @param {number} worldTime - The new world time in seconds
    * @param {number} delta - The time delta in seconds
    * @returns {void}
@@ -86,7 +73,6 @@ export class CalendariaSocket {
 
   /**
    * Emit a note update message to all connected clients.
-   * Broadcasts note create/update/delete operations for real-time sync.
    * @param {'created'|'updated'|'deleted'} action - The type of note operation
    * @param {object} noteData - The note data (stub for created/updated, id for deleted)
    * @param {string} noteData.id - The journal page ID
@@ -101,7 +87,6 @@ export class CalendariaSocket {
 
   /**
    * Emit a clock state update to all connected clients.
-   * Used for real-time clock synchronization (start/stop/pause).
    * @param {boolean} running - Whether the real-time clock is running
    * @param {number} [ratio] - The real-time to game-time ratio
    * @returns {void}
@@ -110,10 +95,6 @@ export class CalendariaSocket {
     if (!this.isPrimaryGM()) return;
     this.emit(SOCKET_TYPES.CLOCK_UPDATE, { running, ratio });
   }
-
-  /* -------------------------------------------- */
-  /*  Message Router                              */
-  /* -------------------------------------------- */
 
   /**
    * Handle incoming socket messages and route to appropriate handlers.
@@ -130,39 +111,37 @@ export class CalendariaSocket {
       case SOCKET_TYPES.CLOCK_UPDATE:
         this.#handleClockUpdate(data);
         break;
-
       case SOCKET_TYPES.DATE_CHANGE:
         this.#handleDateChange(data);
         break;
-
       case SOCKET_TYPES.NOTE_UPDATE:
         this.#handleNoteUpdate(data);
         break;
-
       case SOCKET_TYPES.CALENDAR_SWITCH:
         this.#handleCalendarSwitch(data);
         break;
-
       case SOCKET_TYPES.WEATHER_CHANGE:
         this.#handleWeatherChange(data);
         break;
-
+      case SOCKET_TYPES.WEATHER_REQUEST:
+        this.#handleWeatherRequest(data);
+        break;
+      case SOCKET_TYPES.TIME_REQUEST:
+        this.#handleTimeRequest(data);
+        break;
+      case SOCKET_TYPES.CALENDAR_REQUEST:
+        this.#handleCalendarRequest(data);
+        break;
       case SOCKET_TYPES.REMINDER_NOTIFY:
         this.#handleReminderNotify(data);
         break;
-
       default:
         log(1, `Unknown socket message type: ${type}`);
     }
   }
 
-  /* -------------------------------------------- */
-  /*  Message Handlers                            */
-  /* -------------------------------------------- */
-
   /**
    * Handle remote calendar switch messages.
-   * Updates the local calendar registry to match the remote switch.
    * @private
    * @param {object} data - The calendar switch data
    * @param {string} data.calendarId - The ID of the calendar to switch to
@@ -177,7 +156,6 @@ export class CalendariaSocket {
 
   /**
    * Handle remote date/time change messages.
-   * Re-renders the calendar HUD to reflect the new time.
    * @private
    * @param {object} data - The date change data
    * @param {number} data.worldTime - The new world time in seconds
@@ -191,7 +169,6 @@ export class CalendariaSocket {
 
   /**
    * Handle remote note update messages.
-   * Triggers index rebuild to reflect remote note changes.
    * @private
    * @param {object} data - The note update data
    * @param {'created'|'updated'|'deleted'} data.action - The type of operation
@@ -221,7 +198,6 @@ export class CalendariaSocket {
 
   /**
    * Handle remote clock state update messages.
-   * Syncs the real-time clock state across all clients.
    * @private
    * @param {object} data - The clock update data
    * @param {boolean} data.running - Whether the clock is running
@@ -236,7 +212,6 @@ export class CalendariaSocket {
 
   /**
    * Handle remote weather change messages.
-   * Syncs the weather state across all clients.
    * @private
    * @param {object} data - The weather change data
    * @param {object} data.weather - The new weather state
@@ -249,8 +224,90 @@ export class CalendariaSocket {
   }
 
   /**
+   * Handle weather change request from non-GM users.
+   * @private
+   * @param {object} data - The weather request data
+   * @param {string} [data.action] - The action: 'set', 'generate', or 'clear'
+   * @param {string} [data.presetId] - The preset ID (for 'set' action)
+   * @param {object} [data.options] - Additional options
+   * @returns {void}
+   */
+  static async #handleWeatherRequest(data) {
+    if (!this.isPrimaryGM()) return;
+    const { action, presetId, options = {} } = data;
+    log(3, `Primary GM handling weather request: ${action}`, data);
+
+    switch (action) {
+      case 'set':
+        await WeatherManager.setWeather(presetId, { ...options, fromSocket: true });
+        break;
+      case 'generate':
+        await WeatherManager.generateAndSetWeather({ ...options, fromSocket: true });
+        break;
+      case 'clear':
+        await WeatherManager.clearWeather(true, true);
+        break;
+    }
+  }
+
+  /**
+   * Handle time change request from non-GM users.
+   * @private
+   * @param {object} data - The time request data
+   * @param {string} data.action - The action: 'advance', 'set', or 'jump'
+   * @param {number} [data.delta] - Time delta in seconds (for 'advance')
+   * @param {object} [data.components] - Time components (for 'set')
+   * @param {object} [data.date] - Date object (for 'jump')
+   * @returns {void}
+   */
+  static async #handleTimeRequest(data) {
+    if (!this.isPrimaryGM()) return;
+    const { action, delta, components, date } = data;
+    log(3, `Primary GM handling time request: ${action}`, data);
+
+    switch (action) {
+      case 'advance':
+        await game.time.advance(delta);
+        break;
+      case 'set': {
+        const calendar = CalendarManager.getActiveCalendar();
+        if (!calendar) return;
+        const currentComponents = game.time.components;
+        const merged = { ...currentComponents, ...components };
+        const targetSeconds = calendar.componentsToTime(merged);
+        const timeDelta = targetSeconds - game.time.worldTime;
+        await game.time.advance(timeDelta);
+        break;
+      }
+      case 'jump': {
+        const calendar = CalendarManager.getActiveCalendar();
+        if (!calendar || !date) return;
+        const current = game.time.components;
+        const targetComponents = { ...current, year: date.year, month: date.month, dayOfMonth: date.day };
+        const targetSeconds = calendar.componentsToTime(targetComponents);
+        const timeDelta = targetSeconds - game.time.worldTime;
+        await game.time.advance(timeDelta);
+        break;
+      }
+    }
+  }
+
+  /**
+   * Handle calendar switch request from non-GM users.
+   * @private
+   * @param {object} data - The calendar request data
+   * @param {string} data.calendarId - The calendar ID to switch to
+   * @returns {void}
+   */
+  static async #handleCalendarRequest(data) {
+    if (!this.isPrimaryGM()) return;
+    const { calendarId } = data;
+    log(3, `Primary GM handling calendar switch request: ${calendarId}`);
+    await CalendarManager.switchCalendar(calendarId);
+  }
+
+  /**
    * Handle remote reminder notification messages.
-   * Emits a hook for ReminderScheduler to handle (avoids circular dependency).
    * @private
    * @param {object} data - The reminder notification data
    * @returns {void}
@@ -260,21 +317,8 @@ export class CalendariaSocket {
     Hooks.callAll(HOOKS.REMINDER_RECEIVED, data);
   }
 
-  /* -------------------------------------------- */
-  /*  Primary GM Election                         */
-  /* -------------------------------------------- */
-
   /**
    * Determine if the current user is the primary GM.
-   *
-   * The primary GM is responsible for authoritative updates to prevent race conditions
-   * when multiple GMs are connected. Only the primary GM should broadcast time changes
-   * and other authoritative updates.
-   *
-   * ## Election Method
-   *
-   * 1. First checks the `primaryGM` setting for a manual override
-   * 2. If not set, automatically selects the active GM with the lowest user ID
    * @returns {boolean} True if the current user is the primary GM
    */
   static isPrimaryGM() {
@@ -291,7 +335,6 @@ export class CalendariaSocket {
 
   /**
    * Get the current primary GM user.
-   * Useful for displaying which GM is currently authoritative.
    * @returns {object|null} The primary GM user, or null if none active
    */
   static getPrimaryGM() {

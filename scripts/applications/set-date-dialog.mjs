@@ -5,11 +5,12 @@
  */
 
 import CalendarManager from '../calendar/calendar-manager.mjs';
-import { MODULE, SETTINGS, TEMPLATES } from '../constants.mjs';
+import { MODULE, SETTINGS, SOCKET_TYPES, TEMPLATES } from '../constants.mjs';
 import TimeTracker from '../time/time-tracker.mjs';
 import { formatForLocation } from '../utils/format-utils.mjs';
 import { localize } from '../utils/localization.mjs';
 import { log } from '../utils/logger.mjs';
+import { CalendariaSocket } from '../utils/socket.mjs';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -63,7 +64,7 @@ export class SetDateDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     const isMonthless = calendar?.isMonthless ?? false;
     context.year = displayYear;
     context.isMonthless = isMonthless;
-    context.months = isMonthless ? [] : (calendar?.months?.values?.map((m, i) => ({ index: i, name: localize(m.name), selected: i === components.month })) || []);
+    context.months = isMonthless ? [] : calendar?.months?.values?.map((m, i) => ({ index: i, name: localize(m.name), selected: i === components.month })) || [];
     if (isMonthless) {
       const daysInYear = calendar?.getDaysInYear?.(displayYear) ?? 365;
       context.days = Array.from({ length: daysInYear }, (_, i) => i + 1);
@@ -235,6 +236,11 @@ export class SetDateDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     const skipTriggers = skipCheckbox?.checked ?? true;
     if (skipTriggers) TimeTracker.skipNextHooks();
     const delta = timepoint.worldTime - game.time.worldTime;
+    if (!game.user.isGM) {
+      CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta });
+      this.close();
+      return;
+    }
     await game.time.advance(delta);
     log(3, `Jumped to timepoint: ${timepoint.name} (skip triggers: ${skipTriggers})`);
     this.close();
@@ -304,14 +310,14 @@ export class SetDateDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     const delta = newTime - game.time.worldTime;
     if (delta !== 0) {
       if (skipTriggers) TimeTracker.skipNextHooks();
+      if (!game.user.isGM) {
+        CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta });
+        return;
+      }
       await game.time.advance(delta);
       log(3, `Set date to ${year + yearZero}/${month + 1}/${day} ${hour}:${minute} (skip triggers: ${skipTriggers})`);
     }
   }
-
-  /* -------------------------------------------- */
-  /*  Static Methods                              */
-  /* -------------------------------------------- */
 
   /**
    * Open the Set Date dialog.

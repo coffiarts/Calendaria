@@ -26,10 +26,6 @@ export default class CalendarRegistry {
    */
   static #activeId = null;
 
-  /* -------------------------------------------- */
-  /*  Registration Methods                        */
-  /* -------------------------------------------- */
-
   /**
    * Register a calendar instance.
    * @param {string} id  Calendar ID
@@ -62,10 +58,6 @@ export default class CalendarRegistry {
   static has(id) {
     return this.#calendars.has(id);
   }
-
-  /* -------------------------------------------- */
-  /*  Retrieval Methods                           */
-  /* -------------------------------------------- */
 
   /**
    * Get a calendar by ID.
@@ -120,10 +112,6 @@ export default class CalendarRegistry {
     log(3, `Active calendar set to: ${id}`);
     return true;
   }
-
-  /* -------------------------------------------- */
-  /*  Utility Methods                             */
-  /* -------------------------------------------- */
 
   /**
    * Clear all calendars from the registry.

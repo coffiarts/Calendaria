@@ -30,10 +30,6 @@ export default class EventScheduler {
   /** @type {number} Minimum interval between trigger checks in game seconds (30 minutes) */
   static TRIGGER_CHECK_INTERVAL = 1800;
 
-  /* -------------------------------------------- */
-  /*  Initialization                              */
-  /* -------------------------------------------- */
-
   /**
    * Initialize the event scheduler.
    * @returns {void}
@@ -42,10 +38,6 @@ export default class EventScheduler {
     this.#lastDate = getCurrentDate();
     log(3, 'Event Scheduler initialized');
   }
-
-  /* -------------------------------------------- */
-  /*  Time Update Handler                         */
-  /* -------------------------------------------- */
 
   /**
    * Handle world time updates.
@@ -72,10 +64,6 @@ export default class EventScheduler {
 
     this.#lastDate = { ...currentDate };
   }
-
-  /* -------------------------------------------- */
-  /*  Event Trigger Logic                         */
-  /* -------------------------------------------- */
 
   /**
    * Check if any events should trigger based on time change.
@@ -205,10 +193,6 @@ export default class EventScheduler {
     macro.execute(scope);
   }
 
-  /* -------------------------------------------- */
-  /*  Chat Announcements                          */
-  /* -------------------------------------------- */
-
   /**
    * Send a chat announcement for an event.
    * Respects gmOnly visibility setting.
@@ -289,10 +273,6 @@ export default class EventScheduler {
     return result;
   }
 
-  /* -------------------------------------------- */
-  /*  Random Event Regeneration                   */
-  /* -------------------------------------------- */
-
   /**
    * Check and regenerate random event occurrences when approaching year end.
    * Regenerates occurrences for next year during the last week of the last month.
@@ -317,10 +297,6 @@ export default class EventScheduler {
       log(2, `Auto-regenerated ${occurrences.length} random occurrences for ${fullNote.name} until year ${targetYear}`);
     }
   }
-
-  /* -------------------------------------------- */
-  /*  Multi-Day Event Progress                    */
-  /* -------------------------------------------- */
 
   /**
    * Check if the date has changed (day/month/year).

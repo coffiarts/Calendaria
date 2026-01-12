@@ -623,6 +623,31 @@ export function registerSettings() {
   });
 
   // ========================================//
+  //  Permissions                            //
+  // ========================================//
+
+  /** Permission levels for various actions by role */
+  game.settings.register(MODULE.ID, SETTINGS.PERMISSIONS, {
+    name: 'Permissions',
+    scope: 'world',
+    config: false,
+    type: new ObjectField({
+      initial: {
+        viewFullCalendar: { player: false, trusted: true, assistant: true },
+        viewMiniCalendar: { player: false, trusted: true, assistant: true },
+        viewTimeKeeper: { player: false, trusted: true, assistant: true },
+        addNotes: { player: true, trusted: true, assistant: true },
+        changeDateTime: { player: false, trusted: false, assistant: true },
+        changeActiveCalendar: { player: false, trusted: false, assistant: false },
+        changeWeather: { player: false, trusted: false, assistant: true },
+        editNotes: { player: false, trusted: true, assistant: true },
+        deleteNotes: { player: false, trusted: false, assistant: true },
+        editCalendars: { player: false, trusted: false, assistant: false }
+      }
+    })
+  });
+
+  // ========================================//
   //  Weather System                         //
   // ========================================//
 

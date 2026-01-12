@@ -12,6 +12,7 @@ import TimeKeeper, { getTimeIncrements } from '../../time/time-keeper.mjs';
 import { DEFAULT_FORMAT_PRESETS } from '../../utils/format-utils.mjs';
 import { format, localize } from '../../utils/localization.mjs';
 import { log } from '../../utils/logger.mjs';
+import { canViewMiniCalendar, canViewTimeKeeper } from '../../utils/permissions.mjs';
 import { COLOR_CATEGORIES, COLOR_DEFINITIONS, COMPONENT_CATEGORIES, DEFAULT_COLORS, applyCustomColors, applyPreset } from '../../utils/theme-utils.mjs';
 import WeatherManager from '../../weather/weather-manager.mjs';
 import { CalendarApplication } from '../calendar-application.mjs';
@@ -83,7 +84,8 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     timekeeper: { template: TEMPLATES.SETTINGS.PANEL_TIMEKEEPER, scrollable: [''] },
     miniCalendar: { template: TEMPLATES.SETTINGS.PANEL_MINI_CALENDAR, scrollable: [''] },
     hud: { template: TEMPLATES.SETTINGS.PANEL_HUD, scrollable: [''] },
-    formats: { template: TEMPLATES.SETTINGS.PANEL_FORMATS, scrollable: [''] }
+    formats: { template: TEMPLATES.SETTINGS.PANEL_FORMATS, scrollable: [''] },
+    permissions: { template: TEMPLATES.SETTINGS.PANEL_PERMISSIONS, scrollable: [''] }
   };
 
   /** @override */
@@ -99,6 +101,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
         { id: 'formats', icon: 'fas fa-font', label: 'CALENDARIA.SettingsPanel.Tab.Formats', gmOnly: true },
         { id: 'macros', icon: 'fas fa-bolt', label: 'CALENDARIA.SettingsPanel.Tab.Macros', gmOnly: true },
         { id: 'chat', icon: 'fas fa-comment', label: 'CALENDARIA.SettingsPanel.Tab.Chat', gmOnly: true },
+        { id: 'permissions', icon: 'fas fa-user-shield', label: 'CALENDARIA.SettingsPanel.Tab.Permissions', gmOnly: true },
         { id: 'advanced', icon: 'fas fa-tools', label: 'CALENDARIA.SettingsPanel.Tab.Advanced' },
         { id: 'hud', icon: 'fas fa-sun', label: 'CALENDARIA.SettingsPanel.Tab.HUD', cssClass: 'app-tab' },
         { id: 'miniCalendar', icon: 'fas fa-compress', label: 'CALENDARIA.SettingsPanel.Tab.MiniCalendar', cssClass: 'app-tab' },
@@ -107,10 +110,6 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       initial: 'calendar'
     }
   };
-
-  /* -------------------------------------------- */
-  /*  Context Preparation                         */
-  /* -------------------------------------------- */
 
   /** @override */
   async _prepareContext(options) {
@@ -145,11 +144,15 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       const filtered = {};
       for (const [id, tab] of Object.entries(tabs)) {
         const tabDef = SettingsPanel.TABS.primary.tabs.find((t) => t.id === id);
-        if (!tabDef?.gmOnly) filtered[id] = tab;
+        if (tabDef?.gmOnly) continue;
+        if (id === 'miniCalendar' && !canViewMiniCalendar()) continue;
+        if (id === 'timekeeper' && !canViewTimeKeeper()) continue;
+        filtered[id] = tab;
       }
       const activeTab = this.tabGroups[group];
       const activeTabDef = SettingsPanel.TABS.primary.tabs.find((t) => t.id === activeTab);
-      if (activeTabDef?.gmOnly) {
+      const isActiveHidden = activeTabDef?.gmOnly || (activeTab === 'miniCalendar' && !canViewMiniCalendar()) || (activeTab === 'timekeeper' && !canViewTimeKeeper());
+      if (isActiveHidden) {
         this.tabGroups[group] = 'appearance';
         for (const tab of Object.values(filtered)) {
           tab.active = tab.id === 'appearance';
@@ -205,11 +208,12 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       case 'formats':
         await this.#prepareFormatsContext(context);
         break;
+      case 'permissions':
+        await this.#preparePermissionsContext(context);
+        break;
     }
     return context;
   }
-
-  /* -------------------------------------------- */
 
   /**
    * Prepare context for the Moons tab.
@@ -628,9 +632,33 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     if (moduleData?.languages?.length) context.translations = moduleData.languages.map((lang) => lang.name).join(', ');
   }
 
-  /* -------------------------------------------- */
-  /*  Form Handling                               */
-  /* -------------------------------------------- */
+  /**
+   * Prepare context for the Permissions tab.
+   * @param {object} context - The context object
+   */
+  async #preparePermissionsContext(context) {
+    const defaults = {
+      viewFullCalendar: { player: false, trusted: true, assistant: true },
+      viewMiniCalendar: { player: false, trusted: true, assistant: true },
+      viewTimeKeeper: { player: false, trusted: true, assistant: true },
+      addNotes: { player: true, trusted: true, assistant: true },
+      changeDateTime: { player: false, trusted: false, assistant: true },
+      changeActiveCalendar: { player: false, trusted: false, assistant: false },
+      changeWeather: { player: false, trusted: false, assistant: true },
+      editNotes: { player: false, trusted: true, assistant: true },
+      deleteNotes: { player: false, trusted: false, assistant: true },
+      editCalendars: { player: false, trusted: false, assistant: false }
+    };
+    const saved = game.settings.get(MODULE.ID, SETTINGS.PERMISSIONS) || {};
+    context.permissions = {};
+    for (const [key, defaultVal] of Object.entries(defaults)) {
+      context.permissions[key] = {
+        player: saved[key]?.player ?? defaultVal.player,
+        trusted: saved[key]?.trusted ?? defaultVal.trusted,
+        assistant: saved[key]?.assistant ?? defaultVal.assistant
+      };
+    }
+  }
 
   /**
    * Handle form submission.
@@ -749,6 +777,20 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     if ('primaryGM' in data) await game.settings.set(MODULE.ID, SETTINGS.PRIMARY_GM, data.primaryGM || '');
     if ('loggingLevel' in data) await game.settings.set(MODULE.ID, SETTINGS.LOGGING_LEVEL, data.loggingLevel);
     if ('devMode' in data) await game.settings.set(MODULE.ID, SETTINGS.DEV_MODE, data.devMode);
+    if (data.permissions) {
+      const permissionKeys = ['viewFullCalendar', 'viewMiniCalendar', 'viewTimeKeeper', 'addNotes', 'changeDateTime', 'changeActiveCalendar', 'changeWeather', 'editNotes', 'deleteNotes', 'editCalendars'];
+      const permissions = {};
+      for (const key of permissionKeys) {
+        if (data.permissions[key]) {
+          permissions[key] = {
+            player: !!data.permissions[key].player,
+            trusted: !!data.permissions[key].trusted,
+            assistant: !!data.permissions[key].assistant
+          };
+        }
+      }
+      await game.settings.set(MODULE.ID, SETTINGS.PERMISSIONS, permissions);
+    }
     if (data.colors) {
       const customColors = {};
       for (const def of COLOR_DEFINITIONS) {
@@ -813,16 +855,34 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const timekeeperKeys = ['timeKeeperAutoFade', 'timeKeeperIdleOpacity'];
     if (timekeeperKeys.some((k) => k in data)) foundry.applications.instances.get('time-keeper-hud')?.render();
 
-    const hudKeys = ['hudDialStyle', 'hudTrayDirection', 'hudCombatCompact', 'hudCombatHide', 'hudAutoFade', 'hudIdleOpacity', 'hudWidthScale', 'hudShowWeather', 'hudWeatherDisplayMode', 'hudShowSeason', 'hudSeasonDisplayMode', 'hudShowEra', 'hudStickyTray'];
+    const hudKeys = [
+      'hudDialStyle',
+      'hudTrayDirection',
+      'hudCombatCompact',
+      'hudCombatHide',
+      'hudAutoFade',
+      'hudIdleOpacity',
+      'hudWidthScale',
+      'hudShowWeather',
+      'hudWeatherDisplayMode',
+      'hudShowSeason',
+      'hudSeasonDisplayMode',
+      'hudShowEra',
+      'hudStickyTray'
+    ];
     if (hudKeys.some((k) => k in data)) foundry.applications.instances.get('calendaria-hud')?.render();
 
-    const miniCalKeys = ['miniCalendarAutoFade', 'miniCalendarIdleOpacity', 'miniCalendarControlsDelay', 'miniCalendarConfirmSetDate', 'miniCalendarStickyTimeControls', 'miniCalendarStickySidebar', 'miniCalendarStickyPosition'];
+    const miniCalKeys = [
+      'miniCalendarAutoFade',
+      'miniCalendarIdleOpacity',
+      'miniCalendarControlsDelay',
+      'miniCalendarConfirmSetDate',
+      'miniCalendarStickyTimeControls',
+      'miniCalendarStickySidebar',
+      'miniCalendarStickyPosition'
+    ];
     if (miniCalKeys.some((k) => k in data)) foundry.applications.instances.get('mini-calendar')?.render();
   }
-
-  /* -------------------------------------------- */
-  /*  Action Handlers                             */
-  /* -------------------------------------------- */
 
   /**
    * Open the Calendar Editor.

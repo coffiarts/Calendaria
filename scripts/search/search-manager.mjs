@@ -43,10 +43,6 @@ export default class SearchManager {
     return results;
   }
 
-  /* -------------------------------------------- */
-  /*  Private Search Methods                       */
-  /* -------------------------------------------- */
-
   /**
    * Check if text matches search term.
    * @param {string} text - Text to search
@@ -162,10 +158,6 @@ export default class SearchManager {
 
     return result;
   }
-
-  /* -------------------------------------------- */
-  /*  Formatting Helpers                           */
-  /* -------------------------------------------- */
 
   /**
    * Format note date for display.

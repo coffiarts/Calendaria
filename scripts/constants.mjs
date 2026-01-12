@@ -53,11 +53,12 @@ export const SETTINGS = {
   LOGGING_LEVEL: 'loggingLevel',
   MACRO_TRIGGERS: 'macroTriggers',
   MINI_CALENDAR_AUTO_FADE: 'miniCalendarAutoFade',
+  MINI_CALENDAR_CONFIRM_SET_DATE: 'miniCalendarConfirmSetDate',
   MINI_CALENDAR_CONTROLS_DELAY: 'miniCalendarControlsDelay',
   MINI_CALENDAR_IDLE_OPACITY: 'miniCalendarIdleOpacity',
   MINI_CALENDAR_POSITION: 'miniCalendarPosition',
   MINI_CALENDAR_STICKY_STATES: 'miniCalendarStickyStates',
-  MINI_CALENDAR_CONFIRM_SET_DATE: 'miniCalendarConfirmSetDate',
+  PERMISSIONS: 'permissions',
   POSITION_LOCKED: 'positionLocked',
   PRIMARY_GM: 'primaryGM',
   SAVED_TIMEPOINTS: 'savedTimepoints',
@@ -116,7 +117,8 @@ export const TEMPLATES = {
     PANEL_HUD: `modules/${MODULE.ID}/templates/settings/tab-hud.hbs`,
     PANEL_TIMEKEEPER: `modules/${MODULE.ID}/templates/settings/tab-timekeeper.hbs`,
     PANEL_FULLCAL: `modules/${MODULE.ID}/templates/settings/tab-fullcal.hbs`,
-    PANEL_FORMATS: `modules/${MODULE.ID}/templates/settings/tab-formats.hbs`
+    PANEL_FORMATS: `modules/${MODULE.ID}/templates/settings/tab-formats.hbs`,
+    PANEL_PERMISSIONS: `modules/${MODULE.ID}/templates/settings/tab-permissions.hbs`
   },
   PARTIALS: {
     SCENE_DARKNESS_SYNC: `modules/${MODULE.ID}/templates/partials/scene-darkness-sync.hbs`,
@@ -176,39 +178,39 @@ export const DEFAULT_MOON_PHASES = [
 
 /** @enum {string} Custom hook names fired by the module */
 export const HOOKS = {
-  INIT: 'calendaria.init',
-  READY: 'calendaria.ready',
-  CALENDAR_SWITCHED: 'calendaria.calendarSwitched',
-  REMOTE_CALENDAR_SWITCH: 'calendaria.remoteCalendarSwitch',
   CALENDAR_ADDED: 'calendaria.calendarAdded',
-  CALENDAR_UPDATED: 'calendaria.calendarUpdated',
   CALENDAR_REMOVED: 'calendaria.calendarRemoved',
-  DATE_TIME_CHANGE: 'calendaria.dateTimeChange',
-  DAY_CHANGE: 'calendaria.dayChange',
-  MONTH_CHANGE: 'calendaria.monthChange',
-  YEAR_CHANGE: 'calendaria.yearChange',
-  SEASON_CHANGE: 'calendaria.seasonChange',
-  REMOTE_DATE_CHANGE: 'calendaria.remoteDateChange',
-  SUNRISE: 'calendaria.sunrise',
-  SUNSET: 'calendaria.sunset',
-  MIDNIGHT: 'calendaria.midnight',
-  MIDDAY: 'calendaria.midday',
-  MOON_PHASE_CHANGE: 'calendaria.moonPhaseChange',
-  REST_DAY_CHANGE: 'calendaria.restDayChange',
+  CALENDAR_SWITCHED: 'calendaria.calendarSwitched',
+  CALENDAR_UPDATED: 'calendaria.calendarUpdated',
   CLOCK_START_STOP: 'calendaria.clockStartStop',
   CLOCK_UPDATE: 'calendaria.clockUpdate',
-  NOTE_CREATED: 'calendaria.noteCreated',
-  NOTE_UPDATED: 'calendaria.noteUpdated',
-  NOTE_DELETED: 'calendaria.noteDeleted',
-  EVENT_TRIGGERED: 'calendaria.eventTriggered',
+  DATE_TIME_CHANGE: 'calendaria.dateTimeChange',
+  DAY_CHANGE: 'calendaria.dayChange',
   EVENT_DAY_CHANGED: 'calendaria.eventDayChanged',
-  REMINDER_RECEIVED: 'calendaria.reminderReceived',
-  PRE_RENDER_CALENDAR: 'calendaria.preRenderCalendar',
-  RENDER_CALENDAR: 'calendaria.renderCalendar',
-  IMPORT_STARTED: 'calendaria.importStarted',
+  EVENT_TRIGGERED: 'calendaria.eventTriggered',
   IMPORT_COMPLETE: 'calendaria.importComplete',
   IMPORT_FAILED: 'calendaria.importFailed',
-  WEATHER_CHANGE: 'calendaria.weatherChange'
+  IMPORT_STARTED: 'calendaria.importStarted',
+  INIT: 'calendaria.init',
+  MIDDAY: 'calendaria.midday',
+  MIDNIGHT: 'calendaria.midnight',
+  MONTH_CHANGE: 'calendaria.monthChange',
+  MOON_PHASE_CHANGE: 'calendaria.moonPhaseChange',
+  NOTE_CREATED: 'calendaria.noteCreated',
+  NOTE_DELETED: 'calendaria.noteDeleted',
+  NOTE_UPDATED: 'calendaria.noteUpdated',
+  PRE_RENDER_CALENDAR: 'calendaria.preRenderCalendar',
+  READY: 'calendaria.ready',
+  REMINDER_RECEIVED: 'calendaria.reminderReceived',
+  REMOTE_CALENDAR_SWITCH: 'calendaria.remoteCalendarSwitch',
+  REMOTE_DATE_CHANGE: 'calendaria.remoteDateChange',
+  RENDER_CALENDAR: 'calendaria.renderCalendar',
+  REST_DAY_CHANGE: 'calendaria.restDayChange',
+  SEASON_CHANGE: 'calendaria.seasonChange',
+  SUNRISE: 'calendaria.sunrise',
+  SUNSET: 'calendaria.sunset',
+  WEATHER_CHANGE: 'calendaria.weatherChange',
+  YEAR_CHANGE: 'calendaria.yearChange'
 };
 
 /** @enum {string} Journal page type identifiers */
@@ -223,10 +225,13 @@ export const SHEETS = {
 
 /** @enum {string} Socket message types for multiplayer sync */
 export const SOCKET_TYPES = {
+  CALENDAR_REQUEST: 'calendarRequest',
+  CALENDAR_SWITCH: 'calendarSwitch',
   CLOCK_UPDATE: 'clockUpdate',
   DATE_CHANGE: 'dateChange',
   NOTE_UPDATE: 'noteUpdate',
-  CALENDAR_SWITCH: 'calendarSwitch',
+  REMINDER_NOTIFY: 'reminderNotify',
+  TIME_REQUEST: 'timeRequest',
   WEATHER_CHANGE: 'weatherChange',
-  REMINDER_NOTIFY: 'reminderNotify'
+  WEATHER_REQUEST: 'weatherRequest'
 };

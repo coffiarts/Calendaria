@@ -40,10 +40,6 @@ export const BUNDLED_CALENDARS = [
  */
 export const DEFAULT_CALENDAR = 'gregorian';
 
-/* -------------------------------------------- */
-/*  Loader Functions                            */
-/* -------------------------------------------- */
-
 /**
  * Load a single calendar JSON file.
  * @param {string} id  Calendar ID (filename without extension)

@@ -6,7 +6,7 @@
  */
 
 import CalendarManager from '../calendar/calendar-manager.mjs';
-import { HOOKS, MODULE, SETTINGS, TEMPLATES } from '../constants.mjs';
+import { HOOKS, MODULE, SETTINGS, SOCKET_TYPES, TEMPLATES } from '../constants.mjs';
 import NoteManager from '../notes/note-manager.mjs';
 import { dayOfWeek } from '../notes/utils/date-utils.mjs';
 import { isRecurringMatch } from '../notes/utils/recurrence.mjs';
@@ -14,6 +14,8 @@ import SearchManager from '../search/search-manager.mjs';
 import TimeKeeper, { getTimeIncrements } from '../time/time-keeper.mjs';
 import { formatForLocation } from '../utils/format-utils.mjs';
 import { format, localize } from '../utils/localization.mjs';
+import { canChangeDateTime, canChangeWeather, canViewMiniCalendar } from '../utils/permissions.mjs';
+import { CalendariaSocket } from '../utils/socket.mjs';
 import * as StickyZones from '../utils/sticky-zones.mjs';
 import WeatherManager from '../weather/weather-manager.mjs';
 import { openWeatherPicker } from '../weather/weather-picker.mjs';
@@ -128,10 +130,6 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @override */
   static PARTS = { main: { template: TEMPLATES.MINI_CALENDAR } };
 
-  /* -------------------------------------------- */
-  /*  Properties                                  */
-  /* -------------------------------------------- */
-
   /**
    * Get the active calendar.
    * @returns {object} The active calendar instance
@@ -157,16 +155,14 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
     this._viewedDate = date;
   }
 
-  /* -------------------------------------------- */
-  /*  Rendering                                   */
-  /* -------------------------------------------- */
-
   /** @override */
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
     const calendar = this.calendar;
     const viewedDate = this.viewedDate;
     context.isGM = game.user.isGM;
+    context.canChangeDateTime = canChangeDateTime();
+    context.canChangeWeather = canChangeWeather();
     context.running = TimeKeeper.running;
     const components = game.time.components;
     const yearZero = calendar?.years?.yearZero ?? 0;
@@ -632,10 +628,6 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
     return formatForLocation(calendar, components, 'miniCalendarTime');
   }
 
-  /* -------------------------------------------- */
-  /*  Lifecycle                                   */
-  /* -------------------------------------------- */
-
   /** @override */
   _onRender(context, options) {
     super._onRender(context, options);
@@ -801,10 +793,6 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
     StickyZones.cleanupSnapIndicator();
     await super._onClose(options);
   }
-
-  /* -------------------------------------------- */
-  /*  Position & Dragging                         */
-  /* -------------------------------------------- */
 
   /**
    * Override setPosition to prevent position updates when pinned to a DOM-parented zone.
@@ -972,10 +960,6 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
     };
   }
 
-  /* -------------------------------------------- */
-  /*  Time Updates                                */
-  /* -------------------------------------------- */
-
   /**
    * Handle world time updates.
    */
@@ -1015,10 +999,6 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
       }
     }
   }
-
-  /* -------------------------------------------- */
-  /*  Event Handlers                              */
-  /* -------------------------------------------- */
 
   /**
    * Navigate to the next or previous month (or week for monthless calendars).
@@ -1349,7 +1329,7 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {boolean} [nextDay] - If true, always advance to next day
    */
   async #advanceToHour(targetHour, nextDay = false) {
-    if (!game.user.isGM) return;
+    if (!canChangeDateTime()) return;
     const cal = game.time.calendar;
     if (!cal) return;
     const days = cal.days ?? {};
@@ -1363,7 +1343,13 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
     if (nextDay || currentHour >= targetHour) hoursUntil = hoursPerDay - currentHour + targetHour;
     else hoursUntil = targetHour - currentHour;
     const secondsToAdvance = Math.round(hoursUntil * secondsPerHour);
-    if (secondsToAdvance > 0) await game.time.advance(secondsToAdvance);
+    if (secondsToAdvance > 0) {
+      if (!game.user.isGM) {
+        CalendariaSocket.emit(SOCKET_TYPES.TIME_REQUEST, { action: 'advance', delta: secondsToAdvance });
+        return;
+      }
+      await game.time.advance(secondsToAdvance);
+    }
   }
 
   /**
@@ -1371,7 +1357,7 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
    * For now, generates new weather based on climate/season.
    */
   static async _onOpenWeatherPicker() {
-    if (!game.user.isGM) return;
+    if (!canChangeWeather()) return;
     await openWeatherPicker();
   }
 
@@ -1496,10 +1482,6 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
     this.render();
   }
 
-  /* -------------------------------------------- */
-  /*  Helper Methods                              */
-  /* -------------------------------------------- */
-
   /**
    * Format increment key for display.
    * @param {string} key - Increment key
@@ -1520,15 +1502,17 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
     return labels[key] || key;
   }
 
-  /* -------------------------------------------- */
-  /*  Static Methods                              */
-  /* -------------------------------------------- */
-
   /**
    * Show the MiniCalendar singleton.
+   * @param {object} [options] - Show options
+   * @param {boolean} [options.silent] - If true, don't show permission warning
    * @returns {MiniCalendar} The singleton instance
    */
-  static show() {
+  static show({ silent = false } = {}) {
+    if (!canViewMiniCalendar()) {
+      if (!silent) ui.notifications.warn('CALENDARIA.Permissions.NoAccess', { localize: true });
+      return null;
+    }
     if (!this._instance) this._instance = new MiniCalendar();
     this._instance.render(true);
     return this._instance;

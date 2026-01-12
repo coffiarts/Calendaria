@@ -28,6 +28,8 @@ import TimeTracker from './scripts/time/time-tracker.mjs';
 import { migrateAllDeprecatedTokens, migrateCustomCalendars } from './scripts/utils/format-utils.mjs';
 import { registerKeybindings, toggleCalendarVisibility } from './scripts/utils/keybinds.mjs';
 import { initializeLogger, log } from './scripts/utils/logger.mjs';
+import * as Permissions from './scripts/utils/permissions.mjs';
+const { canViewMiniCalendar, canViewTimeKeeper } = Permissions;
 import { CalendariaSocket } from './scripts/utils/socket.mjs';
 import * as StickyZones from './scripts/utils/sticky-zones.mjs';
 import { initializeTheme } from './scripts/utils/theme-utils.mjs';
@@ -71,10 +73,10 @@ Hooks.once('ready', async () => {
   TimeKeeperHUD.updateIdleOpacity();
   CalendariaHUD.updateIdleOpacity();
   MiniCalendar.updateIdleOpacity();
-  if (game.user.isGM && game.settings.get(MODULE.ID, SETTINGS.SHOW_TIME_KEEPER)) TimeKeeperHUD.show();
+  if (game.settings.get(MODULE.ID, SETTINGS.SHOW_TIME_KEEPER) && canViewTimeKeeper()) TimeKeeperHUD.show({ silent: true });
   if (game.settings.get(MODULE.ID, SETTINGS.FORCE_MINI_CALENDAR)) await game.settings.set(MODULE.ID, SETTINGS.SHOW_MINI_CALENDAR, true);
   if (game.settings.get(MODULE.ID, SETTINGS.FORCE_HUD)) await game.settings.set(MODULE.ID, SETTINGS.SHOW_CALENDAR_HUD, true);
-  if (game.settings.get(MODULE.ID, SETTINGS.SHOW_MINI_CALENDAR)) MiniCalendar.show();
+  if (game.settings.get(MODULE.ID, SETTINGS.SHOW_MINI_CALENDAR) && canViewMiniCalendar()) MiniCalendar.show({ silent: true });
   if (game.system.id === 'dnd5e' && foundry.utils.isNewerVersion(game.system.version, '5.1.10')) {
     const calendarConfig = game.settings.get('dnd5e', 'calendarConfig');
     if (calendarConfig?.enabled) {
@@ -104,5 +106,6 @@ globalThis['CALENDARIA'] = {
   TimeKeeperHUD,
   WeatherManager,
   toggleCalendarVisibility,
-  api: CalendariaAPI
+  api: CalendariaAPI,
+  ...Permissions
 };

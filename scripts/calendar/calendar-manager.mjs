@@ -52,10 +52,6 @@ export default class CalendarManager {
     log(3, 'Calendar Manager initialized');
   }
 
-  /* -------------------------------------------- */
-  /*  Calendar Loading                            */
-  /* -------------------------------------------- */
-
   /**
    * Load calendars from game settings.
    * @private
@@ -164,10 +160,6 @@ export default class CalendarManager {
       log(1, 'Error saving calendars to settings:', error);
     }
   }
-
-  /* -------------------------------------------- */
-  /*  Calendar Management                         */
-  /* -------------------------------------------- */
 
   /**
    * Get a calendar by ID.
@@ -323,10 +315,6 @@ export default class CalendarManager {
     return removed;
   }
 
-  /* -------------------------------------------- */
-  /*  Calendar Utilities                          */
-  /* -------------------------------------------- */
-
   /**
    * Get calendar metadata for UI display.
    * @param {string} id  Calendar ID
@@ -354,10 +342,6 @@ export default class CalendarManager {
     const ids = CalendarRegistry.getAllIds();
     return ids.map((id) => this.getCalendarMetadata(id)).filter(Boolean);
   }
-
-  /* -------------------------------------------- */
-  /*  Hook Registration                           */
-  /* -------------------------------------------- */
 
   /**
    * Handle updateSetting hook for active calendar changes.
@@ -394,10 +378,6 @@ export default class CalendarManager {
   static onCloseGame() {
     if (game.user.isGM) CalendarManager.saveCalendars();
   }
-
-  /* -------------------------------------------- */
-  /*  API Methods                                 */
-  /* -------------------------------------------- */
 
   /**
    * Get the current moon phase for the active calendar.
@@ -441,10 +421,6 @@ export default class CalendarManager {
     const yearOffset = calendar?.yearZero ?? 0;
     return { year: components.year + yearOffset, month: components.month, day: components.dayOfMonth, hour: components.hour, minute: components.minute };
   }
-
-  /* -------------------------------------------- */
-  /*  Custom Calendar Management                  */
-  /* -------------------------------------------- */
 
   /**
    * Create a new custom calendar from a definition.
@@ -605,10 +581,6 @@ export default class CalendarManager {
     const customCalendars = game.settings.get(MODULE.ID, SETTINGS.CUSTOM_CALENDARS) || {};
     return !!customCalendars[id];
   }
-
-  /* -------------------------------------------- */
-  /*  Bundled Calendar Override Management        */
-  /* -------------------------------------------- */
 
   /**
    * Check if a calendar is a bundled (built-in) calendar.

@@ -14,6 +14,7 @@ import { isRecurringMatch } from '../notes/utils/recurrence.mjs';
 import SearchManager from '../search/search-manager.mjs';
 import { formatForLocation } from '../utils/format-utils.mjs';
 import { format, localize } from '../utils/localization.mjs';
+import { canViewFullCalendar } from '../utils/permissions.mjs';
 import WeatherManager from '../weather/weather-manager.mjs';
 import { openWeatherPicker } from '../weather/weather-picker.mjs';
 import * as ViewUtils from './calendar-view-utils.mjs';
@@ -88,6 +89,15 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
   };
 
   static PARTS = { header: { template: TEMPLATES.SHEETS.CALENDAR_HEADER }, content: { template: TEMPLATES.SHEETS.CALENDAR_CONTENT } };
+
+  /** @override */
+  async render(options = {}, _options = {}) {
+    if (!canViewFullCalendar()) {
+      if (!options.silent) ui.notifications.warn('CALENDARIA.Permissions.NoAccess', { localize: true });
+      return this;
+    }
+    return super.render(options, _options);
+  }
 
   /**
    * Get the application window title.
@@ -1007,10 +1017,6 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     return blocks;
   }
 
-  /* -------------------------------------------- */
-  /*  Lifecycle Methods                           */
-  /* -------------------------------------------- */
-
   /**
    * Adjust window size to exactly fit rendered content.
    * Measures actual DOM elements after render.
@@ -1206,10 +1212,6 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     }
     await super._onClose(options);
   }
-
-  /* -------------------------------------------- */
-  /*  Event Handlers                              */
-  /* -------------------------------------------- */
 
   /**
    * Navigate forward or backward in the calendar view.

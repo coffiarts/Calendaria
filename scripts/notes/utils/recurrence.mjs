@@ -43,10 +43,6 @@ function getDayOfYear(date) {
   return dayOfYear + date.day;
 }
 
-/* -------------------------------------------- */
-/*  Condition Evaluation System                 */
-/* -------------------------------------------- */
-
 /**
  * Get the value of a condition field for a given date.
  * @param {string} field - Field name
@@ -236,10 +232,6 @@ function evaluateConditions(conditions, date) {
   if (!conditions?.length) return true;
   return conditions.every((cond) => evaluateCondition(cond, date));
 }
-
-/* -------------------------------------------- */
-/*  Condition Helper Functions                  */
-/* -------------------------------------------- */
 
 /**
  * Get total days since epoch (year 0, day 1).
@@ -494,10 +486,6 @@ function getEraYear(year, eras) {
   return year - (era.startYear ?? 0) + 1;
 }
 
-/* -------------------------------------------- */
-/*  Computed Event (Moveable Feast) System      */
-/* -------------------------------------------- */
-
 /**
  * Resolve a computed date for a given year using the chain.
  * @param {object} computedConfig - Computed config { chain, yearOverrides }
@@ -750,10 +738,6 @@ function getComputedOccurrencesInRange(noteData, rangeStart, rangeEnd, maxOccurr
   }
   return occurrences;
 }
-
-/* -------------------------------------------- */
-/*  Main Recurrence Functions                   */
-/* -------------------------------------------- */
 
 /**
  * Check if a recurring note occurs on a target date.

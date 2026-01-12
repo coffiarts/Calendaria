@@ -10,6 +10,7 @@ import CalendarManager from '../calendar/calendar-manager.mjs';
 import { HOOKS, MODULE, SETTINGS } from '../constants.mjs';
 import { format, localize } from '../utils/localization.mjs';
 import { log } from '../utils/logger.mjs';
+import { canChangeWeather } from '../utils/permissions.mjs';
 import { CalendariaSocket } from '../utils/socket.mjs';
 import { CLIMATE_ZONE_TEMPLATES } from './climate-data.mjs';
 import { generateForecast, generateWeather } from './weather-generator.mjs';
@@ -26,10 +27,6 @@ export default class WeatherManager {
   /** @type {boolean} Whether the manager is initialized */
   static #initialized = false;
 
-  /* -------------------------------------------- */
-  /*  Initialization                              */
-  /* -------------------------------------------- */
-
   /**
    * Initialize the weather manager.
    * Called during module ready hook.
@@ -41,10 +38,6 @@ export default class WeatherManager {
     this.#initialized = true;
     log(3, 'WeatherManager initialized');
   }
-
-  /* -------------------------------------------- */
-  /*  Current Weather                             */
-  /* -------------------------------------------- */
 
   /**
    * Get the current weather.
@@ -70,12 +63,19 @@ export default class WeatherManager {
    * @param {object} [options] - Additional options
    * @param {number} [options.temperature] - Optional temperature override
    * @param {boolean} [options.broadcast] - Whether to broadcast to other clients
+   * @param {boolean} [options.fromSocket] - Whether this is a GM executing a socket request
    * @returns {Promise<object>} The set weather
    */
   static async setWeather(presetId, options = {}) {
-    if (!game.user.isGM) {
-      log(1, 'Only GMs can set weather');
-      ui.notifications.error('CALENDARIA.Weather.Error.GMOnly', { localize: true });
+    if (!options.fromSocket && !canChangeWeather()) {
+      log(1, 'User lacks permission to set weather');
+      ui.notifications.error('CALENDARIA.Permissions.NoAccess', { localize: true });
+      return this.#currentWeather;
+    }
+
+    // Non-GM users with permission must request via socket
+    if (!options.fromSocket && !game.user.isGM && canChangeWeather()) {
+      CalendariaSocket.emit('weatherRequest', { action: 'set', presetId, options: { temperature: options.temperature } });
       return this.#currentWeather;
     }
 
@@ -121,8 +121,14 @@ export default class WeatherManager {
    * @returns {Promise<object>} The set weather
    */
   static async setCustomWeather(weatherData, broadcast = true) {
+    if (!canChangeWeather()) {
+      ui.notifications.error('CALENDARIA.Permissions.NoAccess', { localize: true });
+      return this.#currentWeather;
+    }
+
+    // Custom weather requires GM - too complex for socket relay
     if (!game.user.isGM) {
-      ui.notifications.error('CALENDARIA.Weather.Error.GMOnly', { localize: true });
+      ui.notifications.warn('CALENDARIA.Weather.Error.CustomRequiresGM', { localize: true });
       return this.#currentWeather;
     }
 
@@ -150,8 +156,13 @@ export default class WeatherManager {
    * @param {boolean} [broadcast] - Whether to broadcast
    * @returns {Promise<void>}
    */
-  static async clearWeather(broadcast = true) {
-    if (!game.user.isGM) return;
+  static async clearWeather(broadcast = true, fromSocket = false) {
+    if (!fromSocket && !canChangeWeather()) return;
+    // Non-GM users with permission must request via socket
+    if (!fromSocket && !game.user.isGM && canChangeWeather()) {
+      CalendariaSocket.emit('weatherRequest', { action: 'clear' });
+      return;
+    }
     await this.#saveWeather(null, broadcast);
   }
 
@@ -179,10 +190,6 @@ export default class WeatherManager {
     Hooks.callAll(HOOKS.WEATHER_CHANGE, { previous: null, current: data.weather, remote: true });
   }
 
-  /* -------------------------------------------- */
-  /*  Weather Generation                          */
-  /* -------------------------------------------- */
-
   /**
    * Generate and set weather based on active calendar's climate zone.
    * @param {object} [options] - Generation options
@@ -192,8 +199,14 @@ export default class WeatherManager {
    * @returns {Promise<object>} Generated weather
    */
   static async generateAndSetWeather(options = {}) {
-    if (!game.user.isGM) {
-      log(1, 'Only GMs can generate weather');
+    if (!options.fromSocket && !canChangeWeather()) {
+      log(1, 'User lacks permission to generate weather');
+      return this.#currentWeather;
+    }
+
+    // Non-GM users with permission must request via socket
+    if (!options.fromSocket && !game.user.isGM && canChangeWeather()) {
+      CalendariaSocket.emit('weatherRequest', { action: 'generate', options: { zoneId: options.zoneId, season: options.season } });
       return this.#currentWeather;
     }
 
@@ -323,10 +336,6 @@ export default class WeatherManager {
     return Math.round(tempRange.min + Math.random() * (tempRange.max - tempRange.min));
   }
 
-  /* -------------------------------------------- */
-  /*  Active Zone Management                      */
-  /* -------------------------------------------- */
-
   /**
    * Get the active climate zone config from the calendar.
    * @param {string} [zoneId] - Optional zone ID override
@@ -345,7 +354,7 @@ export default class WeatherManager {
    * @returns {Promise<void>}
    */
   static async setActiveZone(zoneId) {
-    if (!game.user.isGM) return;
+    if (!canChangeWeather()) return;
     const calendar = CalendarManager.getActiveCalendar();
     const calendarId = calendar?.metadata?.id;
     if (!calendarId) return;
@@ -379,10 +388,6 @@ export default class WeatherManager {
     return Object.values(CLIMATE_ZONE_TEMPLATES);
   }
 
-  /* -------------------------------------------- */
-  /*  Custom Presets                              */
-  /* -------------------------------------------- */
-
   /**
    * Get custom weather presets.
    * @returns {object[]} Custom presets
@@ -402,7 +407,7 @@ export default class WeatherManager {
    * @returns {Promise<object>} The added preset
    */
   static async addCustomPreset(preset) {
-    if (!game.user.isGM) return null;
+    if (!canChangeWeather()) return null;
     const customPresets = this.getCustomPresets();
 
     if (customPresets.some((p) => p.id === preset.id) || ALL_PRESETS.some((p) => p.id === preset.id)) {
@@ -424,7 +429,7 @@ export default class WeatherManager {
    * @returns {Promise<boolean>} True if removed
    */
   static async removeCustomPreset(presetId) {
-    if (!game.user.isGM) return false;
+    if (!canChangeWeather()) return false;
     const customPresets = this.getCustomPresets();
     const index = customPresets.findIndex((p) => p.id === presetId);
     if (index === -1) return false;
@@ -441,7 +446,7 @@ export default class WeatherManager {
    * @returns {Promise<object|null>} Updated preset or null
    */
   static async updateCustomPreset(presetId, updates) {
-    if (!game.user.isGM) return null;
+    if (!canChangeWeather()) return null;
     const customPresets = this.getCustomPresets();
     const index = customPresets.findIndex((p) => p.id === presetId);
     if (index === -1) return null;
@@ -452,10 +457,6 @@ export default class WeatherManager {
     log(3, `Updated custom weather preset: ${presetId}`);
     return preset;
   }
-
-  /* -------------------------------------------- */
-  /*  Preset Access                               */
-  /* -------------------------------------------- */
 
   /**
    * Get all weather presets (built-in + custom).
@@ -492,10 +493,6 @@ export default class WeatherManager {
   static getCategories() {
     return WEATHER_CATEGORIES;
   }
-
-  /* -------------------------------------------- */
-  /*  Temperature Formatting                       */
-  /* -------------------------------------------- */
 
   /**
    * Format a temperature value with the configured unit.

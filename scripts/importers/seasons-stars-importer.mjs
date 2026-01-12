@@ -18,10 +18,6 @@ import BaseImporter from './base-importer.mjs';
  * @extends BaseImporter
  */
 export default class SeasonsStarsImporter extends BaseImporter {
-  /* -------------------------------------------- */
-  /*  Static Properties                           */
-  /* -------------------------------------------- */
-
   static id = 'seasons-stars';
   static label = 'CALENDARIA.Importer.SeasonsStars.Name';
   static icon = 'fa-star';
@@ -31,10 +27,6 @@ export default class SeasonsStarsImporter extends BaseImporter {
   static moduleId = 'seasons-and-stars';
   static fileExtensions = ['.json'];
 
-  /* -------------------------------------------- */
-  /*  Detection                                   */
-  /* -------------------------------------------- */
-
   /**
    * Check if the provided data is in S&S format.
    * @param {object} data - Data to check
@@ -43,10 +35,6 @@ export default class SeasonsStarsImporter extends BaseImporter {
   static isSSFormat(data) {
     return !!(data.id && data.translations && (data.months || data.weekdays || data.year));
   }
-
-  /* -------------------------------------------- */
-  /*  Data Loading                                */
-  /* -------------------------------------------- */
 
   /**
    * Load calendar data from installed Seasons & Stars module.
@@ -65,10 +53,6 @@ export default class SeasonsStarsImporter extends BaseImporter {
 
     return { calendar: calendarData, worldEvents };
   }
-
-  /* -------------------------------------------- */
-  /*  Transformation                              */
-  /* -------------------------------------------- */
 
   /**
    * Transform Seasons & Stars data into CalendariaCalendar format.
@@ -103,10 +87,6 @@ export default class SeasonsStarsImporter extends BaseImporter {
       metadata: { id: calendar.id, description: calendar.translations?.en?.description || '', system: calendar.translations?.en?.setting || 'Unknown', importedFrom: 'seasons-stars' }
     };
   }
-
-  /* -------------------------------------------- */
-  /*  Transform Helpers                           */
-  /* -------------------------------------------- */
 
   /**
    * Transform S&S weekdays to Calendaria format.
@@ -392,10 +372,6 @@ export default class SeasonsStarsImporter extends BaseImporter {
     return { short: dateFormats.short || null, long: dateFormats.long || null };
   }
 
-  /* -------------------------------------------- */
-  /*  Note Extraction                             */
-  /* -------------------------------------------- */
-
   /**
    * Extract notes/events from S&S export data.
    * @param {object} data - Raw S&S export data
@@ -495,10 +471,6 @@ export default class SeasonsStarsImporter extends BaseImporter {
     log(3, `Note import complete: ${count}/${notes.length} imported, ${errors.length} errors`);
     return { success: errors.length === 0, count, errors };
   }
-
-  /* -------------------------------------------- */
-  /*  Preview                                     */
-  /* -------------------------------------------- */
 
   /**
    * Count notes in raw S&S data.

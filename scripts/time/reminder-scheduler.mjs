@@ -32,10 +32,6 @@ export default class ReminderScheduler {
   /** @type {number} Last world time when reminders were checked */
   static #lastCheckTime = 0;
 
-  /* -------------------------------------------- */
-  /*  Initialization                              */
-  /* -------------------------------------------- */
-
   /**
    * Initialize the reminder scheduler.
    * Registers hook listener for socket-broadcast reminders.
@@ -45,10 +41,6 @@ export default class ReminderScheduler {
     this.#lastDate = getCurrentDate();
     Hooks.on(HOOKS.REMINDER_RECEIVED, (data) => this.handleReminderNotify(data));
   }
-
-  /* -------------------------------------------- */
-  /*  Time Update Handler                         */
-  /* -------------------------------------------- */
 
   /**
    * Handle world time updates.
@@ -79,10 +71,6 @@ export default class ReminderScheduler {
     }
     this.#lastDate = { ...currentDate };
   }
-
-  /* -------------------------------------------- */
-  /*  Reminder Check Logic                        */
-  /* -------------------------------------------- */
 
   /**
    * Check all notes for pending reminders.
@@ -241,10 +229,6 @@ export default class ReminderScheduler {
     return { year: nextYear, month: nextMonth, day: nextDay };
   }
 
-  /* -------------------------------------------- */
-  /*  Reminder Firing                             */
-  /* -------------------------------------------- */
-
   /**
    * Fire a reminder notification.
    * Broadcasts to all targeted users via socket for toast/dialog types.
@@ -319,10 +303,6 @@ export default class ReminderScheduler {
     return format('CALENDARIA.Reminder.StartsIn', { name: note.name, time: timeStr });
   }
 
-  /* -------------------------------------------- */
-  /*  Notification Types                          */
-  /* -------------------------------------------- */
-
   /**
    * Show toast notification.
    * @param {object} note - The note stub
@@ -390,10 +370,6 @@ export default class ReminderScheduler {
     }
   }
 
-  /* -------------------------------------------- */
-  /*  Utilities                                   */
-  /* -------------------------------------------- */
-
   /**
    * Check if date has changed.
    * @param {object} previous - Previous date
@@ -432,10 +408,6 @@ export default class ReminderScheduler {
     if (icon.startsWith('fa') || data.iconType === 'fontawesome') return `<i class="${icon}" style="color: ${color};"></i>`;
     return `<img src="${icon}" alt="" style="width: 16px; height: 16px; vertical-align: middle;" />`;
   }
-
-  /* -------------------------------------------- */
-  /*  Socket Message Handler                      */
-  /* -------------------------------------------- */
 
   /**
    * Handle incoming reminder notification from socket.

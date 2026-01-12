@@ -7194,6 +7194,67 @@
       }
     }
   }
+
+  /* Permissions Tab */
+  .permissions-table {
+    display: grid;
+    grid-template-columns: 180px repeat(4, 1fr);
+    gap: 0.5rem 0;
+    align-items: center;
+  }
+
+  .permissions-header {
+    display: contents;
+
+    span {
+      font-weight: 600;
+      font-size: var(--font-size-11);
+      text-transform: uppercase;
+      text-align: center;
+      letter-spacing: 0.5px;
+      padding: 0.5rem 0.25rem;
+      line-height: 1.3;
+    }
+
+    span:first-child {
+      text-align: left;
+    }
+
+    &::after {
+      content: '';
+      grid-column: 1 / -1;
+      border-bottom: 1px solid var(--calendaria-border);
+      margin-bottom: 0.25rem;
+    }
+  }
+
+  .permissions-list {
+    display: contents;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .permission-row {
+    display: contents;
+
+    .permission-name {
+      font-size: var(--font-size-16);
+      font-weight: bold;
+      padding: 0.25rem 0;
+    }
+
+    input[type='checkbox'] {
+      justify-self: center;
+    }
+
+    .permission-hint {
+      grid-column: 1 / -1;
+      margin: 0 0 0.75rem;
+      font-size: var(--font-size-11);
+      color: var(--color-text-light-secondary);
+    }
+  }
 }
 
 /* -------------------------------------------- */

@@ -10,6 +10,7 @@ import { HOOKS, MODULE, SETTINGS, TEMPLATES } from '../constants.mjs';
 import TimeKeeper, { getTimeIncrements } from '../time/time-keeper.mjs';
 import { formatForLocation, getDisplayFormat } from '../utils/format-utils.mjs';
 import { localize } from '../utils/localization.mjs';
+import { canChangeDateTime, canViewTimeKeeper } from '../utils/permissions.mjs';
 import * as StickyZones from '../utils/sticky-zones.mjs';
 import { SettingsPanel } from './settings/settings-panel.mjs';
 
@@ -46,10 +47,6 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @override */
   static PARTS = { main: { template: TEMPLATES.TIME_KEEPER_HUD } };
 
-  /* -------------------------------------------- */
-  /*  Rendering                                   */
-  /* -------------------------------------------- */
-
   /** @override */
   async _prepareContext(options) {
     const context = await super._prepareContext(options);
@@ -60,6 +57,7 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
       .map(([key, seconds]) => ({ key, label: this.#formatIncrementLabel(key), seconds, selected: key === TimeKeeper.incrementKey }));
     context.running = TimeKeeper.running;
     context.isGM = game.user.isGM;
+    context.canChangeDateTime = canChangeDateTime();
     context.currentTime = this.#formatTime();
     context.currentDate = this.#formatDate();
     const dateFormat = getDisplayFormat('timekeeperDate');
@@ -220,10 +218,6 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     }
   }
 
-  /* -------------------------------------------- */
-  /*  Action Handlers                             */
-  /* -------------------------------------------- */
-
   /** Decrement time by configured dec2 amount. */
   static #onDec2() {
     const jumps = game.settings.get(MODULE.ID, SETTINGS.TIMEKEEPER_TIME_JUMPS) || {};
@@ -261,10 +255,6 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     TimeKeeper.toggle();
     this.render();
   }
-
-  /* -------------------------------------------- */
-  /*  Event Handlers                              */
-  /* -------------------------------------------- */
 
   /**
    * Handle clock state changes.
@@ -312,10 +302,6 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     return formatForLocation(calendar, { ...components, year: components.year + yearZero, dayOfMonth: (components.dayOfMonth ?? 0) + 1 }, 'timekeeperDate');
   }
 
-  /* -------------------------------------------- */
-  /*  Helper Methods                              */
-  /* -------------------------------------------- */
-
   /**
    * Format increment key for display.
    * @param {string} key - Increment key
@@ -350,19 +336,21 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     const inc1 = currentJumps.inc1 ?? null;
     const inc2 = currentJumps.inc2 ?? null;
     const unitLabel = this.#formatIncrementLabel(TimeKeeper.incrementKey);
-    const formatTooltip = (val) => val !== null ? `${val > 0 ? '+' : ''}${val} ${unitLabel}` : null;
+    const formatTooltip = (val) => (val !== null ? `${val > 0 ? '+' : ''}${val} ${unitLabel}` : null);
     return { dec2Tooltip: formatTooltip(dec2), dec1Tooltip: formatTooltip(dec1), inc1Tooltip: formatTooltip(inc1), inc2Tooltip: formatTooltip(inc2), dec2, dec1, inc1, inc2 };
   }
 
-  /* -------------------------------------------- */
-  /*  Static Methods                              */
-  /* -------------------------------------------- */
-
   /**
    * Render the TimeKeeper HUD singleton.
+   * @param {object} [options] - Show options
+   * @param {boolean} [options.silent] - If true, don't show permission warning
    * @returns {TimeKeeperHUD} The HUD instance
    */
-  static show() {
+  static show({ silent = false } = {}) {
+    if (!canViewTimeKeeper()) {
+      if (!silent) ui.notifications.warn('CALENDARIA.Permissions.NoAccess', { localize: true });
+      return null;
+    }
     if (!this._instance) this._instance = new TimeKeeperHUD();
     this._instance.render(true);
     return this._instance;

@@ -30,10 +30,6 @@ const PHASE_NAMES_8 = [
  * @extends BaseImporter
  */
 export default class CalendariumImporter extends BaseImporter {
-  /* -------------------------------------------- */
-  /*  Static Properties                           */
-  /* -------------------------------------------- */
-
   static id = 'calendarium';
   static label = 'CALENDARIA.Importer.Calendarium.Name';
   static icon = 'fa-book-atlas';
@@ -42,16 +38,8 @@ export default class CalendariumImporter extends BaseImporter {
   static supportsLiveImport = false;
   static fileExtensions = ['.json'];
 
-  /* -------------------------------------------- */
-  /*  Instance Properties                         */
-  /* -------------------------------------------- */
-
   /** @type {Map<string, object>} Category map from Calendarium */
   _categories = new Map();
-
-  /* -------------------------------------------- */
-  /*  Detection                                   */
-  /* -------------------------------------------- */
 
   /**
    * Check if data is a Calendarium export.
@@ -77,10 +65,6 @@ export default class CalendariumImporter extends BaseImporter {
     // Wrap single calendar object in calendars array
     return { calendars: [data] };
   }
-
-  /* -------------------------------------------- */
-  /*  Transformation                              */
-  /* -------------------------------------------- */
 
   /**
    * Transform Calendarium data into CalendariaCalendar format.
@@ -122,10 +106,6 @@ export default class CalendariumImporter extends BaseImporter {
       currentDate: this.#transformCurrentDate(calendar.current)
     };
   }
-
-  /* -------------------------------------------- */
-  /*  Transform Helpers                           */
-  /* -------------------------------------------- */
 
   /**
    * Build category map from Calendarium categories.
@@ -371,10 +351,6 @@ export default class CalendariumImporter extends BaseImporter {
     return { year: current.year, month: current.month ?? 0, day: current.day ?? 1, hour: 0, minute: 0 };
   }
 
-  /* -------------------------------------------- */
-  /*  Note Extraction                             */
-  /* -------------------------------------------- */
-
   /**
    * Extract notes from Calendarium events.
    * @param {object} data - Raw Calendarium export data
@@ -536,10 +512,6 @@ export default class CalendariumImporter extends BaseImporter {
     log(3, `Note import complete: ${count}/${notes.length}, ${errors.length} errors`);
     return { success: errors.length === 0, count, errors };
   }
-
-  /* -------------------------------------------- */
-  /*  Preview                                     */
-  /* -------------------------------------------- */
 
   /** @override */
   getPreviewData(rawData, transformedData) {

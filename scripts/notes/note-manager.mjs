@@ -10,6 +10,7 @@ import CalendarManager from '../calendar/calendar-manager.mjs';
 import { HOOKS, MODULE, SETTINGS } from '../constants.mjs';
 import { format, localize } from '../utils/localization.mjs';
 import { log } from '../utils/logger.mjs';
+import { canAddNotes, canDeleteNotes } from '../utils/permissions.mjs';
 import { createNoteStub, getCategoryDefinition, getDefaultNoteData, getPredefinedCategories, sanitizeNoteData, validateNoteData } from './note-data.mjs';
 import { compareDates } from './utils/date-utils.mjs';
 import { getOccurrencesInRange, getRecurrenceDescription, isRecurringMatch } from './utils/recurrence.mjs';
@@ -30,10 +31,6 @@ export default class NoteManager {
 
   /** @type {boolean} Bypass flag for internal cleanup operations */
   static #bypassDeleteProtection = false;
-
-  /* -------------------------------------------- */
-  /*  Initialization                              */
-  /* -------------------------------------------- */
 
   /**
    * Initialize the note manager.
@@ -91,10 +88,6 @@ export default class NoteManager {
 
     log(3, `Built note index with ${this.#noteIndex.size} notes`);
   }
-
-  /* -------------------------------------------- */
-  /*  Hook Handlers                               */
-  /* -------------------------------------------- */
 
   /**
    * Handle createJournalEntryPage hook.
@@ -237,10 +230,6 @@ export default class NoteManager {
     }
   }
 
-  /* -------------------------------------------- */
-  /*  CRUD Operations                             */
-  /* -------------------------------------------- */
-
   /**
    * Create a new calendar note.
    * @param {object} options  Note creation options
@@ -252,6 +241,10 @@ export default class NoteManager {
    * @returns {Promise<object>} Created journal entry page
    */
   static async createNote({ name, content = '', noteData, calendarId, journalData = {} }) {
+    if (!canAddNotes()) {
+      ui.notifications.warn('CALENDARIA.Permissions.NoAccess', { localize: true });
+      return null;
+    }
     const validation = validateNoteData(noteData);
     if (!validation.valid) log(1, `Invalid note data: ${validation.errors.join(', ')}`);
     const sanitized = sanitizeNoteData(noteData);
@@ -385,7 +378,7 @@ export default class NoteManager {
    * @returns {Promise<number>} Number of notes deleted
    */
   static async deleteAllNotes(options = {}) {
-    if (!game.user.isGM) return 0;
+    if (!canDeleteNotes()) return 0;
     let notes = this.getAllNotes();
     if (notes.length === 0) return 0;
     if (options.calendarId) notes = notes.filter((note) => note.calendarId === options.calendarId);
@@ -404,10 +397,6 @@ export default class NoteManager {
     log(3, `Deleted ${deletedCount} calendar notes`);
     return deletedCount;
   }
-
-  /* -------------------------------------------- */
-  /*  Date Queries                                */
-  /* -------------------------------------------- */
 
   /**
    * Get all notes for a specific date.
@@ -476,10 +465,6 @@ export default class NoteManager {
     return isRecurringMatch(noteStub.flagData, targetDate);
   }
 
-  /* -------------------------------------------- */
-  /*  Categories & Filtering                      */
-  /* -------------------------------------------- */
-
   /**
    * Get notes by category.
    * @param {string} category  Category ID
@@ -517,10 +502,6 @@ export default class NoteManager {
   static getCategoryDefinition(categoryId) {
     return getCategoryDefinition(categoryId);
   }
-
-  /* -------------------------------------------- */
-  /*  Calendar Folder Management                  */
-  /* -------------------------------------------- */
 
   /**
    * Get or create the Folder for a specific calendar's notes.
@@ -644,10 +625,6 @@ export default class NoteManager {
     log(3, `Synced description from journal to calendar ${calendarId}`);
     if (game.user.isGM) await CalendarManager.saveCalendars();
   }
-
-  /* -------------------------------------------- */
-  /*  Utilities                                   */
-  /* -------------------------------------------- */
 
   /**
    * Get or create the Calendar Notes folder.
