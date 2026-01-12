@@ -100,7 +100,7 @@ export function generateWeather({ seasonClimate, zoneConfig, season, seed, custo
   const weatherId = weightedSelect(probabilities, randomFn);
   const preset = getPreset(weatherId, customPresets);
   let finalTempRange = { ...tempRange };
-  const presetConfig = zoneConfig?.presets?.find((p) => p.id === weatherId);
+  const presetConfig = zoneConfig?.presets?.find((p) => p.id === weatherId && p.enabled !== false);
   if (presetConfig?.tempMin != null) finalTempRange.min = presetConfig.tempMin;
   if (presetConfig?.tempMax != null) finalTempRange.max = presetConfig.tempMax;
   const temperature = Math.round(finalTempRange.min + randomFn() * (finalTempRange.max - finalTempRange.min));

@@ -4992,10 +4992,11 @@
   .weather-picker-footer {
     display: flex;
     justify-content: center;
+    gap: 0.5rem;
     padding-top: 0.5rem;
     border-top: 1px solid var(--calendaria-border);
 
-    .random-btn {
+    .footer-btn {
       gap: 0.5rem;
       display: flex;
       align-items: center;
@@ -5006,7 +5007,6 @@
       font-weight: 500;
       font-size: 0.9rem;
       cursor: pointer;
-      background: var(--calendaria-primary);
       transition: opacity 0.15s ease;
 
       &:hover {
@@ -5016,6 +5016,14 @@
       i {
         font-size: 1rem;
       }
+    }
+
+    .random-btn {
+      background: var(--calendaria-primary);
+    }
+
+    .clear-btn {
+      background: var(--calendaria-danger, rgb(165 39 52));
     }
   }
 }

@@ -2229,6 +2229,8 @@
   "CALENDARIA.Weather.PartlyCloudyDesc": "Partial cloud cover",
   "CALENDARIA.Weather.PermafrostSurge": "Permafrost Surge",
   "CALENDARIA.Weather.PermafrostSurgeDesc": "Sudden and aggressive extreme cold",
+  "CALENDARIA.Weather.Picker.Clear": "Clear Weather",
+  "CALENDARIA.Weather.Picker.NoZone": "None",
   "CALENDARIA.Weather.Picker.Random": "Random Weather",
   "CALENDARIA.Weather.Picker.Title": "Select Weather",
   "CALENDARIA.Weather.Picker.Zone": "Climate Zone",
