@@ -281,3 +281,25 @@ export async function onWeatherChange() {
   await applyEnvironmentLighting(activeScene, lighting);
   log(3, `Weather changed, updating darkness to ${newTargetDarkness.toFixed(3)}`);
 }
+
+/**
+ * Handle scene update to sync darkness when a scene becomes active.
+ * @param {object} scene - The scene that was updated
+ * @param {object} change - The change data
+ */
+export async function onUpdateScene(scene, change) {
+  if (!game.user.isGM) return;
+  if (!change.active) return;
+  if (!shouldSyncSceneDarkness(scene)) return;
+  resetDarknessState();
+  const components = game.time.components;
+  const currentHour = components?.hour ?? 0;
+  const hoursPerDay = game.time.calendar?.days?.hoursPerDay ?? 24;
+  const minutesPerHour = game.time.calendar?.days?.minutesPerHour ?? 60;
+  const baseDarkness = calculateDarknessFromTime(currentHour, 0, hoursPerDay, minutesPerHour);
+  const newDarkness = calculateAdjustedDarkness(baseDarkness, scene);
+  startDarknessTransition(scene, newDarkness);
+  const lighting = calculateEnvironmentLighting();
+  await applyEnvironmentLighting(scene, lighting);
+  log(3, `Scene activated, transitioning darkness to ${newDarkness.toFixed(3)}`);
+}

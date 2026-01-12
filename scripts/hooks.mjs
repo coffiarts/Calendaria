@@ -10,7 +10,7 @@ import { MiniCalendar } from './applications/mini-calendar.mjs';
 import CalendarManager from './calendar/calendar-manager.mjs';
 import { onPreCreateChatMessage, onRenderAnnouncementMessage, onRenderChatMessageHTML } from './chat/chat-timestamp.mjs';
 import { HOOKS, MODULE, SETTINGS } from './constants.mjs';
-import { onRenderSceneConfig, onUpdateWorldTime, onWeatherChange } from './darkness.mjs';
+import { onRenderSceneConfig, onUpdateScene, onUpdateWorldTime, onWeatherChange } from './darkness.mjs';
 import { onLongRest, onPreRest } from './integrations/rest-time.mjs';
 import NoteManager from './notes/note-manager.mjs';
 import EventScheduler from './time/event-scheduler.mjs';
@@ -40,6 +40,7 @@ export function registerHooks() {
   Hooks.on('activateDocumentDirectory', onActivateDocumentDirectory);
   Hooks.on('renderSceneConfig', onRenderSceneConfig);
   Hooks.on('updateJournalEntryPage', NoteManager.onUpdateJournalEntryPage.bind(NoteManager));
+  Hooks.on('updateScene', onUpdateScene);
   Hooks.on('updateSetting', CalendarManager.onUpdateSetting.bind(CalendarManager));
   Hooks.on('updateWorldTime', EventScheduler.onUpdateWorldTime.bind(EventScheduler));
   Hooks.on('updateWorldTime', onUpdateWorldTime);
