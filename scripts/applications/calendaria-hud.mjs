@@ -261,6 +261,7 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     if (options.isFirstRender) this.#restorePosition();
+    else this.#handleModeChange();
     this.#enableDragging();
     this.#updateCelestialDisplay();
     this.#updateDomeVisibility();
@@ -519,6 +520,43 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
+   * Handle display mode change by recalculating position to maintain center point.
+   */
+  #handleModeChange() {
+    requestAnimationFrame(() => {
+      const rect = this.element.getBoundingClientRect();
+      if (this.#snappedZoneId) {
+        const barEl = this.element.querySelector('.calendaria-hud-bar');
+        const barHeight = barEl ? barEl.getBoundingClientRect().bottom - rect.top : rect.height;
+        const zonePos = StickyZones.getRestorePosition(this.#snappedZoneId, rect.width, barHeight);
+        if (zonePos) {
+          let newLeft = zonePos.left;
+          let newTop = zonePos.top;
+          let anchorY = null;
+          if (StickyZones.isBottomAnchored(this.#snappedZoneId)) {
+            const savedPos = game.settings.get(MODULE.ID, SETTINGS.CALENDAR_HUD_POSITION);
+            anchorY = savedPos?.anchorY;
+            if (typeof anchorY === 'number') newTop = anchorY - barHeight;
+          }
+          this.setPosition({ left: newLeft, top: newTop });
+          const posData = { left: newLeft, top: newTop, zoneId: this.#snappedZoneId };
+          if (anchorY) posData.anchorY = anchorY;
+          game.settings.set(MODULE.ID, SETTINGS.CALENDAR_HUD_POSITION, posData);
+        }
+      } else {
+        const savedPos = game.settings.get(MODULE.ID, SETTINGS.CALENDAR_HUD_POSITION);
+        if (savedPos && typeof savedPos.centerX === 'number' && typeof savedPos.centerY === 'number') {
+          const newLeft = savedPos.centerX - rect.width / 2;
+          const newTop = savedPos.centerY - rect.height / 2;
+          this.setPosition({ left: newLeft, top: newTop });
+          game.settings.set(MODULE.ID, SETTINGS.CALENDAR_HUD_POSITION, { left: newLeft, top: newTop, centerX: savedPos.centerX, centerY: savedPos.centerY, zoneId: null });
+        }
+      }
+      this.#clampToViewport();
+    });
+  }
+
+  /**
    * Clamp position to viewport.
    */
   #clampToViewport() {
@@ -575,7 +613,9 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
       newTop = Math.max(0, Math.min(newTop, window.innerHeight - rect.height));
       this.setPosition({ left: newLeft, top: newTop });
       this.#updateDomeVisibility();
-      this.#activeSnapZone = StickyZones.checkStickyZones(dragHandle, newLeft, newTop, rect.width, rect.height);
+      const barEl = this.element.querySelector('.calendaria-hud-bar');
+      const barHeight = barEl ? barEl.getBoundingClientRect().bottom - rect.top : rect.height;
+      this.#activeSnapZone = StickyZones.checkStickyZones(dragHandle, newLeft, newTop, rect.width, barHeight);
     };
 
     drag._onDragMouseUp = async (event) => {
@@ -584,12 +624,25 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
       window.removeEventListener(...drag.handlers.dragUp);
       dragHandle.classList.remove('dragging');
       const rect = this.element.getBoundingClientRect();
-      const result = StickyZones.finalizeDrag(dragHandle, this.#activeSnapZone, this, rect.width, rect.height, previousZoneId);
+      const barEl = this.element.querySelector('.calendaria-hud-bar');
+      const barHeight = barEl ? barEl.getBoundingClientRect().bottom - rect.top : rect.height;
+      const result = StickyZones.finalizeDrag(dragHandle, this.#activeSnapZone, this, rect.width, barHeight, previousZoneId);
       this.#snappedZoneId = result.zoneId;
       StickyZones.registerForZoneUpdates(this, this.#snappedZoneId);
       this.#activeSnapZone = null;
       previousZoneId = null;
-      await game.settings.set(MODULE.ID, SETTINGS.CALENDAR_HUD_POSITION, { left: this.position.left, top: this.position.top, zoneId: this.#snappedZoneId });
+      const posData = { left: this.position.left, top: this.position.top, zoneId: this.#snappedZoneId };
+      if (!this.#snappedZoneId) {
+        posData.centerX = this.position.left + rect.width / 2;
+        posData.centerY = this.position.top + rect.height / 2;
+      } else if (StickyZones.isBottomAnchored(this.#snappedZoneId)) {
+        const barEl = this.element.querySelector('.calendaria-hud-bar');
+        if (barEl) {
+          const barRect = barEl.getBoundingClientRect();
+          posData.anchorY = barRect.bottom;
+        }
+      }
+      await game.settings.set(MODULE.ID, SETTINGS.CALENDAR_HUD_POSITION, posData);
     };
   }
 

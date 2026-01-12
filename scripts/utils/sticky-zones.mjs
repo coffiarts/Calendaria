@@ -95,7 +95,7 @@ export function getStickyZones(hudWidth, hudHeight) {
   const hotbar = document.getElementById('hotbar');
   if (hotbar) {
     const rect = hotbar.getBoundingClientRect();
-    zones.push({ id: 'above-hotbar', center: { x: rect.left + rect.width / 2, y: rect.top - hudHeight / 2 - 10 } });
+    zones.push({ id: 'above-hotbar', center: { x: rect.left + rect.width / 2, y: rect.top }, anchor: 'bottom' });
   }
 
   const players = document.getElementById('players');
@@ -121,7 +121,7 @@ export function getStickyZones(hudWidth, hudHeight) {
 }
 
 /**
- * Find the active sticky zone based on HUD center position.
+ * Find the active sticky zone based on HUD position.
  * @param {number} hudCenterX - HUD center X coordinate
  * @param {number} hudCenterY - HUD center Y coordinate
  * @param {number} hudWidth - Width of the HUD element
@@ -133,7 +133,8 @@ export function getActiveZone(hudCenterX, hudCenterY, hudWidth, hudHeight) {
   const zones = getStickyZones(hudWidth, hudHeight);
   for (const zone of zones) {
     const dx = hudCenterX - zone.center.x;
-    const dy = hudCenterY - zone.center.y;
+    const hudCompareY = zone.anchor === 'bottom' ? hudCenterY + hudHeight / 2 : hudCenterY;
+    const dy = hudCompareY - zone.center.y;
     const distance = Math.sqrt(dx * dx + dy * dy);
     if (distance <= SNAP_DISTANCE) return zone;
   }
@@ -148,7 +149,9 @@ export function getActiveZone(hudCenterX, hudCenterY, hudWidth, hudHeight) {
  * @returns {{left: number, top: number}} Position for indicator
  */
 function getIndicatorPosition(zone, hudWidth, hudHeight) {
-  return { left: zone.center.x - hudWidth / 2, top: zone.center.y - hudHeight / 2 };
+  const left = zone.center.x - hudWidth / 2;
+  const top = zone.anchor === 'bottom' ? zone.center.y - hudHeight : zone.center.y - hudHeight / 2;
+  return { left, top };
 }
 
 /**
@@ -289,6 +292,15 @@ export function isZoneValid(zoneId) {
 }
 
 /**
+ * Check if a zone uses bottom anchoring.
+ * @param {string} zoneId - The zone ID to check
+ * @returns {boolean} Whether the zone uses bottom anchoring
+ */
+export function isBottomAnchored(zoneId) {
+  return zoneId === 'above-hotbar';
+}
+
+/**
  * Get position for restoring a pinned zone (fixed-position zones only).
  * @param {string|null} zoneId - Zone ID to restore
  * @param {number} hudWidth - HUD width
@@ -325,7 +337,9 @@ export function getZonePosition(zoneId, hudWidth, hudHeight) {
   const zones = getStickyZones(hudWidth, hudHeight);
   const zone = zones.find((z) => z.id === zoneId);
   if (!zone) return null;
-  return { left: zone.center.x - hudWidth / 2, top: zone.center.y - hudHeight / 2 };
+  const left = zone.center.x - hudWidth / 2;
+  const top = zone.anchor === 'bottom' ? zone.center.y - hudHeight : zone.center.y - hudHeight / 2;
+  return { left, top };
 }
 
 /** @type {Set<{app: object, zoneId: string}>} Registered apps for position updates */
