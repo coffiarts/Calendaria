@@ -96,6 +96,15 @@ export function registerSettings() {
     type: new ObjectField({ initial: { timeControls: false, sidebar: false, position: false } })
   });
 
+  /** Confirm before setting current date in MiniCalendar */
+  game.settings.register(MODULE.ID, SETTINGS.MINI_CALENDAR_CONFIRM_SET_DATE, {
+    name: 'CALENDARIA.Settings.ConfirmSetDate.Name',
+    hint: 'CALENDARIA.Settings.ConfirmSetDate.Hint',
+    scope: 'user',
+    config: false,
+    type: new BooleanField({ initial: true })
+  });
+
   /** Track if format migration has been run */
   game.settings.register(MODULE.ID, 'formatMigrationComplete', {
     name: 'Format Migration Complete',

@@ -71,6 +71,16 @@
       </div>
       <p class="hint">{{localize "CALENDARIA.Settings.IdleOpacity.Hint"}}</p>
     </div>
+
+    {{#if isGM}}
+    <div class="form-group">
+      <label>{{localize "CALENDARIA.Settings.ConfirmSetDate.Name"}}</label>
+      <div class="form-fields">
+        <input type="checkbox" name="miniCalendarConfirmSetDate" {{#if miniCalendarConfirmSetDate}}checked{{/if}}>
+      </div>
+      <p class="hint">{{localize "CALENDARIA.Settings.ConfirmSetDate.Hint"}}</p>
+    </div>
+    {{/if}}
   </fieldset>
 
   <fieldset>

@@ -13,7 +13,7 @@ import { isRecurringMatch } from '../notes/utils/recurrence.mjs';
 import SearchManager from '../search/search-manager.mjs';
 import TimeKeeper, { getTimeIncrements } from '../time/time-keeper.mjs';
 import { formatForLocation } from '../utils/format-utils.mjs';
-import { localize } from '../utils/localization.mjs';
+import { format, localize } from '../utils/localization.mjs';
 import * as StickyZones from '../utils/sticky-zones.mjs';
 import WeatherManager from '../weather/weather-manager.mjs';
 import { openWeatherPicker } from '../weather/weather-picker.mjs';
@@ -1223,7 +1223,21 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   static async _onSetCurrentDate(_event, _target) {
     if (!this._selectedDate) return;
-    await ViewUtils.setDateTo(this._selectedDate.year, this._selectedDate.month, this._selectedDate.day, this.calendar);
+
+    const confirmEnabled = game.settings.get(MODULE.ID, SETTINGS.MINI_CALENDAR_CONFIRM_SET_DATE);
+    if (confirmEnabled) {
+      const dateStr = this._formatSelectedDate();
+      const confirmed = await foundry.applications.api.DialogV2.confirm({
+        window: { title: localize('CALENDARIA.MiniCalendar.SetCurrentDate') },
+        content: `<p>${format('CALENDARIA.MiniCalendar.SetCurrentDateConfirm', { date: dateStr })}</p>`,
+        rejectClose: false,
+        modal: true
+      });
+      if (!confirmed) return;
+    }
+
+    const { year, month, day } = this._selectedDate;
+    await ViewUtils.setDateTo(year, month, day, this.calendar);
     this._selectedDate = null;
     await this.render();
   }

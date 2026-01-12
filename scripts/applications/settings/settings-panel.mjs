@@ -306,6 +306,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     context.miniCalendarAutoFade = game.settings.get(MODULE.ID, SETTINGS.MINI_CALENDAR_AUTO_FADE);
     context.miniCalendarIdleOpacity = game.settings.get(MODULE.ID, SETTINGS.MINI_CALENDAR_IDLE_OPACITY);
     context.miniCalendarControlsDelay = game.settings.get(MODULE.ID, SETTINGS.MINI_CALENDAR_CONTROLS_DELAY);
+    context.miniCalendarConfirmSetDate = game.settings.get(MODULE.ID, SETTINGS.MINI_CALENDAR_CONFIRM_SET_DATE);
     context.forceMiniCalendar = game.settings.get(MODULE.ID, SETTINGS.FORCE_MINI_CALENDAR);
   }
 
@@ -673,6 +674,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     if ('miniCalendarAutoFade' in data) await game.settings.set(MODULE.ID, SETTINGS.MINI_CALENDAR_AUTO_FADE, data.miniCalendarAutoFade);
     if ('miniCalendarIdleOpacity' in data) await game.settings.set(MODULE.ID, SETTINGS.MINI_CALENDAR_IDLE_OPACITY, Number(data.miniCalendarIdleOpacity));
     if ('miniCalendarControlsDelay' in data) await game.settings.set(MODULE.ID, SETTINGS.MINI_CALENDAR_CONTROLS_DELAY, Number(data.miniCalendarControlsDelay));
+    if ('miniCalendarConfirmSetDate' in data) await game.settings.set(MODULE.ID, SETTINGS.MINI_CALENDAR_CONFIRM_SET_DATE, data.miniCalendarConfirmSetDate);
     if ('darknessSync' in data) await game.settings.set(MODULE.ID, SETTINGS.DARKNESS_SYNC, data.darknessSync);
     if ('ambienceSync' in data) await game.settings.set(MODULE.ID, SETTINGS.AMBIENCE_SYNC, data.ambienceSync);
     if ('advanceTimeOnRest' in data) await game.settings.set(MODULE.ID, SETTINGS.ADVANCE_TIME_ON_REST, data.advanceTimeOnRest);
@@ -814,7 +816,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const hudKeys = ['hudDialStyle', 'hudTrayDirection', 'hudCombatCompact', 'hudCombatHide', 'hudAutoFade', 'hudIdleOpacity', 'hudWidthScale', 'hudShowWeather', 'hudWeatherDisplayMode', 'hudShowSeason', 'hudSeasonDisplayMode', 'hudShowEra', 'hudStickyTray'];
     if (hudKeys.some((k) => k in data)) foundry.applications.instances.get('calendaria-hud')?.render();
 
-    const miniCalKeys = ['miniCalendarAutoFade', 'miniCalendarIdleOpacity', 'miniCalendarControlsDelay', 'miniCalendarStickyTimeControls', 'miniCalendarStickySidebar', 'miniCalendarStickyPosition'];
+    const miniCalKeys = ['miniCalendarAutoFade', 'miniCalendarIdleOpacity', 'miniCalendarControlsDelay', 'miniCalendarConfirmSetDate', 'miniCalendarStickyTimeControls', 'miniCalendarStickySidebar', 'miniCalendarStickyPosition'];
     if (miniCalKeys.some((k) => k in data)) foundry.applications.instances.get('mini-calendar')?.render();
   }
 

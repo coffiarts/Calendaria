@@ -3952,6 +3952,10 @@
     &.pin-btn.sticky-position {
       color: var(--calendaria-error);
     }
+
+    &.set-current-date {
+      color: var(--calendaria-primary);
+    }
   }
 
   .calendar-indicators {

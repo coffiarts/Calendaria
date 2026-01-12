@@ -57,6 +57,7 @@ export const SETTINGS = {
   MINI_CALENDAR_IDLE_OPACITY: 'miniCalendarIdleOpacity',
   MINI_CALENDAR_POSITION: 'miniCalendarPosition',
   MINI_CALENDAR_STICKY_STATES: 'miniCalendarStickyStates',
+  MINI_CALENDAR_CONFIRM_SET_DATE: 'miniCalendarConfirmSetDate',
   POSITION_LOCKED: 'positionLocked',
   PRIMARY_GM: 'primaryGM',
   SAVED_TIMEPOINTS: 'savedTimepoints',
