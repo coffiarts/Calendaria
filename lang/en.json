@@ -1982,7 +1982,7 @@
   "CALENDARIA.Settings.TimeKeeper.Name": "TimeKeeper Controls",
   "CALENDARIA.Settings.TimeSpeedIncrement.Hint": "The unit of time for real-time clock speed.",
   "CALENDARIA.Settings.TimeSpeedIncrement.Name": "Time Speed Unit",
-  "CALENDARIA.Settings.TimeSpeedMultiplier.Hint": "How much game time passes for every real-world second when the clock is running.",
+  "CALENDARIA.Settings.TimeSpeedMultiplier.Hint": "How much game time passes for every real-world second when the clock is running. Hover over the HUD and press pause to stop time from passing.",
   "CALENDARIA.Settings.TimeSpeedMultiplier.Name": "Game Time per Real Second",
   "CALENDARIA.Settings.TimeSpeedMultiplier.Suffix": "per real second",
   "CALENDARIA.SettingsPanel.About.Author": "Author:",
