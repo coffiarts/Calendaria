@@ -8,14 +8,14 @@ import { CalendarApplication } from './applications/calendar-application.mjs';
 import { CalendarEditor } from './applications/calendar-editor.mjs';
 import { MiniCalendar } from './applications/mini-calendar.mjs';
 import CalendarManager from './calendar/calendar-manager.mjs';
-import { HOOKS } from './constants.mjs';
+import { HOOKS, SOCKET_TYPES } from './constants.mjs';
 import NoteManager from './notes/note-manager.mjs';
 import SearchManager from './search/search-manager.mjs';
 import { DEFAULT_FORMAT_PRESETS, formatCustom, getAvailableTokens, PRESET_FORMATTERS, timeSince } from './utils/format-utils.mjs';
 import { log } from './utils/logger.mjs';
 import { canAddNotes, canChangeActiveCalendar, canChangeDateTime, canEditCalendars, canEditNotes } from './utils/permissions.mjs';
 import { CalendariaSocket } from './utils/socket.mjs';
-import { SOCKET_TYPES } from './constants.mjs';
+
 import WeatherManager from './weather/weather-manager.mjs';
 
 /**
@@ -336,20 +336,9 @@ export const CalendariaAPI = {
   formatDate(components = null, formatOrPreset = 'long') {
     const calendar = CalendarManager.getActiveCalendar();
     if (!calendar) return '';
-
-    // Get components and convert dayOfMonth from 0-indexed to 1-indexed for display
     const raw = components || game.time.components;
-    const formatted = {
-      ...raw,
-      dayOfMonth: (raw.dayOfMonth ?? 0) + 1
-    };
-
-    // Check if it's a preset name
-    if (PRESET_FORMATTERS[formatOrPreset]) {
-      return PRESET_FORMATTERS[formatOrPreset](calendar, formatted);
-    }
-
-    // Otherwise treat as a format string
+    const formatted = { ...raw, dayOfMonth: (raw.dayOfMonth ?? 0) + 1 };
+    if (PRESET_FORMATTERS[formatOrPreset]) return PRESET_FORMATTERS[formatOrPreset](calendar, formatted);
     return formatCustom(calendar, formatted, formatOrPreset);
   },
 
