@@ -103,6 +103,9 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @type {string|null} ID of zone HUD is currently snapped to */
   #snappedZoneId = null;
 
+  /** @type {string|null} Last tracked mode state for position handling */
+  #lastModeState = null;
+
   /** @override */
   static DEFAULT_OPTIONS = {
     id: 'calendaria-hud',
@@ -258,8 +261,14 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
       this.element.style.removeProperty('--hud-width-scale');
     }
 
-    if (options.isFirstRender) this.#restorePosition();
-    else this.#handleModeChange();
+    const currentModeState = `${this.isCompact}-${this.useSliceMode}`;
+    if (options.isFirstRender) {
+      this.#restorePosition();
+      this.#lastModeState = currentModeState;
+    } else if (this.#lastModeState !== currentModeState) {
+      this.#handleModeChange();
+      this.#lastModeState = currentModeState;
+    }
     this.#enableDragging();
     this.#updateCelestialDisplay();
     this.#updateDomeVisibility();
