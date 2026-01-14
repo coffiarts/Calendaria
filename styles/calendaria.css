@@ -3663,6 +3663,398 @@ span.calendaria-moon-icon {
   opacity: 1;
 }
 
+.time-keeper-hud .time-display-stopwatch-btn {
+  display: flex;
+  opacity: 0;
+  position: absolute;
+  right: -24px;
+  justify-content: center;
+  align-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--calendaria-text-dim);
+  font-size: 12px;
+  pointer-events: none;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    color: var(--calendaria-text);
+  }
+}
+
+.time-keeper-hud .time-display:hover .time-display-stopwatch-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ======================================== */
+/* Stopwatch                                */
+/* ======================================== */
+
+.stopwatch {
+  --stopwatch-size: 200px;
+
+  position: fixed;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.stopwatch .stopwatch-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: var(--stopwatch-size);
+}
+
+.stopwatch .stopwatch-face {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: var(--stopwatch-size);
+  height: var(--stopwatch-size);
+  border: 4px solid var(--calendaria-border);
+  border-radius: 50%;
+  cursor: grab;
+  background: var(--calendaria-bg);
+  box-shadow:
+    0 4px 16px var(--calendaria-shadow),
+    inset 0 0 20px rgb(0 0 0 / 20%);
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.stopwatch .stopwatch-dial {
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, var(--calendaria-bg-lighter) 0%, var(--calendaria-bg-darker) 100%);
+  border: 2px solid var(--calendaria-border-light);
+  pointer-events: none;
+}
+
+.stopwatch .stopwatch-ticks {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(from 0deg, var(--calendaria-text-dim) 0deg 1deg, transparent 1deg 6deg);
+    mask: radial-gradient(circle, transparent 88%, rgb(0 0 0) 88%);
+    -webkit-mask: radial-gradient(circle, transparent 88%, rgb(0 0 0) 88%);
+  }
+}
+
+.stopwatch .stopwatch-hand {
+  position: absolute;
+  bottom: 50%;
+  left: 50%;
+  transform-origin: bottom center;
+  border-radius: 2px;
+  pointer-events: none;
+
+  &.second-hand {
+    z-index: 3;
+    width: 2px;
+    height: 42%;
+    margin-left: -1px;
+    background: var(--calendaria-error);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--calendaria-error) 80%, transparent);
+  }
+
+  &.minute-hand {
+    z-index: 2;
+    width: 5px;
+    height: 32%;
+    margin-left: -2.5px;
+    background: var(--calendaria-text);
+    box-shadow: 0 0 3px rgb(0 0 0 / 40%);
+  }
+}
+
+.stopwatch .stopwatch-center-dot {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  margin: -6px 0 0 -6px;
+  border-radius: 50%;
+  background: var(--calendaria-text);
+  border: 2px solid var(--calendaria-border);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 30%);
+  pointer-events: none;
+}
+
+.stopwatch .stopwatch-display {
+  position: absolute;
+  z-index: 10;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--calendaria-bg) 85%, transparent);
+  pointer-events: none;
+}
+
+.stopwatch .stopwatch-time {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--calendaria-bg);
+  border: 1px solid var(--calendaria-border);
+  color: var(--calendaria-text);
+  font-weight: bold;
+  font-size: calc(var(--stopwatch-size) * 0.09);
+  font-family: monospace;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+}
+
+.stopwatch .stopwatch-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.stopwatch .stopwatch-btn {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  border: none;
+  background: none;
+  outline: none;
+  box-shadow: none;
+  color: var(--calendaria-text-dim);
+  font-size: 18px;
+  line-height: 1;
+  pointer-events: auto;
+  transform: translateX(-50%);
+  transition:
+    color 0.15s ease,
+    transform 0.1s ease;
+
+  &:focus,
+  &:active {
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* Uniform icon sizing */
+  i {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    padding: 0;
+    font-size: inherit;
+    line-height: 1;
+  }
+
+  &:hover:not(:disabled) {
+    color: var(--calendaria-text);
+    transform: translateX(-50%) scale(1.15);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
+
+  /* Position buttons: Bell | Lap | PlayPause | Reset | Mode */
+
+  &.notification {
+    top: 87%;
+    left: 10%;
+
+    &.active {
+      color: var(--calendaria-primary);
+    }
+  }
+
+  &.lap {
+    top: 97%;
+    left: 30%;
+  }
+
+  &.start,
+  &.pause {
+    top: 100%;
+    left: 50%;
+  }
+
+  &.start {
+    color: var(--calendaria-success);
+  }
+
+  &.pause {
+    color: var(--calendaria-warning);
+  }
+
+  &.reset {
+    top: 97%;
+    left: 70%;
+    color: var(--calendaria-danger);
+  }
+
+  &.mode {
+    top: 87%;
+    left: 90%;
+    color: var(--calendaria-primary);
+  }
+}
+
+.stopwatch .stopwatch-laps {
+  width: var(--stopwatch-size);
+  margin-top: 25px;
+  border: 1px solid var(--calendaria-border);
+  border-radius: 8px;
+  background: var(--calendaria-bg);
+  box-shadow: 0 2px 6px var(--calendaria-shadow);
+}
+
+.stopwatch .stopwatch-laps-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--calendaria-border-light);
+  color: var(--calendaria-text-dim);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+
+  .stopwatch-clear-laps {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--calendaria-text-dim);
+    font-size: 8px;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: var(--calendaria-danger);
+    }
+  }
+}
+
+.stopwatch .stopwatch-lap-list {
+  margin: 0;
+  padding: 4px 8px;
+  list-style: none;
+  max-height: 60px;
+  overflow-y: auto;
+}
+
+.stopwatch .stopwatch-lap {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  color: var(--calendaria-text);
+  font-size: 10px;
+  font-family: monospace;
+
+  .lap-index {
+    color: var(--calendaria-text-dim);
+  }
+}
+
+.stopwatch .stopwatch-resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 14px;
+  height: 14px;
+  cursor: nesw-resize;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    width: 8px;
+    height: 8px;
+    border-right: 2px solid var(--calendaria-text-dim);
+    border-top: 2px solid var(--calendaria-text-dim);
+  }
+
+  &:hover::after {
+    border-color: var(--calendaria-primary);
+  }
+}
+
+.stopwatch:hover .stopwatch-resize-handle {
+  opacity: 1;
+}
+
+.stopwatch-notification-form {
+  .form-group {
+    margin-bottom: 12px;
+
+    label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 600;
+    }
+
+    input,
+    select {
+      box-sizing: border-box;
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid var(--color-border-light-tertiary);
+      border-radius: 4px;
+    }
+
+    .hint {
+      margin-top: 4px;
+      color: var(--color-text-dark-secondary);
+      font-size: 11px;
+    }
+  }
+}
+
 /* ======================================== */
 /* MiniCalendar                             */
 /* ======================================== */

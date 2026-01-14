@@ -468,6 +468,30 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       { id: 'fullcal', label: localize('CALENDARIA.Format.Category.FullCalendar'), locations: context.formatLocations.filter((l) => l.category === 'fullcal') },
       { id: 'chat', label: localize('CALENDARIA.Format.Category.Chat'), locations: context.formatLocations.filter((l) => l.category === 'chat') }
     ];
+
+    // Stopwatch formats (elapsed time formats)
+    const realtimePresets = ['HH:mm:ss.SSS', 'HH:mm:ss', 'mm:ss.SSS', 'mm:ss', 'ss.SSS'];
+    const gametimePresets = ['HH:mm:ss', 'mm:ss', 'ss'];
+
+    const currentRealtimeFormat = game.settings.get(MODULE.ID, SETTINGS.STOPWATCH_FORMAT_REALTIME) || 'HH:mm:ss.SSS';
+    const currentGametimeFormat = game.settings.get(MODULE.ID, SETTINGS.STOPWATCH_FORMAT_GAMETIME) || 'HH:mm:ss';
+
+    const isRealtimeCustom = !realtimePresets.includes(currentRealtimeFormat);
+    const isGametimeCustom = !gametimePresets.includes(currentGametimeFormat);
+
+    context.stopwatchRealtimeOptions = [
+      ...realtimePresets.map((f) => ({ value: f, label: f, selected: currentRealtimeFormat === f })),
+      { value: 'custom', label: localize('CALENDARIA.Format.Preset.Custom'), selected: isRealtimeCustom }
+    ];
+    context.stopwatchRealtimeCustom = isRealtimeCustom ? currentRealtimeFormat : '';
+    context.stopwatchRealtimeValue = currentRealtimeFormat;
+
+    context.stopwatchGametimeOptions = [
+      ...gametimePresets.map((f) => ({ value: f, label: f, selected: currentGametimeFormat === f })),
+      { value: 'custom', label: localize('CALENDARIA.Format.Preset.Custom'), selected: isGametimeCustom }
+    ];
+    context.stopwatchGametimeCustom = isGametimeCustom ? currentGametimeFormat : '';
+    context.stopwatchGametimeValue = currentGametimeFormat;
   }
 
   /**
@@ -478,6 +502,9 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     context.showTimeKeeper = game.settings.get(MODULE.ID, SETTINGS.SHOW_TIME_KEEPER);
     context.timeKeeperAutoFade = game.settings.get(MODULE.ID, SETTINGS.TIMEKEEPER_AUTO_FADE);
     context.timeKeeperIdleOpacity = game.settings.get(MODULE.ID, SETTINGS.TIMEKEEPER_IDLE_OPACITY);
+
+    // Stopwatch settings
+    context.stopwatchAutoStartTime = game.settings.get(MODULE.ID, SETTINGS.STOPWATCH_AUTO_START_TIME);
 
     // TimeKeeper time jumps
     const timeKeeperJumps = game.settings.get(MODULE.ID, SETTINGS.TIMEKEEPER_TIME_JUMPS) || {};
@@ -672,6 +699,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     if ('showTimeKeeper' in data) await game.settings.set(MODULE.ID, SETTINGS.SHOW_TIME_KEEPER, data.showTimeKeeper);
     if ('timeKeeperAutoFade' in data) await game.settings.set(MODULE.ID, SETTINGS.TIMEKEEPER_AUTO_FADE, data.timeKeeperAutoFade);
     if ('timeKeeperIdleOpacity' in data) await game.settings.set(MODULE.ID, SETTINGS.TIMEKEEPER_IDLE_OPACITY, Number(data.timeKeeperIdleOpacity));
+    if ('stopwatchAutoStartTime' in data) await game.settings.set(MODULE.ID, SETTINGS.STOPWATCH_AUTO_START_TIME, data.stopwatchAutoStartTime);
     if ('timeSpeedMultiplier' in data || 'timeSpeedIncrement' in data) {
       if ('timeSpeedMultiplier' in data) await game.settings.set(MODULE.ID, SETTINGS.TIME_SPEED_MULTIPLIER, Math.max(1, Number(data.timeSpeedMultiplier) || 1));
       if ('timeSpeedIncrement' in data) await game.settings.set(MODULE.ID, SETTINGS.TIME_SPEED_INCREMENT, data.timeSpeedIncrement);
@@ -849,6 +877,24 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       Hooks.callAll('calendaria.displayFormatsChanged', newFormats);
       const settingsPanel = foundry.applications.instances.get('calendaria-settings-panel');
       if (settingsPanel?.rendered) settingsPanel.render({ parts: ['formats'] });
+    }
+
+    // Stopwatch format settings
+    if (data.stopwatchFormatRealtime) {
+      // Validate: only allow time tokens (HH, mm, ss, SSS) and separators
+      const validTimeTokens = /^[HhmsS:.\- ]*$/;
+      let format = data.stopwatchFormatRealtime;
+      if (!validTimeTokens.test(format)) format = format.replace(/[^HhmsS:.\- ]/g, '');
+      if (format) await game.settings.set(MODULE.ID, SETTINGS.STOPWATCH_FORMAT_REALTIME, format);
+      foundry.applications.instances.get('calendaria-stopwatch')?.render();
+    }
+    if (data.stopwatchFormatGametime) {
+      // Validate: only allow time tokens without milliseconds (HH, mm, ss) and separators
+      const validTimeTokens = /^[Hhms:.\- ]*$/;
+      let format = data.stopwatchFormatGametime;
+      if (!validTimeTokens.test(format)) format = format.replace(/[^Hhms:.\- ]/g, '');
+      if (format) await game.settings.set(MODULE.ID, SETTINGS.STOPWATCH_FORMAT_GAMETIME, format);
+      foundry.applications.instances.get('calendaria-stopwatch')?.render();
     }
 
     // Re-render applications when their settings change
@@ -1570,6 +1616,24 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             } else {
               customInput.classList.add('hidden');
               customInput.value = '';
+            }
+          }
+        });
+      });
+
+      // Stopwatch format select handling
+      const stopwatchSelects = htmlElement.querySelectorAll('select[data-format-target]');
+      stopwatchSelects.forEach((select) => {
+        select.addEventListener('change', (event) => {
+          const targetName = event.target.dataset.formatTarget;
+          const customInput = htmlElement.querySelector(`input[name="${targetName}"]`);
+          if (customInput) {
+            if (event.target.value === 'custom') {
+              customInput.style.display = '';
+              customInput.focus();
+            } else {
+              customInput.style.display = 'none';
+              customInput.value = event.target.value;
             }
           }
         });

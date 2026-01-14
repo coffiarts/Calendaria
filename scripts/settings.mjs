@@ -59,6 +59,48 @@ export function registerSettings() {
     type: new ObjectField({ nullable: true, initial: null })
   });
 
+  /** Saved position for the Stopwatch */
+  game.settings.register(MODULE.ID, SETTINGS.STOPWATCH_POSITION, {
+    name: 'Stopwatch Position',
+    scope: 'user',
+    config: false,
+    type: new ObjectField({ nullable: true, initial: null })
+  });
+
+  /** Saved state for the Stopwatch (running, elapsed time, etc.) */
+  game.settings.register(MODULE.ID, SETTINGS.STOPWATCH_STATE, {
+    name: 'Stopwatch State',
+    scope: 'client',
+    config: false,
+    type: new ObjectField({ nullable: true, initial: null })
+  });
+
+  /** Stopwatch display format */
+  game.settings.register(MODULE.ID, SETTINGS.STOPWATCH_FORMAT_REALTIME, {
+    name: 'CALENDARIA.Settings.StopwatchFormatRealtime.Name',
+    hint: 'CALENDARIA.Settings.StopwatchFormatRealtime.Hint',
+    scope: 'user',
+    config: false,
+    type: new StringField({ initial: 'HH:mm:ss.SSS' })
+  });
+
+  game.settings.register(MODULE.ID, SETTINGS.STOPWATCH_FORMAT_GAMETIME, {
+    name: 'CALENDARIA.Settings.StopwatchFormatGametime.Name',
+    hint: 'CALENDARIA.Settings.StopwatchFormatGametime.Hint',
+    scope: 'user',
+    config: false,
+    type: new StringField({ initial: 'HH:mm:ss' })
+  });
+
+  /** Stopwatch auto-start game time */
+  game.settings.register(MODULE.ID, SETTINGS.STOPWATCH_AUTO_START_TIME, {
+    name: 'CALENDARIA.Settings.StopwatchAutoStartTime.Name',
+    hint: 'CALENDARIA.Settings.StopwatchAutoStartTime.Hint',
+    scope: 'world',
+    config: false,
+    type: new BooleanField({ initial: false })
+  });
+
   /** MiniCalendar auto-fade on idle */
   game.settings.register(MODULE.ID, SETTINGS.MINI_CALENDAR_AUTO_FADE, {
     name: 'CALENDARIA.Settings.AutoFade.Name',

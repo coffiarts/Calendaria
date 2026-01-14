@@ -328,9 +328,7 @@ export class CalendariaSocket {
     const activeGMs = game.users.filter((u) => u.isGM && u.active);
     if (activeGMs.length === 0) return false;
     const primaryGM = activeGMs.sort((a, b) => a.id.localeCompare(b.id))[0];
-    const isPrimary = primaryGM.id === game.user.id;
-    log(3, `Primary GM check (automatic): ${isPrimary} (primary: ${primaryGM.name}, current: ${game.user.name})`);
-    return isPrimary;
+    return primaryGM.id === game.user.id;
   }
 
   /**

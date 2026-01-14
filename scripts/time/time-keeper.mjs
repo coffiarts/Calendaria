@@ -95,7 +95,20 @@ export default class TimeKeeper {
     Hooks.on('pauseGame', this.#onPauseGame.bind(this));
     Hooks.on('combatStart', this.#onCombatStart.bind(this));
     Hooks.on('deleteCombat', this.#onCombatEnd.bind(this));
+    this.#autoStartIfSynced();
     log(3, 'TimeKeeper initialized');
+  }
+
+  /**
+   * Auto-start clock if sync enabled and game unpaused.
+   * Called during initialization (which happens on ready).
+   */
+  static #autoStartIfSynced() {
+    if (!game.user.isGM) return;
+    if (!game.settings.get(MODULE.ID, SETTINGS.SYNC_CLOCK_PAUSE)) return;
+    if (game.paused || game.combat?.started) return;
+    this.start();
+    log(3, 'Clock auto-started (sync enabled, game unpaused)');
   }
 
   /**

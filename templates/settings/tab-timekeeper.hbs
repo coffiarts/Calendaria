@@ -46,6 +46,18 @@
 
   {{#if isGM}}
   <fieldset>
+    <legend>{{localize "CALENDARIA.SettingsPanel.Section.Stopwatch"}}</legend>
+
+    <div class="form-group">
+      <label>{{localize "CALENDARIA.Settings.StopwatchAutoStartTime.Name"}}</label>
+      <div class="form-fields">
+        <input type="checkbox" name="stopwatchAutoStartTime" {{#if stopwatchAutoStartTime}}checked{{/if}}>
+      </div>
+      <p class="hint">{{localize "CALENDARIA.Settings.StopwatchAutoStartTime.Hint"}}</p>
+    </div>
+  </fieldset>
+
+  <fieldset>
     <legend>{{localize "CALENDARIA.SettingsPanel.Section.CustomTimeJumps"}}</legend>
     <p class="hint section-hint">{{localize "CALENDARIA.SettingsPanel.Hint.CustomTimeJumps"}}</p>
 

@@ -686,6 +686,87 @@ function getCycleNumber(calendar, components) {
   return Math.max(1, cycleNum);
 }
 
+// ==================== Duration Formatting ====================
+
+/**
+ * Format milliseconds into a display string based on format setting.
+ * Supports tokens: HH (hours), mm (minutes), ss (seconds), SSS (milliseconds).
+ * @param {number} ms - Milliseconds to format
+ * @param {string} format - Format string (e.g., 'HH:mm:ss.SSS', 'mm:ss')
+ * @returns {string} Formatted duration string
+ */
+export function formatDuration(ms, format = 'HH:mm:ss.SSS') {
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const milliseconds = ms % 1000;
+  const pad = (n, len = 2) => String(n).padStart(len, '0');
+
+  switch (format) {
+    case 'HH:mm:ss.SSS':
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(milliseconds, 3)}`;
+    case 'HH:mm:ss':
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    case 'mm:ss.SSS':
+      return `${pad(minutes + hours * 60)}:${pad(seconds)}.${pad(milliseconds, 3)}`;
+    case 'mm:ss':
+      return `${pad(minutes + hours * 60)}:${pad(seconds)}`;
+    case 'ss.SSS':
+      return `${pad(seconds + minutes * 60 + hours * 3600)}:${pad(milliseconds, 3)}`;
+    case 'ss':
+      return `${pad(seconds + minutes * 60 + hours * 3600)}`;
+    default:
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(milliseconds, 3)}`;
+  }
+}
+
+/**
+ * Format game time seconds into display string based on calendar settings.
+ * Uses calendar's time units (hoursPerDay, minutesPerHour, secondsPerMinute).
+ * @param {number} totalSecs - Total game time seconds
+ * @param {object} calendar - Active calendar with time unit definitions
+ * @param {string} format - Format string (e.g., 'HH:mm:ss', 'mm:ss')
+ * @returns {string} Formatted duration string
+ */
+export function formatGameDuration(totalSecs, calendar, format = 'HH:mm:ss') {
+  const hoursPerDay = calendar?.days?.hoursPerDay ?? 24;
+  const minutesPerHour = calendar?.days?.minutesPerHour ?? 60;
+  const secondsPerMinute = calendar?.days?.secondsPerMinute ?? 60;
+  const secsPerMin = secondsPerMinute;
+  const secsPerHour = minutesPerHour * secsPerMin;
+  const secsPerDay = hoursPerDay * secsPerHour;
+  const days = Math.floor(totalSecs / secsPerDay);
+  const hours = Math.floor((totalSecs % secsPerDay) / secsPerHour);
+  const minutes = Math.floor((totalSecs % secsPerHour) / secsPerMin);
+  const secs = Math.floor(totalSecs % secsPerMin);
+  const pad = (n, len = 2) => String(n).padStart(len, '0');
+  const showMs = format.includes('.SSS');
+  const msSuffix = showMs ? '.000' : '';
+
+  switch (format) {
+    case 'HH:mm:ss.SSS':
+    case 'HH:mm:ss':
+      if (days > 0) return `${days}d ${pad(hours)}:${pad(minutes)}:${pad(secs)}${msSuffix}`;
+      return `${pad(hours)}:${pad(minutes)}:${pad(secs)}${msSuffix}`;
+    case 'mm:ss.SSS':
+    case 'mm:ss': {
+      const totalMins = minutes + hours * minutesPerHour + days * hoursPerDay * minutesPerHour;
+      return `${pad(totalMins)}:${pad(secs)}${msSuffix}`;
+    }
+    case 'ss.SSS':
+    case 'ss': {
+      const totalSecsCalc = secs + minutes * secsPerMin + hours * secsPerHour + days * secsPerDay;
+      return `${pad(totalSecsCalc)}${msSuffix}`;
+    }
+    default:
+      if (days > 0) return `${days}d ${pad(hours)}:${pad(minutes)}:${pad(secs)}${msSuffix}`;
+      return `${pad(hours)}:${pad(minutes)}:${pad(secs)}${msSuffix}`;
+  }
+}
+
+// ==================== Legacy Format Migration ====================
+
 /**
  * Check if a format string uses legacy {{var}} syntax.
  * @param {string} formatStr - Format string

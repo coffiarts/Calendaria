@@ -10,6 +10,7 @@ import { CalendarApplication } from './scripts/applications/calendar-application
 import { CalendarEditor } from './scripts/applications/calendar-editor.mjs';
 import { CalendariaHUD } from './scripts/applications/calendaria-hud.mjs';
 import { MiniCalendar } from './scripts/applications/mini-calendar.mjs';
+import { Stopwatch } from './scripts/applications/stopwatch.mjs';
 import { TimeKeeperHUD } from './scripts/applications/time-keeper-hud.mjs';
 import CalendarManager from './scripts/calendar/calendar-manager.mjs';
 import CalendariaCalendar from './scripts/calendar/data/calendaria-calendar.mjs';
@@ -102,6 +103,7 @@ globalThis['CALENDARIA'] = {
   CalendarApplication,
   CalendarEditor,
   MiniCalendar,
+  Stopwatch,
   TimeKeeper,
   TimeKeeperHUD,
   WeatherManager,

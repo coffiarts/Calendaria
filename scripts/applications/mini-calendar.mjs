@@ -29,9 +29,6 @@ const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
  * MiniCalendar widget combining mini month view with time controls.
  */
 export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
-  /** @type {MiniCalendar|null} Singleton instance */
-  static _instance = null;
-
   /** @type {object|null} Currently selected date */
   _selectedDate = null;
 
@@ -1503,6 +1500,14 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
+   * Get the singleton instance from Foundry's application registry.
+   * @returns {MiniCalendar|undefined} The instance if it exists
+   */
+  static get instance() {
+    return foundry.applications.instances.get(this.DEFAULT_OPTIONS.id);
+  }
+
+  /**
    * Show the MiniCalendar singleton.
    * @param {object} [options] - Show options
    * @param {boolean} [options.silent] - If true, don't show permission warning
@@ -1513,23 +1518,19 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
       if (!silent) ui.notifications.warn('CALENDARIA.Permissions.NoAccess', { localize: true });
       return null;
     }
-    if (!this._instance) this._instance = new MiniCalendar();
-    this._instance.render(true);
-    return this._instance;
+    const instance = this.instance ?? new MiniCalendar();
+    instance.render(true);
+    return instance;
   }
 
-  /**
-   * Hide the MiniCalendar.
-   */
+  /** Hide the MiniCalendar. */
   static hide() {
-    if (this._instance) this._instance.close();
+    this.instance?.close();
   }
 
-  /**
-   * Toggle the MiniCalendar visibility.
-   */
+  /** Toggle the MiniCalendar visibility. */
   static toggle() {
-    if (this._instance?.rendered) this.hide();
+    if (this.instance?.rendered) this.hide();
     else this.show();
   }
 
@@ -1543,19 +1544,11 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
-   * Get the singleton instance.
-   * @returns {MiniCalendar|null} The singleton instance or null if not created
-   */
-  static get instance() {
-    return this._instance;
-  }
-
-  /**
    * Refresh sticky states from settings on the current instance.
    * Called when settings change externally (e.g., from settings panel).
    */
   static refreshStickyStates() {
-    if (!this._instance) return;
-    this._instance.#restoreStickyStates();
+    const instance = this.instance;
+    if (instance) instance.#restoreStickyStates();
   }
 }

@@ -8,6 +8,10 @@
         <i class="fas {{#if running}}fa-pause{{else}}fa-play{{/if}}"></i>
       </button>
       {{/if}}
+      <button type="button" class="time-display-stopwatch-btn" data-action="openStopwatch"
+        data-tooltip="{{localize 'CALENDARIA.Stopwatch.Title'}}">
+        <i class="fas fa-stopwatch"></i>
+      </button>
     </div>
     {{#if showDate}}<span class="time-display-date">{{currentDate}}</span>{{/if}}
   </div>

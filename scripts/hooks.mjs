@@ -7,6 +7,7 @@
 
 import { CalendariaHUD } from './applications/calendaria-hud.mjs';
 import { MiniCalendar } from './applications/mini-calendar.mjs';
+import { Stopwatch } from './applications/stopwatch.mjs';
 import CalendarManager from './calendar/calendar-manager.mjs';
 import { onChatMessage } from './chat/chat-commands.mjs';
 import { onPreCreateChatMessage, onRenderAnnouncementMessage, onRenderChatMessageHTML } from './chat/chat-timestamp.mjs';
@@ -50,6 +51,7 @@ export function registerHooks() {
   Hooks.on('updateWorldTime', TimeTracker.onUpdateWorldTime.bind(TimeTracker));
   Hooks.on('getSceneControlButtons', onGetSceneControlButtons);
   Hooks.on(HOOKS.WEATHER_CHANGE, onWeatherChange);
+  Hooks.once('ready', () => Stopwatch.restore());
   CalendariaHUD.registerCombatHooks();
   log(3, 'Hooks registered');
 }

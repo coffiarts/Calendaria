@@ -13,6 +13,7 @@ import { localize } from '../utils/localization.mjs';
 import { canChangeDateTime, canViewTimeKeeper } from '../utils/permissions.mjs';
 import * as StickyZones from '../utils/sticky-zones.mjs';
 import { SettingsPanel } from './settings/settings-panel.mjs';
+import { Stopwatch } from './stopwatch.mjs';
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -41,7 +42,7 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     classes: ['calendaria', 'time-keeper-hud'],
     position: { width: 200, height: 'auto', zIndex: 100 },
     window: { frame: false, positioned: true },
-    actions: { dec2: TimeKeeperHUD.#onDec2, dec1: TimeKeeperHUD.#onDec1, inc1: TimeKeeperHUD.#onInc1, inc2: TimeKeeperHUD.#onInc2, toggle: TimeKeeperHUD.#onToggle }
+    actions: { dec2: TimeKeeperHUD.#onDec2, dec1: TimeKeeperHUD.#onDec1, inc1: TimeKeeperHUD.#onInc1, inc2: TimeKeeperHUD.#onInc2, toggle: TimeKeeperHUD.#onToggle, openStopwatch: TimeKeeperHUD.#onOpenStopwatch }
   };
 
   /** @override */
@@ -256,6 +257,11 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     this.render();
   }
 
+  /** Open the Stopwatch application. */
+  static #onOpenStopwatch() {
+    Stopwatch.toggle();
+  }
+
   /**
    * Handle clock state changes.
    * @private
@@ -341,6 +347,14 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
+   * Get the singleton instance from Foundry's application registry.
+   * @returns {TimeKeeperHUD|undefined} The instance if it exists
+   */
+  static get instance() {
+    return foundry.applications.instances.get(this.DEFAULT_OPTIONS.id);
+  }
+
+  /**
    * Render the TimeKeeper HUD singleton.
    * @param {object} [options] - Show options
    * @param {boolean} [options.silent] - If true, don't show permission warning
@@ -351,23 +365,19 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
       if (!silent) ui.notifications.warn('CALENDARIA.Permissions.NoAccess', { localize: true });
       return null;
     }
-    if (!this._instance) this._instance = new TimeKeeperHUD();
-    this._instance.render(true);
-    return this._instance;
+    const instance = this.instance ?? new TimeKeeperHUD();
+    instance.render(true);
+    return instance;
   }
 
-  /**
-   * Hide the TimeKeeper HUD.
-   */
+  /** Hide the TimeKeeper HUD. */
   static hide() {
-    this._instance?.close();
+    this.instance?.close();
   }
 
-  /**
-   * Toggle the TimeKeeper HUD visibility.
-   */
+  /** Toggle the TimeKeeper HUD visibility. */
   static toggle() {
-    if (this._instance?.rendered) this.hide();
+    if (this.instance?.rendered) this.hide();
     else this.show();
   }
 
@@ -379,7 +389,4 @@ export class TimeKeeperHUD extends HandlebarsApplicationMixin(ApplicationV2) {
     const opacity = autoFade ? game.settings.get(MODULE.ID, SETTINGS.TIMEKEEPER_IDLE_OPACITY) / 100 : 1;
     document.documentElement.style.setProperty('--calendaria-timekeeper-idle-opacity', opacity);
   }
-
-  /** @type {TimeKeeperHUD|null} Singleton instance */
-  static _instance = null;
 }
