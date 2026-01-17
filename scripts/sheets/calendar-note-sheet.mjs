@@ -189,6 +189,13 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
   _onFirstRender(context, options) {
     super._onFirstRender(context, options);
     this.#renderHeaderControls();
+    if (this._isNewNote && this.isEditMode) {
+      const titleInput = this.element.querySelector('input[name="name"]');
+      if (titleInput) {
+        titleInput.focus();
+        titleInput.select();
+      }
+    }
   }
 
   /** @inheritdoc */

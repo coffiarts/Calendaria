@@ -287,6 +287,7 @@ export class Stopwatch extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /** Open notification configuration dialog. */
   static async #onOpenNotification() {
+    const currentSound = this.#notification?.sound || 'sounds/notify.wav';
     const content = `
       <form class="stopwatch-notification-form">
         <div class="form-group">
@@ -302,29 +303,53 @@ export class Stopwatch extends HandlebarsApplicationMixin(ApplicationV2) {
             <option value="both" ${this.#notification?.type === 'both' ? 'selected' : ''}>${localize('CALENDARIA.Stopwatch.NotificationBoth')}</option>
           </select>
         </div>
+        <div class="form-group">
+          <label>${localize('CALENDARIA.Stopwatch.NotificationSoundFile')}</label>
+          <div class="form-fields">
+            <input type="text" name="sound" value="${currentSound}" placeholder="sounds/notify.wav" />
+            <button type="button" class="file-picker" data-type="audio" data-target="sound" title="${localize('FILES.BrowseTooltip')}">
+              <i class="fas fa-file-audio"></i>
+            </button>
+          </div>
+        </div>
       </form>
     `;
 
     const result = await foundry.applications.api.DialogV2.wait({
       window: { title: localize('CALENDARIA.Stopwatch.ConfigureNotification'), icon: 'fas fa-bell' },
       content,
+      render: (_event, dialog) => {
+        const form = dialog.element.querySelector('form');
+        const filePickerBtn = form.querySelector('.file-picker');
+        filePickerBtn?.addEventListener('click', async () => {
+          const fp = new FilePicker({
+            type: 'audio',
+            current: form.sound.value || 'sounds/',
+            callback: (path) => {
+              form.sound.value = path;
+            }
+          });
+          fp.browse();
+        });
+      },
       buttons: [
         {
           action: 'save',
           label: localize('CALENDARIA.Common.Save'),
           icon: 'fas fa-save',
           callback: (_event, _button, dialog) => {
-            const form = dialog.querySelector('form');
+            const form = dialog.element.querySelector('form');
             const threshold = parseInt(form.threshold.value) || null;
             const type = form.type.value;
-            return { threshold, type };
+            const sound = form.sound.value || 'sounds/notify.wav';
+            return { threshold, type, sound };
           }
         },
         {
           action: 'clear',
           label: localize('CALENDARIA.Stopwatch.ClearNotification'),
           icon: 'fas fa-times',
-          callback: () => ({ threshold: null, type: null })
+          callback: () => ({ threshold: null, type: null, sound: null })
         }
       ],
       rejectClose: false
@@ -332,7 +357,7 @@ export class Stopwatch extends HandlebarsApplicationMixin(ApplicationV2) {
 
     if (result) {
       this.#notificationThreshold = result.threshold;
-      this.#notification = result.threshold ? { type: result.type } : null;
+      this.#notification = result.threshold ? { type: result.type, sound: result.sound } : null;
       this.#notificationFired = false;
       this.#saveState();
       this.render();
@@ -426,9 +451,10 @@ export class Stopwatch extends HandlebarsApplicationMixin(ApplicationV2) {
   /** Fire the configured notification. */
   #fireNotification() {
     const type = this.#notification?.type || 'toast';
+    const sound = this.#notification?.sound || 'sounds/notify.wav';
     const message = localize('CALENDARIA.Stopwatch.NotificationMessage');
     if (type === 'toast' || type === 'both') ui.notifications.info(`<i class="fas fa-stopwatch"></i> ${message}`);
-    if (type === 'sound' || type === 'both') AudioHelper.play({ src: 'sounds/notify.wav', volume: 0.5, autoplay: true });
+    if (type === 'sound' || type === 'both') foundry.audio.AudioHelper.play({ src: sound, volume: 1, autoplay: true });
   }
 
   /** Save stopwatch state to client settings. */

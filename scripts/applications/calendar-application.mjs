@@ -1254,9 +1254,9 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
       })
     });
     this._hooks.push({
-      name: 'deleteJournalEntryPage',
-      id: Hooks.on('deleteJournalEntryPage', (page, _options, _userId) => {
-        if (page.type === 'calendaria.calendarnote') debouncedRender();
+      name: 'deleteJournalEntry',
+      id: Hooks.on('deleteJournalEntry', (journal) => {
+        if (journal.pages.some((p) => p.type === 'calendaria.calendarnote')) debouncedRender();
       })
     });
     this._hooks.push({ name: HOOKS.WEATHER_CHANGE, id: Hooks.on(HOOKS.WEATHER_CHANGE, () => debouncedRender()) });

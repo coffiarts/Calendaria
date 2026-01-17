@@ -2151,6 +2151,7 @@
   "CALENDARIA.Stopwatch.NotificationBoth": "Toast + Sound",
   "CALENDARIA.Stopwatch.NotificationMessage": "Stopwatch threshold reached!",
   "CALENDARIA.Stopwatch.NotificationSound": "Sound Only",
+  "CALENDARIA.Stopwatch.NotificationSoundFile": "Sound File",
   "CALENDARIA.Stopwatch.NotificationThreshold": "Notify After",
   "CALENDARIA.Stopwatch.NotificationToast": "Toast Message",
   "CALENDARIA.Stopwatch.NotificationType": "Notification Type",

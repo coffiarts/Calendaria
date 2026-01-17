@@ -376,6 +376,18 @@ export class CalendariaHUD extends HandlebarsApplicationMixin(ApplicationV2) {
       })
     });
     this.#hooks.push({
+      name: 'deleteJournalEntry',
+      id: Hooks.on('deleteJournalEntry', (journal) => {
+        if (journal.pages.some((p) => p.type === 'calendaria.calendarnote')) debouncedRender();
+      })
+    });
+    this.#hooks.push({
+      name: 'createJournalEntryPage',
+      id: Hooks.on('createJournalEntryPage', (page) => {
+        if (page.type === 'calendaria.calendarnote') debouncedRender();
+      })
+    });
+    this.#hooks.push({
       name: 'calendaria.displayFormatsChanged',
       id: Hooks.on('calendaria.displayFormatsChanged', () => this.render({ parts: ['bar'] }))
     });

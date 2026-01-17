@@ -824,9 +824,9 @@ export class MiniCalendar extends HandlebarsApplicationMixin(ApplicationV2) {
     });
 
     this.#hooks.push({
-      name: 'deleteJournalEntryPage',
-      id: Hooks.on('deleteJournalEntryPage', (page) => {
-        if (page.type === 'calendaria.calendarnote') debouncedRender();
+      name: 'deleteJournalEntry',
+      id: Hooks.on('deleteJournalEntry', (journal) => {
+        if (journal.pages.some((p) => p.type === 'calendaria.calendarnote')) debouncedRender();
       })
     });
 

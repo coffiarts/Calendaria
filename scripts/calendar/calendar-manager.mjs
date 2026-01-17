@@ -510,7 +510,12 @@ export default class CalendarManager {
    */
   static async deleteCustomCalendar(id) {
     const customCalendars = game.settings.get(MODULE.ID, SETTINGS.CUSTOM_CALENDARS) || {};
-    if (!customCalendars[id]) {
+    const legacyData = game.settings.get(MODULE.ID, SETTINGS.CALENDARS) || {};
+    const legacyCalendars = legacyData.calendars || {};
+    const inCustom = !!customCalendars[id];
+    const inLegacy = !!legacyCalendars[id];
+
+    if (!inCustom && !inLegacy) {
       log(2, `Cannot delete calendar: ${id} is not a custom calendar`);
       return false;
     }
@@ -521,8 +526,14 @@ export default class CalendarManager {
     }
 
     try {
-      delete customCalendars[id];
-      await game.settings.set(MODULE.ID, SETTINGS.CUSTOM_CALENDARS, customCalendars);
+      if (inCustom) {
+        delete customCalendars[id];
+        await game.settings.set(MODULE.ID, SETTINGS.CUSTOM_CALENDARS, customCalendars);
+      }
+      if (inLegacy) {
+        delete legacyCalendars[id];
+        await game.settings.set(MODULE.ID, SETTINGS.CALENDARS, { ...legacyData, calendars: legacyCalendars });
+      }
       CalendarRegistry.unregister(id);
       Hooks.callAll(HOOKS.CALENDAR_REMOVED, id);
       log(3, `Deleted custom calendar: ${id}`);
@@ -579,7 +590,10 @@ export default class CalendarManager {
    */
   static isCustomCalendar(id) {
     const customCalendars = game.settings.get(MODULE.ID, SETTINGS.CUSTOM_CALENDARS) || {};
-    return !!customCalendars[id];
+    if (customCalendars[id]) return true;
+    const legacyData = game.settings.get(MODULE.ID, SETTINGS.CALENDARS) || {};
+    const legacyCalendars = legacyData.calendars || {};
+    return !!legacyCalendars[id];
   }
 
   /**
