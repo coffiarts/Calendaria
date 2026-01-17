@@ -157,11 +157,12 @@
                 data-tooltip="{{festivalName}}">
                 <span class="festival-name">{{festivalName}}</span>
                 {{#if hasNotes}}<span class="note-badge">{{noteCount}}</span>{{/if}}
-                {{#if moonIcon}}{{#if moonColor}}<span class="moon-tint" style="--moon-color: {{moonColor}}">
-                      <img class="moon-tiny tinted" src="{{moonIcon}}" alt="{{moonPhase}}"
-                        data-tooltip="{{moonPhase}}"></span>
+                {{#if moonIcon}}{{#if moonColor}}<span class="moon-tint clickable" style="--moon-color: {{moonColor}}" data-action="showMoons"
+                        data-tooltip="{{moonPhase}}">
+                      <img class="moon-tiny tinted" src="{{moonIcon}}" alt="{{moonPhase}}"></span>
                   {{else}}
-                    <img class="moon-tiny" src="{{moonIcon}}" alt="{{moonPhase}}" data-tooltip="{{moonPhase}}">
+                    <img class="moon-tiny clickable" src="{{moonIcon}}" alt="{{moonPhase}}" data-action="showMoons"
+                      data-tooltip="{{moonPhase}}">
                   {{/if}}{{/if}}
               </div>
             {{/each}}
@@ -191,11 +192,12 @@
                 {{#if festivalName}}data-tooltip="{{festivalName}}" {{/if}}>
                 <span class="day-num">{{day}}</span>
                 {{#if hasNotes}}<span class="note-badge">{{noteCount}}</span>{{/if}}
-                {{#if moonIcon}}{{#if moonColor}}<span class="moon-tint" style="--moon-color: {{moonColor}}">
-                      <img class="moon-tiny tinted" src="{{moonIcon}}" alt="{{moonPhase}}"
-                        data-tooltip="{{moonPhase}}"></span>
+                {{#if moonIcon}}{{#if moonColor}}<span class="moon-tint clickable" style="--moon-color: {{moonColor}}" data-action="showMoons"
+                        data-tooltip="{{moonPhase}}">
+                      <img class="moon-tiny tinted" src="{{moonIcon}}" alt="{{moonPhase}}"></span>
                   {{else}}
-                    <img class="moon-tiny" src="{{moonIcon}}" alt="{{moonPhase}}" data-tooltip="{{moonPhase}}">
+                    <img class="moon-tiny clickable" src="{{moonIcon}}" alt="{{moonPhase}}" data-action="showMoons"
+                      data-tooltip="{{moonPhase}}">
                   {{/if}}{{/if}}
               </div>
             {{/if}}

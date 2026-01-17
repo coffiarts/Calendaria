@@ -354,7 +354,8 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
             if (!phase) return null;
             return { moonName: localize(moon.name), phaseName: localize(phase.name), icon: phase.icon, color: moon.color || null };
           })
-          .filter(Boolean);
+          .filter(Boolean)
+          .sort((a, b) => a.moonName.localeCompare(b.moonName));
         moonPhases = processMoonPhases(moonPhases);
       }
 
@@ -516,7 +517,8 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
               if (!phase) return null;
               return { moonName: localize(moon.name), phaseName: localize(phase.name), icon: phase.icon, color: moon.color || null };
             })
-            .filter(Boolean);
+            .filter(Boolean)
+            .sort((a, b) => a.moonName.localeCompare(b.moonName));
           moonPhases = processMoonPhases(moonPhases);
         }
 

@@ -20,6 +20,25 @@ const DOUBLE_CLICK_THRESHOLD = 400;
 /** @type {{time: number, year: number|null, month: number|null, day: number|null}} Click state for double-click detection */
 const clickState = { time: 0, year: null, month: null, day: null };
 
+/** @type {string|null} User-selected moon name override for display */
+let selectedMoonOverride = null;
+
+/**
+ * Set the moon override for display.
+ * @param {string|null} moonName - Moon name to display, or null to use default (first alphabetically)
+ */
+export function setSelectedMoon(moonName) {
+  selectedMoonOverride = moonName;
+}
+
+/**
+ * Get the current moon override.
+ * @returns {string|null} Selected moon name or null
+ */
+export function getSelectedMoon() {
+  return selectedMoonOverride;
+}
+
 /**
  * Convert hex color to hue angle for CSS filter.
  * @param {string} hex - Hex color (e.g., '#ff0000')
@@ -172,7 +191,8 @@ export function getNotesForDay(notes, year, month, day) {
 }
 
 /**
- * Get the first moon's phase for a specific day.
+ * Get the selected moon's phase for a specific day.
+ * Uses override if set, otherwise first alphabetically.
  * @param {object} calendar - The calendar
  * @param {number} year - Display year
  * @param {number} month - Month
@@ -181,25 +201,31 @@ export function getNotesForDay(notes, year, month, day) {
  */
 export function getFirstMoonPhase(calendar, year, month, day) {
   if (!game.settings.get(MODULE.ID, SETTINGS.SHOW_MOON_PHASES)) return null;
-  if (!calendar?.moons?.[0]) return null;
+  if (!calendar?.moons?.length) return null;
+  const sortedMoons = [...calendar.moons].map((m, i) => ({ ...m, originalIndex: i })).sort((a, b) => localize(a.name).localeCompare(localize(b.name)));
+  let moon = sortedMoons[0];
+  if (selectedMoonOverride) {
+    const overrideMoon = sortedMoons.find((m) => localize(m.name) === selectedMoonOverride);
+    if (overrideMoon) moon = overrideMoon;
+  }
   const internalYear = year - (calendar.years?.yearZero ?? 0);
   let dayOfYear = day - 1;
   for (let idx = 0; idx < month; idx++) dayOfYear += calendar.getDaysInMonth(idx, internalYear);
   const dayComponents = { year: internalYear, month, day: dayOfYear, hour: 12, minute: 0, second: 0 };
   const dayWorldTime = calendar.componentsToTime(dayComponents);
-  const phase = calendar.getMoonPhase(0, dayWorldTime);
+  const phase = calendar.getMoonPhase(moon.originalIndex, dayWorldTime);
   if (!phase) return null;
-  const color = calendar.moons[0].color || null;
-  return { icon: phase.icon, color, hue: color ? hexToHue(color) : null, tooltip: `${localize(calendar.moons[0].name)}: ${localize(phase.name)}` };
+  const color = moon.color || null;
+  return { icon: phase.icon, color, hue: color ? hexToHue(color) : null, tooltip: `${localize(moon.name)}: ${localize(phase.name)}` };
 }
 
 /**
- * Get all moon phases for a specific day.
+ * Get all moon phases for a specific day, sorted alphabetically.
  * @param {object} calendar - The calendar
  * @param {number} year - Display year
  * @param {number} month - Month
  * @param {number} day - Day (1-indexed)
- * @returns {Array|null} Array of moon phase data
+ * @returns {Array|null} Array of moon phase data sorted alphabetically by moon name
  */
 export function getAllMoonPhases(calendar, year, month, day) {
   if (!game.settings.get(MODULE.ID, SETTINGS.SHOW_MOON_PHASES)) return null;
@@ -216,7 +242,8 @@ export function getAllMoonPhases(calendar, year, month, day) {
       const color = moon.color || null;
       return { moonName: localize(moon.name), phaseName: localize(phase.name), icon: phase.icon, color, hue: color ? hexToHue(color) : null };
     })
-    .filter(Boolean);
+    .filter(Boolean)
+    .sort((a, b) => a.moonName.localeCompare(b.moonName));
 }
 
 /**

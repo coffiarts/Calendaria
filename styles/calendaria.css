@@ -6913,6 +6913,108 @@ span.calendaria-moon-icon {
 }
 
 /* ======================================== */
+/* Moons Radial View Tooltip                */
+/* ======================================== */
+.calendaria-moons-tooltip {
+  z-index: 100001;
+  position: fixed;
+  padding: 12px;
+  border: 1px solid var(--calendaria-border, rgb(58 58 94));
+  border-radius: 10px;
+  background: var(--calendaria-bg, rgb(26 26 46));
+  box-shadow: 0 4px 20px rgb(0 0 0 / 60%);
+  cursor: grab;
+}
+
+.calendaria-moons-tooltip .moons-radial {
+  position: relative;
+  width: var(--radial-size);
+  height: var(--radial-size);
+  margin: 8px auto;
+}
+
+.calendaria-moons-tooltip .moon-radial-item {
+  --angle: calc(360deg / var(--moon-count) * var(--moon-index));
+  --radius: calc(var(--radial-size) / 2 - 16px);
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--radius) * -1)) rotate(calc(var(--angle) * -1));
+}
+
+.calendaria-moons-tooltip .moon-radial-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 3px;
+  border-radius: 50%;
+  background: var(--calendaria-bg-hover, rgb(40 40 70));
+  box-shadow: 0 2px 6px rgb(0 0 0 / 40%);
+}
+
+.calendaria-moons-tooltip .moon-radial-icon.tinted {
+  background-color: color-mix(in srgb, var(--moon-color, transparent) 50%, rgb(40 40 70));
+}
+
+.calendaria-moons-tooltip .moon-radial-icon.tinted img {
+  mix-blend-mode: multiply;
+  filter: brightness(1.2) contrast(1.1);
+}
+
+.calendaria-moons-tooltip .moon-radial-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.calendaria-moons-tooltip .moon-radial-item {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.calendaria-moons-tooltip .moon-radial-item:hover {
+  transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--radius) * -1)) rotate(calc(var(--angle) * -1)) scale(1.1);
+}
+
+.calendaria-moons-tooltip .moon-radial-item.selected .moon-radial-icon {
+  outline: 2px solid var(--calendaria-primary, #7b68ee);
+  outline-offset: 2px;
+}
+
+.calendaria-moons-tooltip .moon-name {
+  color: var(--calendaria-text);
+  font-weight: 500;
+  font-size: var(--font-size-10, 0.625rem);
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.calendaria-moons-tooltip .moon-radial-item.selected .moon-name {
+  color: var(--calendaria-primary, #7b68ee);
+}
+
+/* Clickable moon icons in calendar */
+.moon-tiny.clickable,
+.moon-tint.clickable {
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.moon-tiny.clickable:hover,
+.moon-tint.clickable:hover {
+  z-index: 10;
+  transform: scale(1.3);
+  filter: brightness(1.2);
+}
+
+/* ======================================== */
 /* Settings Panel                           */
 /* ======================================== */
 .settings-panel {
