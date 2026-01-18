@@ -105,8 +105,10 @@ export function formatEraTemplate(template, context) {
     YY: String(context.year).slice(-2),
     GGGG: context.era ?? context.name ?? '',
     G: context.abbreviation ?? context.short ?? '',
-    yy: context.yearInEra ?? ''
+    yy: context.yearInEra ?? '',
+    '[yearInEra]': context.yearInEra ?? '',
+    '[year]': context.year
   };
-  // Match tokens longest-first to prevent partial matches (YYYY before YY, GGGG before G)
-  return template.replace(/YYYY|GGGG|YY|yy|G/g, (match) => tokens[match] ?? match);
+  // Match tokens longest-first to prevent partial matches
+  return template.replace(/\[yearInEra\]|\[year\]|YYYY|GGGG|YY|yy|G/g, (match) => tokens[match] ?? match);
 }

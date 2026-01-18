@@ -599,9 +599,9 @@ export function registerSettings() {
       initial: {
         hudDate: { gm: 'ordinal', player: 'ordinal' },
         hudTime: { gm: 'time', player: 'time' },
-        miniCalendarHeader: { gm: 'MMMM [era]', player: 'MMMM [era]' },
+        miniCalendarHeader: { gm: 'MMMM GGGG', player: 'MMMM GGGG' },
         miniCalendarTime: { gm: 'time', player: 'time' },
-        fullCalendarHeader: { gm: 'MMMM [era]', player: 'MMMM [era]' },
+        fullCalendarHeader: { gm: 'MMMM GGGG', player: 'MMMM GGGG' },
         chatTimestamp: { gm: 'short', player: 'short' },
         stopwatchRealtime: { gm: 'stopwatchRealtimeFull', player: 'stopwatchRealtimeFull' },
         stopwatchGametime: { gm: 'stopwatchGametimeFull', player: 'stopwatchGametimeFull' }

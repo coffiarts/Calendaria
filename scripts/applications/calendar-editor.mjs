@@ -6,6 +6,7 @@
  */
 
 import CalendarManager from '../calendar/calendar-manager.mjs';
+import { isBundledCalendar } from '../calendar/calendar-loader.mjs';
 import CalendarRegistry from '../calendar/calendar-registry.mjs';
 import { formatEraTemplate } from '../calendar/calendar-utils.mjs';
 import { ASSETS, DEFAULT_MOON_PHASES, MODULE, SETTINGS, TEMPLATES } from '../constants.mjs';
@@ -2042,7 +2043,8 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
       let calendarId;
 
       if (this.#isEditing && this.#calendarId) {
-        if (CalendarManager.isBundledCalendar(this.#calendarId) || CalendarManager.hasDefaultOverride(this.#calendarId)) {
+        // Use isBundledCalendar directly to check BUNDLED_CALENDARS array, avoiding legacy data issues
+        if (isBundledCalendar(this.#calendarId) || CalendarManager.hasDefaultOverride(this.#calendarId)) {
           calendar = await CalendarManager.saveDefaultOverride(this.#calendarId, this.#calendarData);
         } else {
           calendar = await CalendarManager.updateCustomCalendar(this.#calendarId, this.#calendarData);

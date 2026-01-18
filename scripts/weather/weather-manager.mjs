@@ -7,6 +7,7 @@
  */
 
 import CalendarManager from '../calendar/calendar-manager.mjs';
+import { isBundledCalendar } from '../calendar/calendar-loader.mjs';
 import { HOOKS, MODULE, SETTINGS } from '../constants.mjs';
 import { format, localize } from '../utils/localization.mjs';
 import { log } from '../utils/logger.mjs';
@@ -362,10 +363,11 @@ export default class WeatherManager {
     const zone = calendarData.weather.zones?.find((z) => z.id === zoneId);
     if (!zone) return;
     calendarData.weather.activeZone = zoneId;
-    if (CalendarManager.isCustomCalendar(calendarId)) {
-      await CalendarManager.updateCustomCalendar(calendarId, calendarData);
-    } else {
+    // Use isBundledCalendar directly to avoid legacy data issues
+    if (isBundledCalendar(calendarId)) {
       await CalendarManager.saveDefaultOverride(calendarId, calendarData);
+    } else {
+      await CalendarManager.updateCustomCalendar(calendarId, calendarData);
     }
     log(3, `Active climate zone set to: ${zoneId}`);
   }

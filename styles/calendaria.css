@@ -335,17 +335,6 @@
 }
 
 /* ======================================== */
-/* Global Calendaria Scope Override         */
-/* ======================================== */
-
-.calendaria {
-  /* Override rogue system color overrides */
-  color: var(--calendaria-text) !important;
-
-  --input-text-color: var(--calendaria-text) !important;
-}
-
-/* ======================================== */
 /* Calendar Application Styles              */
 /* ======================================== */
 
@@ -6944,6 +6933,8 @@ span.calendaria-moon-icon {
   flex-direction: column;
   align-items: center;
   transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--radius) * -1)) rotate(calc(var(--angle) * -1));
+  cursor: pointer;
+  transition: transform 0.15s ease;
 }
 
 .calendaria-moons-tooltip .moon-radial-icon {
@@ -6973,17 +6964,12 @@ span.calendaria-moon-icon {
   object-fit: contain;
 }
 
-.calendaria-moons-tooltip .moon-radial-item {
-  cursor: pointer;
-  transition: transform 0.15s ease;
-}
-
 .calendaria-moons-tooltip .moon-radial-item:hover {
   transform: translate(-50%, -50%) rotate(var(--angle)) translateY(calc(var(--radius) * -1)) rotate(calc(var(--angle) * -1)) scale(1.1);
 }
 
 .calendaria-moons-tooltip .moon-radial-item.selected .moon-radial-icon {
-  outline: 2px solid var(--calendaria-primary, #7b68ee);
+  outline: 2px solid var(--calendaria-primary, rgb(123 104 238));
   outline-offset: 2px;
 }
 
@@ -6997,14 +6983,16 @@ span.calendaria-moon-icon {
 }
 
 .calendaria-moons-tooltip .moon-radial-item.selected .moon-name {
-  color: var(--calendaria-primary, #7b68ee);
+  color: var(--calendaria-primary, rgb(123 104 238));
 }
 
 /* Clickable moon icons in calendar */
 .moon-tiny.clickable,
 .moon-tint.clickable {
   cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .moon-tiny.clickable:hover,
@@ -7201,7 +7189,7 @@ span.calendaria-moon-icon {
       width: fit-content;
       border: 1px solid var(--button-border-color);
       border-radius: 4px;
-      color: var(--calendaria-text);
+      color: inherit;
       text-decoration: none;
       cursor: pointer;
       background: var(--button-background-color);

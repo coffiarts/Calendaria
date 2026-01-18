@@ -88,7 +88,7 @@ export function dateFormattingParts(calendar, components) {
   const erasArray = Array.isArray(calendar?.eras) ? calendar.eras : calendar?.eras?.values;
   if (erasArray?.length > 0) {
     for (const era of erasArray) {
-      if (displayYear >= era.startYear && (!era.endYear || displayYear <= era.endYear)) {
+      if (displayYear >= era.startYear && (era.endYear == null || displayYear <= era.endYear)) {
         eraName = localize(era.name);
         eraAbbr = era.abbreviation ? localize(era.abbreviation) : eraName.slice(0, 2);
         eraYear = displayYear - era.startYear + 1;
@@ -515,10 +515,16 @@ export function formatCustom(calendar, components, formatStr) {
  * @returns {string} Moon phase name
  */
 function getMoonPhaseName(calendar, components) {
-  const { year, month, dayOfMonth } = components;
   if (!calendar?.moons?.length) return '';
+  if (calendar.getMoonPhase && calendar.componentsToTime) {
+    const worldTime = calendar.componentsToTime(components);
+    const phaseData = calendar.getMoonPhase(0, worldTime);
+    return phaseData?.subPhaseName || phaseData?.name || '';
+  }
+  // Fallback for non-CalendariaCalendar objects
   const moon = calendar.moons[0];
   if (!moon.phases?.length) return '';
+  const { year, month, dayOfMonth } = components;
   const cycleLength = moon.cycleLength || 29;
   const refDate = moon.referenceDate || { year: 0, month: 0, day: 1 };
   const refDays = refDate.year * 365 + refDate.month * 30 + refDate.day;
@@ -624,7 +630,13 @@ function getCanonicalHour(calendar, components) {
   const { hour = 0 } = components;
   if (!calendar?.canonicalHours?.length) return '';
   for (const ch of calendar.canonicalHours) {
-    if (hour >= ch.startHour && hour < ch.endHour) return localize(ch.name);
+    // Handle hours that wrap around midnight (e.g., 21-1 means 21:00 to 01:00)
+    if (ch.startHour <= ch.endHour) {
+      if (hour >= ch.startHour && hour < ch.endHour) return localize(ch.name);
+    } else {
+      // Wraps around midnight: startHour > endHour
+      if (hour >= ch.startHour || hour < ch.endHour) return localize(ch.name);
+    }
   }
   return '';
 }
@@ -639,7 +651,11 @@ function getCanonicalHourAbbr(calendar, components) {
   const { hour = 0 } = components;
   if (!calendar?.canonicalHours?.length) return '';
   for (const ch of calendar.canonicalHours) {
-    if (hour >= ch.startHour && hour < ch.endHour) return ch.abbreviation ? localize(ch.abbreviation) : localize(ch.name).slice(0, 3);
+    // Handle hours that wrap around midnight (e.g., 21-1 means 21:00 to 01:00)
+    let matches = false;
+    if (ch.startHour <= ch.endHour) matches = hour >= ch.startHour && hour < ch.endHour;
+    else matches = hour >= ch.startHour || hour < ch.endHour;
+    if (matches) return ch.abbreviation ? localize(ch.abbreviation) : localize(ch.name).slice(0, 3);
   }
   return '';
 }
@@ -810,14 +826,14 @@ export function migrateLegacyFormat(legacyFormat) {
     '{{Wn}}': '[namedWeekAbbr]',
     '{{ch}}': '[ch]',
     '{{chAbbr}}': '[chAbbr]',
-    '{{E}}': '[era]',
+    '{{E}}': 'GGGG',
     '{{e}}': '[yearInEra]',
-    '{{season}}': '[season]',
+    '{{season}}': 'QQQQ',
     '{{moon}}': '[moon]',
     // Era template tokens (convert directly to UTS#35)
     '{{era}}': 'GGGG',
-    '{{eraYear}}': 'yy',
-    '{{yearInEra}}': 'yy',
+    '{{eraYear}}': '[yearInEra]',
+    '{{yearInEra}}': '[yearInEra]',
     '{{year}}': 'YYYY',
     '{{abbreviation}}': 'G',
     '{{short}}': 'G'
@@ -1111,7 +1127,6 @@ const DEPRECATED_TOKENS = {
   d: 'e',
   '[era]': 'GGGG',
   '[eraAbbr]': 'G',
-  '[yearInEra]': 'yy',
   '[year]': 'YYYY',
   '[short]': 'G',
   '[season]': 'QQQQ',

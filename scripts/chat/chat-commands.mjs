@@ -204,7 +204,7 @@ async function cmdMoon() {
     const phase = calendar.getMoonPhase(index);
     if (!phase) return null;
     const icon = phase.icon ? `<img src="${phase.icon}" style="height:1.2em;vertical-align:middle;margin-right:4px;">` : '';
-    return `${icon}<strong>${localize(moon.name)}:</strong> ${localize(phase.name)}`;
+    return `${icon}<strong>${localize(moon.name)}:</strong> ${phase.subPhaseName || localize(phase.name)}`;
   }).filter(Boolean);
   if (!lines.length) return sendChat(localize('CALENDARIA.ChatCommand.NoMoons'));
   await sendChat(lines.join('<br>'));
@@ -325,7 +325,7 @@ async function cmdCalendar() {
   if (calendar.moons?.length) {
     const moonStrs = calendar.moons.map((moon, index) => {
       const phase = calendar.getMoonPhase(index);
-      return phase ? `${localize(moon.name)}: ${localize(phase.name)}` : null;
+      return phase ? `${localize(moon.name)}: ${phase.subPhaseName || localize(phase.name)}` : null;
     }).filter(Boolean);
     if (moonStrs.length) lines.push(`<strong>${localize('CALENDARIA.ChatCommand.Moons')}:</strong> ${moonStrs.join(', ')}`);
   }

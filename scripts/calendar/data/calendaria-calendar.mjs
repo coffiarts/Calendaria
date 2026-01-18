@@ -819,23 +819,51 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     const daysIntoCycleRaw = (((daysSinceReference % moon.cycleLength) + moon.cycleLength) % moon.cycleLength) + cycleDayAdjust;
     const daysIntoCycle = ((daysIntoCycleRaw % moon.cycleLength) + moon.cycleLength) % moon.cycleLength;
     const normalizedPosition = daysIntoCycle / moon.cycleLength;
-    const numPhases = moon.phases?.length || 8;
-    const phaseDays = CalendariaCalendar.#buildPhaseDayDistribution(moon.cycleLength, numPhases);
     const dayIndex = Math.floor(daysIntoCycle);
-    let cumulativeDays = 0;
+
+    // Use phase start/end ranges if defined, otherwise fall back to even distribution
+    const phases = moon.phases || [];
+    const hasRanges = phases.length > 0 && phases[0].start !== undefined && phases[0].end !== undefined;
+
     let phaseArrayIndex = 0;
     let dayWithinPhase = 0;
-    for (let i = 0; i < phaseDays.length; i++) {
-      if (dayIndex < cumulativeDays + phaseDays[i]) {
-        phaseArrayIndex = i;
-        dayWithinPhase = dayIndex - cumulativeDays;
-        break;
+    let phaseDuration = 1;
+
+    if (hasRanges) {
+      // Match phase by normalized position against start/end ranges
+      for (let i = 0; i < phases.length; i++) {
+        const phase = phases[i];
+        const start = phase.start ?? 0;
+        const end = phase.end ?? 1;
+        // Handle wrap-around (e.g., start=0.9, end=0.1)
+        const inRange = end > start ? (normalizedPosition >= start && normalizedPosition < end) : (normalizedPosition >= start || normalizedPosition < end);
+        if (inRange) {
+          phaseArrayIndex = i;
+          const phaseLength = end > start ? end - start : (1 - start) + end;
+          phaseDuration = Math.max(1, Math.round(phaseLength * moon.cycleLength));
+          const posInPhase = end > start ? normalizedPosition - start : (normalizedPosition >= start ? normalizedPosition - start : normalizedPosition + (1 - start));
+          dayWithinPhase = Math.floor(posInPhase * moon.cycleLength);
+          break;
+        }
       }
-      cumulativeDays += phaseDays[i];
+    } else {
+      // Fall back to even distribution
+      const numPhases = phases.length || 8;
+      const phaseDays = CalendariaCalendar.#buildPhaseDayDistribution(moon.cycleLength, numPhases);
+      let cumulativeDays = 0;
+      for (let i = 0; i < phaseDays.length; i++) {
+        if (dayIndex < cumulativeDays + phaseDays[i]) {
+          phaseArrayIndex = i;
+          dayWithinPhase = dayIndex - cumulativeDays;
+          phaseDuration = phaseDays[i];
+          break;
+        }
+        cumulativeDays += phaseDays[i];
+      }
     }
-    const matchedPhase = moon.phases[phaseArrayIndex] || moon.phases?.[0];
+
+    const matchedPhase = phases[phaseArrayIndex] || phases[0];
     if (!matchedPhase) return null;
-    const phaseDuration = phaseDays[phaseArrayIndex];
     const subPhaseName = CalendariaCalendar.#getSubPhaseName(matchedPhase, dayWithinPhase, phaseDuration);
     return { name: matchedPhase.name, subPhaseName, icon: matchedPhase.icon || '', position: normalizedPosition, dayInCycle: dayIndex, phaseIndex: phaseArrayIndex, dayWithinPhase, phaseDuration };
   }

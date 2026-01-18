@@ -352,7 +352,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
           .map((moon, index) => {
             const phase = calendar.getMoonPhase(index, dayWorldTime);
             if (!phase) return null;
-            return { moonName: localize(moon.name), phaseName: localize(phase.name), icon: phase.icon, color: moon.color || null };
+            return { moonName: localize(moon.name), phaseName: phase.subPhaseName || localize(phase.name), icon: phase.icon, color: moon.color || null };
           })
           .filter(Boolean)
           .sort((a, b) => a.moonName.localeCompare(b.moonName));
@@ -515,7 +515,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
             .map((moon, index) => {
               const phase = calendar.getMoonPhase(index, dayWorldTime);
               if (!phase) return null;
-              return { moonName: localize(moon.name), phaseName: localize(phase.name), icon: phase.icon, color: moon.color || null };
+              return { moonName: localize(moon.name), phaseName: phase.subPhaseName || localize(phase.name), icon: phase.icon, color: moon.color || null };
             })
             .filter(Boolean)
             .sort((a, b) => a.moonName.localeCompare(b.moonName));
@@ -1263,6 +1263,7 @@ export class CalendarApplication extends HandlebarsApplicationMixin(ApplicationV
     });
     this._hooks.push({ name: HOOKS.WEATHER_CHANGE, id: Hooks.on(HOOKS.WEATHER_CHANGE, () => debouncedRender()) });
     this._hooks.push({ name: HOOKS.WIDGETS_REFRESH, id: Hooks.on(HOOKS.WIDGETS_REFRESH, () => debouncedRender()) });
+    this._hooks.push({ name: 'calendaria.displayFormatsChanged', id: Hooks.on('calendaria.displayFormatsChanged', () => debouncedRender()) });
     this._hooks.push({ name: 'updateWorldTime', id: Hooks.on('updateWorldTime', this._onUpdateWorldTime.bind(this)) });
   }
 

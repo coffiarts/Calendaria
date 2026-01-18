@@ -216,7 +216,7 @@ export function getFirstMoonPhase(calendar, year, month, day) {
   const phase = calendar.getMoonPhase(moon.originalIndex, dayWorldTime);
   if (!phase) return null;
   const color = moon.color || null;
-  return { icon: phase.icon, color, hue: color ? hexToHue(color) : null, tooltip: `${localize(moon.name)}: ${localize(phase.name)}` };
+  return { icon: phase.icon, color, hue: color ? hexToHue(color) : null, tooltip: `${localize(moon.name)}: ${phase.subPhaseName || localize(phase.name)}` };
 }
 
 /**
@@ -240,7 +240,7 @@ export function getAllMoonPhases(calendar, year, month, day) {
       const phase = calendar.getMoonPhase(index, dayWorldTime);
       if (!phase) return null;
       const color = moon.color || null;
-      return { moonName: localize(moon.name), phaseName: localize(phase.name), icon: phase.icon, color, hue: color ? hexToHue(color) : null };
+      return { moonName: localize(moon.name), phaseName: phase.subPhaseName || localize(phase.name), icon: phase.icon, color, hue: color ? hexToHue(color) : null };
     })
     .filter(Boolean)
     .sort((a, b) => a.moonName.localeCompare(b.moonName));

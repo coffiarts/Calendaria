@@ -140,7 +140,7 @@
   "eras"          : [
     {"name": "First Age",      "abbreviation": "FA", "startYear": -2000, "endYear": -500, "template": "Year [yearInEra] of the GGGG"},
     {"name": "Dark Centuries", "abbreviation": "DC", "startYear":  -500, "endYear":    0, "template": "Year [yearInEra] of the GGGG"},
-    {"name": "Second Age",     "abbreviation": "SA", "startYear":     1, "endYear": null, "template": "Year [year] of the GGGG"     }
+    {"name": "Second Age",     "abbreviation": "SA", "startYear":     1, "endYear": null, "template": "Year [year] of the GGGG"}
   ],
   "canonicalHours": [
     {"name": "Dawn Watch",      "abbreviation": "Dawn",  "startHour":  5, "endHour":  9},
