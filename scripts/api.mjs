@@ -438,11 +438,9 @@ export const CalendariaAPI = {
       ui.notifications.error('CALENDARIA.Permissions.NoAccess', { localize: true });
       return null;
     }
-    const calendar = CalendarManager.getActiveCalendar();
-    const yearZero = calendar?.years?.yearZero ?? 0;
     const noteData = {
-      startDate: { year: startDate.year - yearZero, month: startDate.month, day: startDate.day, hour: startDate.hour ?? 0, minute: startDate.minute ?? 0 },
-      endDate: endDate ? { year: endDate.year - yearZero, month: endDate.month, day: endDate.day, hour: endDate.hour ?? 23, minute: endDate.minute ?? 59 } : null,
+      startDate: { year: startDate.year, month: startDate.month, day: startDate.day, hour: startDate.hour ?? 0, minute: startDate.minute ?? 0 },
+      endDate: endDate ? { year: endDate.year, month: endDate.month, day: endDate.day, hour: endDate.hour ?? 23, minute: endDate.minute ?? 59 } : null,
       allDay,
       repeat,
       categories,
@@ -470,11 +468,9 @@ export const CalendariaAPI = {
       ui.notifications.error('CALENDARIA.Permissions.NoAccess', { localize: true });
       return null;
     }
-    const calendar = CalendarManager.getActiveCalendar();
-    const yearZero = calendar?.years?.yearZero ?? 0;
     const noteData = {};
-    if (updates.startDate) noteData.startDate = { ...updates.startDate, year: updates.startDate.year - yearZero };
-    if (updates.endDate) noteData.endDate = { ...updates.endDate, year: updates.endDate.year - yearZero };
+    if (updates.startDate) noteData.startDate = { ...updates.startDate };
+    if (updates.endDate) noteData.endDate = { ...updates.endDate };
     if (updates.allDay !== undefined) noteData.allDay = updates.allDay;
     if (updates.repeat !== undefined) noteData.repeat = updates.repeat;
     if (updates.categories !== undefined) noteData.categories = updates.categories;
@@ -508,9 +504,7 @@ export const CalendariaAPI = {
    * @returns {object[]} Array of note stubs
    */
   getNotesForDate(year, month, day) {
-    const calendar = CalendarManager.getActiveCalendar();
-    const yearZero = calendar?.years?.yearZero ?? 0;
-    return NoteManager.getNotesForDate(year - yearZero, month, day);
+    return NoteManager.getNotesForDate(year, month, day);
   },
 
   /**
@@ -522,9 +516,8 @@ export const CalendariaAPI = {
   getNotesForMonth(year, month) {
     const calendar = CalendarManager.getActiveCalendar();
     const yearZero = calendar?.years?.yearZero ?? 0;
-    const internalYear = year - yearZero;
-    const daysInMonth = calendar?.getDaysInMonth(month, internalYear) ?? 30;
-    return NoteManager.getNotesInRange({ year: internalYear, month, day: 1 }, { year: internalYear, month, day: daysInMonth });
+    const daysInMonth = calendar?.getDaysInMonth(month, year - yearZero) ?? 30;
+    return NoteManager.getNotesInRange({ year, month, day: 1 }, { year, month, day: daysInMonth });
   },
 
   /**
@@ -534,9 +527,7 @@ export const CalendariaAPI = {
    * @returns {object[]} Array of note stubs
    */
   getNotesInRange(startDate, endDate) {
-    const calendar = CalendarManager.getActiveCalendar();
-    const yearZero = calendar?.years?.yearZero ?? 0;
-    return NoteManager.getNotesInRange({ ...startDate, year: startDate.year - yearZero }, { ...endDate, year: endDate.year - yearZero });
+    return NoteManager.getNotesInRange(startDate, endDate);
   },
 
   /**
