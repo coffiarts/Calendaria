@@ -1150,6 +1150,7 @@
   "CALENDARIA.Reminder.MinutesPlural": "{mins} minutes",
   "CALENDARIA.Reminder.OpenNote": "Open Note",
   "CALENDARIA.Reminder.StartsIn": "<strong>{name}</strong> starts in {time}",
+  "CALENDARIA.Reminder.StartsNow": "<strong>{name}</strong> is today",
   "CALENDARIA.Reminder.Title": "Event Reminder",
   "CALENDARIA.Repeat.computed": "Computed",
   "CALENDARIA.Repeat.daily": "Daily",
