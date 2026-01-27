@@ -607,7 +607,13 @@ function getMoonPhaseIcon(calendar, components, moonSelector) {
   if (!moon) return '';
   let phase;
   if (calendar.getMoonPhase && calendar.componentsToTime) {
-    const worldTime = calendar.componentsToTime(components);
+    const yearZero = calendar.years?.yearZero ?? 0;
+    const internalComponents = {
+      ...components,
+      year: components.year - yearZero,
+      dayOfMonth: (components.dayOfMonth ?? 1) - 1
+    };
+    const worldTime = calendar.componentsToTime(internalComponents);
     const phaseData = calendar.getMoonPhase(moonIndex, worldTime);
     if (phaseData) phase = { name: phaseData.name, icon: phaseData.icon };
   }
