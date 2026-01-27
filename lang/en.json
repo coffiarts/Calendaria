@@ -1003,6 +1003,7 @@
   "CALENDARIA.Note.Condition.Year": "Year",
   "CALENDARIA.Note.Condition.YearInEra": "Year in Era",
   "CALENDARIA.Note.Content": "Note Content",
+  "CALENDARIA.Note.CreationRequested": "Note creation requested. The GM will create it for you.",
   "CALENDARIA.Note.DeleteCategoryConfirm": "Delete custom category \"{label}\"?",
   "CALENDARIA.Note.DeleteCategoryHint": "This will remove it from the list but won't affect notes already using it.",
   "CALENDARIA.Note.DeleteCategoryTitle": "Delete Category",

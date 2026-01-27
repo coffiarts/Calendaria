@@ -9,6 +9,7 @@ import { MiniCal } from '../applications/mini-cal.mjs';
 import { TimeKeeper } from '../applications/time-keeper.mjs';
 import CalendarManager from '../calendar/calendar-manager.mjs';
 import { HOOKS, MODULE, SETTINGS, SOCKET_TYPES } from '../constants.mjs';
+import NoteManager from '../notes/note-manager.mjs';
 import WeatherManager from '../weather/weather-manager.mjs';
 import { log } from './logger.mjs';
 
@@ -113,6 +114,9 @@ export class CalendariaSocket {
     switch (type) {
       case SOCKET_TYPES.CLOCK_UPDATE:
         this.#handleClockUpdate(data);
+        break;
+      case SOCKET_TYPES.CREATE_NOTE:
+        this.#handleCreateNote(data);
         break;
       case SOCKET_TYPES.DATE_CHANGE:
         this.#handleDateChange(data);
@@ -220,6 +224,28 @@ export class CalendariaSocket {
     const { running, ratio } = data;
     log(3, `Handling remote clock update: running=${running}, ratio=${ratio}`);
     Hooks.callAll('calendaria.clockUpdate', { running, ratio });
+  }
+
+  /**
+   * Handle note creation request from non-GM users.
+   * @private
+   * @param {object} data - The note creation data
+   * @param {string} data.name - Note name
+   * @param {string} data.content - Note content (HTML)
+   * @param {object} data.noteData - Calendar note data
+   * @param {string} data.calendarId - Calendar ID
+   * @param {object} data.journalData - Additional journal data
+   * @returns {void}
+   */
+  static async #handleCreateNote(data) {
+    if (!this.isPrimaryGM()) return;
+    const { name, content, noteData, calendarId, journalData } = data;
+    log(3, `Primary GM handling note creation request: ${name}`);
+    try {
+      await NoteManager.createNote({ name, content, noteData, calendarId, journalData });
+    } catch (error) {
+      log(1, 'Error creating note via socket:', error);
+    }
   }
 
   /**

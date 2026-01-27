@@ -7,10 +7,11 @@
  */
 
 import CalendarManager from '../calendar/calendar-manager.mjs';
-import { HOOKS, MODULE, SETTINGS } from '../constants.mjs';
+import { HOOKS, MODULE, SETTINGS, SOCKET_TYPES } from '../constants.mjs';
 import { format, localize } from '../utils/localization.mjs';
 import { log } from '../utils/logger.mjs';
 import { canAddNotes, canDeleteNotes } from '../utils/permissions.mjs';
+import { CalendariaSocket } from '../utils/socket.mjs';
 import { createNoteStub, getCategoryDefinition, getDefaultNoteData, getPredefinedCategories, sanitizeNoteData, validateNoteData } from './note-data.mjs';
 import { compareDates } from './utils/date-utils.mjs';
 import { getOccurrencesInRange, getRecurrenceDescription, isRecurringMatch } from './utils/recurrence.mjs';
@@ -252,6 +253,14 @@ export default class NoteManager {
       const activeCalendar = CalendarManager.getActiveCalendar();
       if (!activeCalendar?.metadata?.id) throw new Error('No active calendar found');
       calendarId = activeCalendar.metadata.id;
+    }
+
+    // If user lacks JournalEntry create permission, socket to GM
+    if (!game.user.isGM && !game.user.can('JOURNAL_CREATE')) {
+      CalendariaSocket.emit(SOCKET_TYPES.CREATE_NOTE, { name, content, noteData: sanitized, calendarId, journalData });
+      ui.notifications.info('CALENDARIA.Note.CreationRequested', { localize: true });
+      log(3, `Note creation requested via GM: ${name}`);
+      return null;
     }
 
     const calendar = CalendarManager.getCalendar(calendarId);
