@@ -524,7 +524,9 @@ export class MiniCal extends HandlebarsApplicationMixin(ApplicationV2) {
     const currentSeason = ViewUtils.enrichSeasonData(calendar.getCurrentSeason?.(viewedComponents));
     const currentEra = calendar.getCurrentEra?.();
     const monthWeekdays = calendar.getWeekdaysForMonth?.(month) ?? calendar.days?.values ?? [];
-    const headerComponents = { year, month, dayOfMonth: date.day };
+    const showSelectedInHeader = game.settings.get(MODULE.ID, SETTINGS.MINI_CAL_HEADER_SHOW_SELECTED);
+    const headerDate = showSelectedInHeader && this._selectedDate ? this._selectedDate : { year, month, day: date.day };
+    const headerComponents = { year: headerDate.year, month: headerDate.month, dayOfMonth: headerDate.day };
     const rawHeader = formatForLocation(calendar, headerComponents, 'miniCalHeader');
     const formattedHeader = hasMoonIconMarkers(rawHeader) ? renderMoonIcons(rawHeader) : rawHeader;
 

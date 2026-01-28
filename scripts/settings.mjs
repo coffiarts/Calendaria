@@ -262,6 +262,16 @@ export function registerSettings() {
     onChange: () => foundry.applications.instances.get('mini-cal')?.render()
   });
 
+  /** Show selected date in MiniCal header instead of viewed date */
+  game.settings.register(MODULE.ID, SETTINGS.MINI_CAL_HEADER_SHOW_SELECTED, {
+    name: 'CALENDARIA.Settings.MiniCalHeaderShowSelected.Name',
+    hint: 'CALENDARIA.Settings.MiniCalHeaderShowSelected.Hint',
+    scope: 'user',
+    config: false,
+    type: new BooleanField({ initial: false }),
+    onChange: () => foundry.applications.instances.get('mini-cal')?.render()
+  });
+
   // ========================================//
   //  BigCal Block Visibility                //
   // ========================================//
@@ -384,6 +394,16 @@ export function registerSettings() {
     scope: 'user',
     config: false,
     type: new BooleanField({ initial: true }),
+    onChange: () => foundry.applications.instances.get('calendaria')?.render()
+  });
+
+  /** Show selected date in BigCal header instead of viewed date */
+  game.settings.register(MODULE.ID, SETTINGS.BIG_CAL_HEADER_SHOW_SELECTED, {
+    name: 'CALENDARIA.Settings.BigCalHeaderShowSelected.Name',
+    hint: 'CALENDARIA.Settings.BigCalHeaderShowSelected.Hint',
+    scope: 'user',
+    config: false,
+    type: new BooleanField({ initial: false }),
     onChange: () => foundry.applications.instances.get('calendaria')?.render()
   });
 

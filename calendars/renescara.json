@@ -170,7 +170,7 @@
     "type"   : "month-based",
     "names"  : [ {"name": "Week of Rising", "abbreviation": "Rising"}, {"name": "Week of Fullness", "abbreviation": "Fullness"}, {"name": "Week of Turning", "abbreviation": "Turning"}, {"name": "Week of Fading", "abbreviation": "Fading"} ]
   },
-  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, YYYY", "full": "MMMM D, YYYY ([ch])", "time": "HH:mm", "time12": "h:mm a"},
+  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, YYYY", "full": "MMMM D, YYYY ([ch])", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
   "weather"       : {
     "zones": [
       {

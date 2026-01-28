@@ -82,6 +82,6 @@
   "canonicalHours": [],
   "weeks"         : {"enabled": false, "type": "year-based", "names": []},
   "amPmNotation"  : {"am": "AM", "pm": "PM"},
-  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, YYYY", "full": "MMMM D, YYYY", "time": "HH:mm", "time12": "h:mm a"},
+  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, YYYY", "full": "MMMM D, YYYY", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
   "metadata"      : {"id": "greyhawk", "description": "CALENDARIA.Calendar.Greyhawk.Description", "author": "calendaria", "system": "Greyhawk"}
 }

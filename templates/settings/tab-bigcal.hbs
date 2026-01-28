@@ -35,7 +35,8 @@
     <div class="form-group{{#unless bigCalShowWeather}} disabled{{/unless}}">
       <label for="bigCalWeatherDisplayMode">{{localize "CALENDARIA.Settings.HUDWeatherDisplayMode.Name"}}</label>
       <div class="form-fields">
-        <select id="bigCalWeatherDisplayMode" name="bigCalWeatherDisplayMode" {{#unless bigCalShowWeather}}disabled aria-disabled="true"{{/unless}}>
+        <select id="bigCalWeatherDisplayMode" name="bigCalWeatherDisplayMode" {{#unless bigCalShowWeather}}disabled
+          aria-disabled="true" {{/unless}}>
           {{#each bigCalWeatherDisplayModeOptions}}
             <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
           {{/each}}
@@ -55,7 +56,8 @@
     <div class="form-group{{#unless bigCalShowSeason}} disabled{{/unless}}">
       <label for="bigCalSeasonDisplayMode">{{localize "CALENDARIA.Settings.HUDSeasonDisplayMode.Name"}}</label>
       <div class="form-fields">
-        <select id="bigCalSeasonDisplayMode" name="bigCalSeasonDisplayMode" {{#unless bigCalShowSeason}}disabled aria-disabled="true"{{/unless}}>
+        <select id="bigCalSeasonDisplayMode" name="bigCalSeasonDisplayMode" {{#unless bigCalShowSeason}}disabled
+          aria-disabled="true" {{/unless}}>
           {{#each bigCalSeasonDisplayModeOptions}}
             <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
           {{/each}}
@@ -75,7 +77,8 @@
     <div class="form-group{{#unless bigCalShowEra}} disabled{{/unless}}">
       <label for="bigCalEraDisplayMode">{{localize "CALENDARIA.Settings.HUDEraDisplayMode.Name"}}</label>
       <div class="form-fields">
-        <select id="bigCalEraDisplayMode" name="bigCalEraDisplayMode" {{#unless bigCalShowEra}}disabled aria-disabled="true"{{/unless}}>
+        <select id="bigCalEraDisplayMode" name="bigCalEraDisplayMode" {{#unless bigCalShowEra}}disabled
+          aria-disabled="true" {{/unless}}>
           {{#each bigCalEraDisplayModeOptions}}
             <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
           {{/each}}
@@ -95,7 +98,8 @@
     <div class="form-group{{#unless bigCalShowCycles}} disabled{{/unless}}">
       <label for="bigCalCyclesDisplayMode">{{localize "CALENDARIA.Settings.HUDCyclesDisplayMode.Name"}}</label>
       <div class="form-fields">
-        <select id="bigCalCyclesDisplayMode" name="bigCalCyclesDisplayMode" {{#unless bigCalShowCycles}}disabled aria-disabled="true"{{/unless}}>
+        <select id="bigCalCyclesDisplayMode" name="bigCalCyclesDisplayMode" {{#unless bigCalShowCycles}}disabled
+          aria-disabled="true" {{/unless}}>
           {{#each bigCalCyclesDisplayModeOptions}}
             <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
           {{/each}}
@@ -107,9 +111,19 @@
     <div class="form-group">
       <label for="bigCalShowMoonPhases">{{localize "CALENDARIA.Settings.ShowMoonPhases.Name"}}</label>
       <div class="form-fields">
-        <input type="checkbox" id="bigCalShowMoonPhases" name="bigCalShowMoonPhases" {{#if bigCalShowMoonPhases}}checked{{/if}}>
+        <input type="checkbox" id="bigCalShowMoonPhases" name="bigCalShowMoonPhases"
+          {{#if bigCalShowMoonPhases}}checked{{/if}}>
       </div>
       <p class="hint">{{localize "CALENDARIA.Settings.BigCalShowMoonPhases.Hint"}}</p>
+    </div>
+
+    <div class="form-group">
+      <label for="bigCalHeaderShowSelected">{{localize "CALENDARIA.Settings.BigCalHeaderShowSelected.Name"}}</label>
+      <div class="form-fields">
+        <input type="checkbox" id="bigCalHeaderShowSelected" name="bigCalHeaderShowSelected"
+          {{#if bigCalHeaderShowSelected}}checked{{/if}}>
+      </div>
+      <p class="hint">{{localize "CALENDARIA.Settings.BigCalHeaderShowSelected.Hint"}}</p>
     </div>
   </fieldset>
 

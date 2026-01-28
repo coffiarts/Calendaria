@@ -106,42 +106,6 @@
     {{/if}}
   </fieldset>
 
-  <fieldset data-section="minical-sticky">
-    <legend>{{localize "CALENDARIA.SettingsPanel.Section.StickyStates"}}
-      <button type="button" class="reset-section" data-action="resetSection" data-section="minical-sticky" data-tooltip
-        aria-label="{{localize "CALENDARIA.SettingsPanel.ResetSection.Tooltip"}}"><i class="fas fa-undo"></i></button>
-    </legend>
-    <input type="hidden" name="miniCalStickySection" value="1">
-    <p class="hint section-hint">{{localize "CALENDARIA.SettingsPanel.Hint.StickyStates"}}</p>
-
-    <div class="form-group">
-      <label for="miniCalStickyTimeControls">{{localize "CALENDARIA.Common.StickyTimeControls"}}</label>
-      <div class="form-fields">
-        <input type="checkbox" id="miniCalStickyTimeControls" name="miniCalStickyTimeControls"
-          {{#if miniCalStickyTimeControls}}checked{{/if}}>
-      </div>
-      <p class="hint">{{localize "CALENDARIA.SettingsPanel.Hint.StickyTimeControls"}}</p>
-    </div>
-
-    <div class="form-group">
-      <label for="miniCalStickySidebar">{{localize "CALENDARIA.SettingsPanel.Sticky.Sidebar"}}</label>
-      <div class="form-fields">
-        <input type="checkbox" id="miniCalStickySidebar" name="miniCalStickySidebar"
-          {{#if miniCalStickySidebar}}checked{{/if}}>
-      </div>
-      <p class="hint">{{localize "CALENDARIA.SettingsPanel.Hint.StickySidebar"}}</p>
-    </div>
-
-    <div class="form-group">
-      <label for="miniCalStickyPosition">{{localize "CALENDARIA.Common.LockPosition"}}</label>
-      <div class="form-fields">
-        <input type="checkbox" id="miniCalStickyPosition" name="miniCalStickyPosition"
-          {{#if miniCalStickyPosition}}checked{{/if}}>
-      </div>
-      <p class="hint">{{localize "CALENDARIA.SettingsPanel.Hint.StickyPosition"}}</p>
-    </div>
-  </fieldset>
-
   <fieldset data-section="minical-block-visibility">
     <legend>{{localize "CALENDARIA.SettingsPanel.Section.BlockVisibility"}}
       <button type="button" class="reset-section" data-action="resetSection" data-section="minical-block-visibility"
@@ -153,7 +117,8 @@
     <div class="form-group">
       <label for="miniCalShowWeather">{{localize "CALENDARIA.Settings.HUDShowWeather.Name"}}</label>
       <div class="form-fields">
-        <input type="checkbox" id="miniCalShowWeather" name="miniCalShowWeather" {{#if miniCalShowWeather}}checked{{/if}}>
+        <input type="checkbox" id="miniCalShowWeather" name="miniCalShowWeather"
+          {{#if miniCalShowWeather}}checked{{/if}}>
       </div>
       <p class="hint">{{localize "CALENDARIA.Settings.MiniCalShowWeather.Hint"}}</p>
     </div>
@@ -161,7 +126,8 @@
     <div class="form-group{{#unless miniCalShowWeather}} disabled{{/unless}}">
       <label for="miniCalWeatherDisplayMode">{{localize "CALENDARIA.Settings.HUDWeatherDisplayMode.Name"}}</label>
       <div class="form-fields">
-        <select id="miniCalWeatherDisplayMode" name="miniCalWeatherDisplayMode" {{#unless miniCalShowWeather}}disabled aria-disabled="true"{{/unless}}>
+        <select id="miniCalWeatherDisplayMode" name="miniCalWeatherDisplayMode" {{#unless miniCalShowWeather}}disabled
+          aria-disabled="true" {{/unless}}>
           {{#each miniCalWeatherDisplayModeOptions}}
             <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
           {{/each}}
@@ -181,7 +147,8 @@
     <div class="form-group{{#unless miniCalShowSeason}} disabled{{/unless}}">
       <label for="miniCalSeasonDisplayMode">{{localize "CALENDARIA.Settings.HUDSeasonDisplayMode.Name"}}</label>
       <div class="form-fields">
-        <select id="miniCalSeasonDisplayMode" name="miniCalSeasonDisplayMode" {{#unless miniCalShowSeason}}disabled aria-disabled="true"{{/unless}}>
+        <select id="miniCalSeasonDisplayMode" name="miniCalSeasonDisplayMode" {{#unless miniCalShowSeason}}disabled
+          aria-disabled="true" {{/unless}}>
           {{#each miniCalSeasonDisplayModeOptions}}
             <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
           {{/each}}
@@ -201,7 +168,8 @@
     <div class="form-group{{#unless miniCalShowEra}} disabled{{/unless}}">
       <label for="miniCalEraDisplayMode">{{localize "CALENDARIA.Settings.HUDEraDisplayMode.Name"}}</label>
       <div class="form-fields">
-        <select id="miniCalEraDisplayMode" name="miniCalEraDisplayMode" {{#unless miniCalShowEra}}disabled aria-disabled="true"{{/unless}}>
+        <select id="miniCalEraDisplayMode" name="miniCalEraDisplayMode" {{#unless miniCalShowEra}}disabled
+          aria-disabled="true" {{/unless}}>
           {{#each miniCalEraDisplayModeOptions}}
             <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
           {{/each}}
@@ -221,7 +189,8 @@
     <div class="form-group{{#unless miniCalShowCycles}} disabled{{/unless}}">
       <label for="miniCalCyclesDisplayMode">{{localize "CALENDARIA.Settings.HUDCyclesDisplayMode.Name"}}</label>
       <div class="form-fields">
-        <select id="miniCalCyclesDisplayMode" name="miniCalCyclesDisplayMode" {{#unless miniCalShowCycles}}disabled aria-disabled="true"{{/unless}}>
+        <select id="miniCalCyclesDisplayMode" name="miniCalCyclesDisplayMode" {{#unless miniCalShowCycles}}disabled
+          aria-disabled="true" {{/unless}}>
           {{#each miniCalCyclesDisplayModeOptions}}
             <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{this.label}}</option>
           {{/each}}
@@ -233,45 +202,21 @@
     <div class="form-group">
       <label for="miniCalShowMoonPhases">{{localize "CALENDARIA.Settings.ShowMoonPhases.Name"}}</label>
       <div class="form-fields">
-        <input type="checkbox" id="miniCalShowMoonPhases" name="miniCalShowMoonPhases" {{#if miniCalShowMoonPhases}}checked{{/if}}>
+        <input type="checkbox" id="miniCalShowMoonPhases" name="miniCalShowMoonPhases"
+          {{#if miniCalShowMoonPhases}}checked{{/if}}>
       </div>
       <p class="hint">{{localize "CALENDARIA.Settings.MiniCalShowMoonPhases.Hint"}}</p>
     </div>
-  </fieldset>
 
-  {{#if isGM}}
-    <fieldset data-section="minical-time-jumps">
-      <legend>{{localize "CALENDARIA.SettingsPanel.Section.CustomTimeJumps"}}
-        <button type="button" class="reset-section" data-action="resetSection" data-section="minical-time-jumps"
-          data-tooltip aria-label="{{localize "CALENDARIA.SettingsPanel.ResetSection.Tooltip"}}"><i
-            class="fas fa-undo"></i></button>
-      </legend>
-      <p class="hint section-hint">{{localize "CALENDARIA.SettingsPanel.Hint.CustomTimeJumps"}}</p>
-
-      <div class="time-jumps-grid">
-        <div class="time-jumps-header">
-          <span></span>
-          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorDecrement"}}</span>
-          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorDecrement"}}</span>
-          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorIncrement"}}</span>
-          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorIncrement"}}</span>
-        </div>
-        {{#each miniCalTimeJumps}}
-          <div class="time-jumps-row">
-            <label>{{label}}</label>
-            <input type="number" name="miniCalTimeJumps.{{key}}.dec2" value="{{jumps.dec2}}"
-              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorDecrement"}}">
-            <input type="number" name="miniCalTimeJumps.{{key}}.dec1" value="{{jumps.dec1}}"
-              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorDecrement"}}">
-            <input type="number" name="miniCalTimeJumps.{{key}}.inc1" value="{{jumps.inc1}}"
-              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorIncrement"}}">
-            <input type="number" name="miniCalTimeJumps.{{key}}.inc2" value="{{jumps.inc2}}"
-              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorIncrement"}}">
-          </div>
-        {{/each}}
+    <div class="form-group">
+      <label for="miniCalHeaderShowSelected">{{localize "CALENDARIA.Settings.MiniCalHeaderShowSelected.Name"}}</label>
+      <div class="form-fields">
+        <input type="checkbox" id="miniCalHeaderShowSelected" name="miniCalHeaderShowSelected"
+          {{#if miniCalHeaderShowSelected}}checked{{/if}}>
       </div>
-    </fieldset>
-  {{/if}}
+      <p class="hint">{{localize "CALENDARIA.Settings.MiniCalHeaderShowSelected.Hint"}}</p>
+    </div>
+  </fieldset>
 
   <fieldset data-section="display-formats">
     <legend>{{localize "CALENDARIA.SettingsPanel.Section.DisplayFormats"}}
@@ -317,6 +262,76 @@
         </div>
       </div>
     {{/each}}
+  </fieldset>
+
+  {{#if isGM}}
+    <fieldset data-section="minical-time-jumps">
+      <legend>{{localize "CALENDARIA.SettingsPanel.Section.CustomTimeJumps"}}
+        <button type="button" class="reset-section" data-action="resetSection" data-section="minical-time-jumps"
+          data-tooltip aria-label="{{localize "CALENDARIA.SettingsPanel.ResetSection.Tooltip"}}"><i
+            class="fas fa-undo"></i></button>
+      </legend>
+      <p class="hint section-hint">{{localize "CALENDARIA.SettingsPanel.Hint.CustomTimeJumps"}}</p>
+
+      <div class="time-jumps-grid">
+        <div class="time-jumps-header">
+          <span></span>
+          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorDecrement"}}</span>
+          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorDecrement"}}</span>
+          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorIncrement"}}</span>
+          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorIncrement"}}</span>
+        </div>
+        {{#each miniCalTimeJumps}}
+          <div class="time-jumps-row">
+            <label>{{label}}</label>
+            <input type="number" name="miniCalTimeJumps.{{key}}.dec2" value="{{jumps.dec2}}"
+              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorDecrement"}}">
+            <input type="number" name="miniCalTimeJumps.{{key}}.dec1" value="{{jumps.dec1}}"
+              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorDecrement"}}">
+            <input type="number" name="miniCalTimeJumps.{{key}}.inc1" value="{{jumps.inc1}}"
+              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorIncrement"}}">
+            <input type="number" name="miniCalTimeJumps.{{key}}.inc2" value="{{jumps.inc2}}"
+              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorIncrement"}}">
+          </div>
+        {{/each}}
+      </div>
+    </fieldset>
+  {{/if}}
+
+  <fieldset data-section="minical-sticky">
+    <legend>{{localize "CALENDARIA.SettingsPanel.Section.StickyStates"}}
+      <button type="button" class="reset-section" data-action="resetSection" data-section="minical-sticky" data-tooltip
+        aria-label="{{localize "CALENDARIA.SettingsPanel.ResetSection.Tooltip"}}"><i class="fas fa-undo"></i></button>
+    </legend>
+    <input type="hidden" name="miniCalStickySection" value="1">
+    <p class="hint section-hint">{{localize "CALENDARIA.SettingsPanel.Hint.StickyStates"}}</p>
+
+    <div class="form-group">
+      <label for="miniCalStickyTimeControls">{{localize "CALENDARIA.Common.StickyTimeControls"}}</label>
+      <div class="form-fields">
+        <input type="checkbox" id="miniCalStickyTimeControls" name="miniCalStickyTimeControls"
+          {{#if miniCalStickyTimeControls}}checked{{/if}}>
+      </div>
+      <p class="hint">{{localize "CALENDARIA.SettingsPanel.Hint.StickyTimeControls"}}</p>
+    </div>
+
+    <div class="form-group">
+      <label for="miniCalStickySidebar">{{localize "CALENDARIA.SettingsPanel.Sticky.Sidebar"}}</label>
+      <div class="form-fields">
+        <input type="checkbox" id="miniCalStickySidebar" name="miniCalStickySidebar"
+          {{#if miniCalStickySidebar}}checked{{/if}}>
+      </div>
+      <p class="hint">{{localize "CALENDARIA.SettingsPanel.Hint.StickySidebar"}}</p>
+    </div>
+
+    <div class="form-group">
+      <label for="miniCalStickyPosition">{{localize "CALENDARIA.Common.LockPosition"}}</label>
+      <div class="form-fields">
+        <input type="checkbox" id="miniCalStickyPosition" name="miniCalStickyPosition"
+          {{#if miniCalStickyPosition}}checked{{/if}}>
+      </div>
+      <p class="hint">{{localize "CALENDARIA.SettingsPanel.Hint.StickyPosition"}}</p>
+    </div>
   </fieldset>
 
 </section>

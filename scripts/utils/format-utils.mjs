@@ -5,7 +5,6 @@
  */
 
 import { format, localize } from './localization.mjs';
-import { log } from './logger.mjs';
 
 /**
  * Get ordinal suffix for a number.
@@ -518,36 +517,24 @@ export function formatCustom(calendar, components, formatStr) {
  * @param {string} formatStr - The format string to validate
  * @param {object} [calendar] - Optional calendar data for preview
  * @param {object} [components] - Optional date components for preview
- * @returns {{valid: boolean, preview?: string, error?: string}} Validation result
+ * @returns {{valid: boolean, preview: string, error: string}} Validation result
  */
 export function validateFormatString(formatStr, calendar, components) {
-  // Empty/missing strings are handled by UI reset logic
   if (!formatStr || typeof formatStr !== 'string') return { valid: true };
-
-  // Check for unclosed brackets
   const openBrackets = (formatStr.match(/\[/g) || []).length;
   const closeBrackets = (formatStr.match(/]/g) || []).length;
-  if (openBrackets !== closeBrackets) {
-    return { valid: false, error: 'CALENDARIA.Format.Error.UnclosedBracket' };
-  }
-
-  // Check for empty brackets
-  if (/\[\]/.test(formatStr)) {
-    return { valid: false, error: 'CALENDARIA.Format.Error.EmptyBracket' };
-  }
-
-  // Generate preview if calendar and components provided
+  if (openBrackets !== closeBrackets) return { valid: false, error: 'CALENDARIA.Format.Error.UnclosedBracket' };
+  if (/\[]/.test(formatStr)) return { valid: false, error: 'CALENDARIA.Format.Error.EmptyBracket' };
   if (calendar && components) {
     try {
       const preview = formatCustom(calendar, components, formatStr);
-      // Strip moon icon markers for text preview
       const cleanPreview = stripMoonIconMarkers(preview);
       return { valid: true, preview: cleanPreview };
     } catch (e) {
+      log(1, e);
       return { valid: false, error: 'CALENDARIA.Format.Error.Invalid' };
     }
   }
-
   return { valid: true };
 }
 
@@ -867,6 +854,10 @@ export const DEFAULT_FORMAT_PRESETS = {
   ordinalEra: 'Do of MMMM, YYYY GGGG',
   ordinalFull: 'EEEE, Do of MMMM, YYYY GGGG',
   seasonDate: 'QQQQ, Do of MMMM',
+  // Year/Week
+  weekHeader: '[Week] W [of] MMMM, Y',
+  yearOnly: 'Y',
+  yearEra: 'Y G',
   // Time
   time12: 'h:mm A',
   time12Sec: 'h:mm:ss A',
@@ -900,6 +891,9 @@ const LOCATION_FORMAT_KEYS = {
   miniCalHeader: 'dateLong',
   miniCalTime: 'time24',
   bigCalHeader: 'dateFull',
+  bigCalWeekHeader: 'weekHeader',
+  bigCalYearHeader: 'yearHeader',
+  bigCalYearLabel: 'yearLabel',
   chatTimestamp: 'dateLong'
 };
 
@@ -915,6 +909,9 @@ export const LOCATION_DEFAULTS = {
   miniCalHeader: 'dateLong',
   miniCalTime: 'time24',
   bigCalHeader: 'dateFull',
+  bigCalWeekHeader: 'weekHeader',
+  bigCalYearHeader: 'yearOnly',
+  bigCalYearLabel: 'yearEra',
   chatTimestamp: 'dateShort',
   stopwatchRealtime: 'stopwatchRealtimeFull',
   stopwatchGametime: 'stopwatchGametimeFull'
@@ -952,7 +949,8 @@ export function getDisplayFormat(locationId) {
 function resolveCalendarDefault(calendar, locationId) {
   const formatKey = LOCATION_FORMAT_KEYS[locationId] || 'dateLong';
   const calendarFormat = calendar?.dateFormats?.[formatKey];
-  return calendarFormat || formatKey;
+  // Fall back to the preset format if calendar doesn't have this format key
+  return calendarFormat || DEFAULT_FORMAT_PRESETS[formatKey] || LOCATION_DEFAULTS[locationId] || 'dateLong';
 }
 
 /**
@@ -991,6 +989,9 @@ export function getDisplayLocationDefinitions() {
     { id: 'miniCalHeader', label: 'CALENDARIA.Format.Location.MiniCalHeader', category: 'miniCal' },
     { id: 'miniCalTime', label: 'CALENDARIA.Format.Location.MiniCalTime', category: 'miniCal' },
     { id: 'bigCalHeader', label: 'CALENDARIA.Format.Location.BigCalHeader', category: 'bigcal' },
+    { id: 'bigCalWeekHeader', label: 'CALENDARIA.Format.Location.BigCalWeekHeader', category: 'bigcal' },
+    { id: 'bigCalYearHeader', label: 'CALENDARIA.Format.Location.BigCalYearHeader', category: 'bigcal' },
+    { id: 'bigCalYearLabel', label: 'CALENDARIA.Format.Location.BigCalYearLabel', category: 'bigcal' },
     { id: 'chatTimestamp', label: 'CALENDARIA.Format.Location.ChatTimestamp', category: 'chat' }
   ];
 }
