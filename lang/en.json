@@ -45,6 +45,8 @@
   "CALENDARIA.Calendar.Gregorian.Name": "Gregorian Calendar",
   "CALENDARIA.Calendar.Greyhawk.Description": "The Calendar of Oerth, used in the World of Greyhawk campaign setting",
   "CALENDARIA.Calendar.Greyhawk.Name": "Calendar of Greyhawk",
+  "CALENDARIA.Calendar.Greyhawk364.Description": "The 364-day Calendar of Oerth from Dragon #68, with 7-day festival weeks and accurate lunar cycles",
+  "CALENDARIA.Calendar.Greyhawk364.Name": "Calendar of Greyhawk (Dragon #68)",
   "CALENDARIA.Calendar.Harptos.Description": "The Calendar of Harptos, used in the Forgotten Realms campaign setting",
   "CALENDARIA.Calendar.Harptos.Name": "Calendar of Harptos",
   "CALENDARIA.Calendar.Khorvaire.Description": "The Calendar of Khorvaire, used in the Eberron campaign setting",
