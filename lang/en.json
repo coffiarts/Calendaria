@@ -718,7 +718,7 @@
   "CALENDARIA.Format.Token.MMMM": "Month full (January, December)",
   "CALENDARIA.Format.Token.Mo": "Month ordinal (1st, 6th, 12th)",
   "CALENDARIA.Format.Token.moon": "Moon phase (Full Moon, New Moon)",
-  "CALENDARIA.Format.Token.moonIcon": "Moon phase icon",
+  "CALENDARIA.Format.Token.moonIcon": "Moon phase icon (use [moonIcon=0] or [moonIcon='Name'] for specific moon)",
   "CALENDARIA.Format.Token.Q": "Season index (1, 2, 3, 4)",
   "CALENDARIA.Format.Token.QQ": "Season index, 2-digit (01, 02, 03, 04)",
   "CALENDARIA.Format.Token.QQQ": "Season short (Spr, Sum, Aut, Win)",
