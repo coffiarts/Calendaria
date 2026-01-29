@@ -257,8 +257,7 @@ export default class NoteManager {
 
     // If user lacks JournalEntry create permission, socket to GM
     if (!game.user.isGM && !game.user.can('JOURNAL_CREATE')) {
-      CalendariaSocket.emit(SOCKET_TYPES.CREATE_NOTE, { name, content, noteData: sanitized, calendarId, journalData });
-      ui.notifications.info('CALENDARIA.Note.CreationRequested', { localize: true });
+      CalendariaSocket.emit(SOCKET_TYPES.CREATE_NOTE, { name, content, noteData: sanitized, calendarId, journalData, requesterId: game.user.id });
       log(3, `Note creation requested via GM: ${name}`);
       return null;
     }

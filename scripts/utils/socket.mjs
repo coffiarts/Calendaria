@@ -118,6 +118,9 @@ export class CalendariaSocket {
       case SOCKET_TYPES.CREATE_NOTE:
         this.#handleCreateNote(data);
         break;
+      case SOCKET_TYPES.CREATE_NOTE_COMPLETE:
+        this.#handleCreateNoteComplete(data);
+        break;
       case SOCKET_TYPES.DATE_CHANGE:
         this.#handleDateChange(data);
         break;
@@ -235,17 +238,40 @@ export class CalendariaSocket {
    * @param {object} data.noteData - Calendar note data
    * @param {string} data.calendarId - Calendar ID
    * @param {object} data.journalData - Additional journal data
+   * @param {string} data.requesterId - User ID of the requesting player
    * @returns {void}
    */
   static async #handleCreateNote(data) {
     if (!this.isPrimaryGM()) return;
-    const { name, content, noteData, calendarId, journalData } = data;
+    const { name, content, noteData, calendarId, journalData, requesterId } = data;
     log(3, `Primary GM handling note creation request: ${name}`);
     try {
-      await NoteManager.createNote({ name, content, noteData, calendarId, journalData });
+      const page = await NoteManager.createNote({ name, content, noteData, calendarId, journalData });
+      if (page && requesterId) {
+        await page.parent.update({ ownership: { [requesterId]: 3 } });
+        this.emit(SOCKET_TYPES.CREATE_NOTE_COMPLETE, { pageId: page.id, journalId: page.parent.id, requesterId });
+      }
     } catch (error) {
       log(1, 'Error creating note via socket:', error);
     }
+  }
+
+  /**
+   * Handle note creation completion on requesting client.
+   * @private
+   * @param {object} data - The completion data
+   * @param {string} data.pageId - Created page ID
+   * @param {string} data.journalId - Parent journal ID
+   * @param {string} data.requesterId - User ID of the requesting player
+   * @returns {void}
+   */
+  static #handleCreateNoteComplete(data) {
+    const { pageId, journalId, requesterId } = data;
+    if (game.user.id !== requesterId) return;
+    log(3, `Note creation complete, opening editor for: ${pageId}`);
+    const journal = game.journal.get(journalId);
+    const page = journal?.pages.get(pageId);
+    if (page) page.sheet.render(true, { mode: 'edit' });
   }
 
   /**

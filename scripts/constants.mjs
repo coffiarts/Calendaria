@@ -276,6 +276,7 @@ export const SOCKET_TYPES = {
   CALENDAR_SWITCH: 'calendarSwitch',
   CLOCK_UPDATE: 'clockUpdate',
   CREATE_NOTE: 'createNote',
+  CREATE_NOTE_COMPLETE: 'createNoteComplete',
   DATE_CHANGE: 'dateChange',
   HUD_VISIBILITY: 'hudVisibility',
   MINI_CAL_VISIBILITY: 'miniCalVisibility',
