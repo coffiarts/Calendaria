@@ -46,7 +46,7 @@
       {"name": "CALENDARIA.Season.Winter", "icon": "fas fa-snowflake", "color": "#87ceeb", "seasonalType": "winter", "dayStart": 354, "dayEnd":  78, "abbreviation": "Win"}
     ]
   },
-  "eras"          : [ {"name": "Dale Reckoning", "abbreviation": "DR", "startYear": 1, "endYear": null, "format": "suffix", "template": null} ],
+  "eras"          : [ {"name": "Dale Reckoning", "abbreviation": "DR", "startYear": 1, "endYear": null} ],
   "moons"         : [
     {
       "name"         : "Selûne",
@@ -70,6 +70,6 @@
   "canonicalHours": [],
   "weeks"         : {"enabled": false, "type": "year-based", "names": []},
   "amPmNotation"  : {"am": "AM", "pm": "PM"},
-  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, YYYY", "full": "MMMM D, YYYY", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
+  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, Y", "full": "MMMM D, Y", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
   "metadata"      : {"id": "harptos", "description": "CALENDARIA.Calendar.Harptos.Description", "author": "calendaria", "system": "Forgotten Realms"}
 }

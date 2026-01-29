@@ -47,7 +47,7 @@
       {"name": "Autumn",                      "icon": "fas fa-leaf",        "color": "#d2691e", "seasonalType": "autumn", "dayStart": 274, "dayEnd": 336, "abbreviation": "Aut"}
     ]
   },
-  "eras"          : [ {"name": "Common Year", "abbreviation": "CY", "startYear": 1, "endYear": null, "format": "suffix", "template": null} ],
+  "eras"          : [ {"name": "Common Year", "abbreviation": "CY", "startYear": 1, "endYear": null} ],
   "moons"         : [
     {
       "name"         : "Luna",
@@ -87,6 +87,6 @@
   "canonicalHours": [],
   "weeks"         : {"enabled": false, "type": "year-based", "names": []},
   "amPmNotation"  : {"am": "AM", "pm": "PM"},
-  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, YYYY", "full": "MMMM D, YYYY", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
+  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, Y", "full": "MMMM D, Y", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
   "metadata"      : {"id": "greyhawk-364", "description": "CALENDARIA.Calendar.Greyhawk364.Description", "author": "calendaria", "system": "Greyhawk"}
 }

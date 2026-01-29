@@ -10,8 +10,6 @@
           aria-label="{{localize 'CALENDARIA.Editor.Tooltip.EraStartYear'}}">{{localize "CALENDARIA.Editor.Column.StartYear"}}</span>
         <span class="col-end-year" data-tooltip
           aria-label="{{localize 'CALENDARIA.Editor.Tooltip.EraEndYear'}}">{{localize "CALENDARIA.Editor.Column.EndYear"}}</span>
-        <span class="col-format" data-tooltip
-          aria-label="{{localize 'CALENDARIA.Editor.Tooltip.EraFormat'}}">{{localize "CALENDARIA.Editor.Column.Format"}}</span>
         <span class="col-controls"></span>
       </div>
 
@@ -28,11 +26,6 @@
             <input type="number" id="editor-era-{{this.index}}-end" name="eras.{{this.index}}.endYear"
               value="{{this.endYear}}" class="col-end-year"
               placeholder="{{localize 'CALENDARIA.Editor.Placeholder.Ongoing'}}">
-            <select id="editor-era-{{this.index}}-format" name="eras.{{this.index}}.format" class="col-format">
-              {{#each this.formatOptions}}
-                <option value="{{this.value}}" {{#if this.selected}}selected{{/if}}>{{localize this.label}}</option>
-              {{/each}}
-            </select>
 
             <div class="item-controls col-controls">
               <button type="button" data-action="addEra" data-index="{{this.index}}" data-tooltip
@@ -44,16 +37,6 @@
                 <i class="fas fa-trash"></i>
               </button>
             </div>
-          </div>
-          <div class="era-template flexrow">
-            <label class="col-template-label"
-              for="editor-era-{{this.index}}-template">{{localize "CALENDARIA.Editor.Era.Template"}}</label>
-            <input type="text" id="editor-era-{{this.index}}-template" name="eras.{{this.index}}.template"
-              value="{{this.template}}" class="col-template"
-              placeholder="{{localize 'CALENDARIA.Editor.Era.TemplatePlaceholder'}}" data-tooltip
-              aria-label="{{localize 'CALENDARIA.Editor.Era.TemplateHint'}}" data-action="updateEraPreview"
-              data-index="{{this.index}}">
-            <span class="era-preview" data-era-index="{{this.index}}">{{this.preview}}</span>
           </div>
         </div>
       {{/each}}

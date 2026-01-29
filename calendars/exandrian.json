@@ -35,7 +35,7 @@
       {"name": "CALENDARIA.Season.Autumn", "icon": "fas fa-leaf",      "color": "#d2691e", "seasonalType": "autumn", "dayStart": 238, "dayEnd": 295, "abbreviation": "Aut"}
     ]
   },
-  "eras"          : [ {"name": "Post-Divergence", "abbreviation": "PD", "startYear": 1, "endYear": null, "format": "suffix", "template": null} ],
+  "eras"          : [ {"name": "Post-Divergence", "abbreviation": "PD", "startYear": 1, "endYear": null} ],
   "moons"         : [
     {
       "name"         : "Catha",
@@ -75,6 +75,6 @@
   "canonicalHours": [],
   "weeks"         : {"enabled": false, "type": "year-based", "names": []},
   "amPmNotation"  : {"am": "AM", "pm": "PM"},
-  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, YYYY", "full": "MMMM D, YYYY", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
+  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, Y", "full": "MMMM D, Y", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
   "metadata"      : {"id": "exandrian", "description": "CALENDARIA.Calendar.Exandrian.Description", "author": "calendaria", "system": "Exandria"}
 }

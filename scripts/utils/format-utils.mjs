@@ -840,19 +840,19 @@ export const DEFAULT_FORMAT_PRESETS = {
   // Date - Standard
   dateShort: 'D MMM',
   dateMedium: 'D MMMM',
-  dateLong: 'D MMMM, YYYY',
-  dateFull: 'EEEE, D MMMM YYYY',
+  dateLong: 'D MMMM, Y',
+  dateFull: 'EEEE, D MMMM Y',
   // Date - Regional
-  dateUS: 'MMMM D, YYYY',
-  dateUSFull: 'EEEE, MMMM D, YYYY',
+  dateUS: 'MMMM D, Y',
+  dateUSFull: 'EEEE, MMMM D, Y',
   dateISO: 'YYYY-MM-DD',
   dateNumericUS: 'MM/DD/YYYY',
   dateNumericEU: 'DD/MM/YYYY',
   // Date - Ordinal/Fantasy
   ordinal: 'Do of MMMM',
-  ordinalLong: 'Do of MMMM, YYYY',
-  ordinalEra: 'Do of MMMM, YYYY GGGG',
-  ordinalFull: 'EEEE, Do of MMMM, YYYY GGGG',
+  ordinalLong: 'Do of MMMM, Y',
+  ordinalEra: 'Do of MMMM, Y GGGG',
+  ordinalFull: 'EEEE, Do of MMMM, Y GGGG',
   seasonDate: 'QQQQ, Do of MMMM',
   // Year/Week
   weekHeader: '[Week] W [of] MMMM, Y',
@@ -866,8 +866,8 @@ export const DEFAULT_FORMAT_PRESETS = {
   // Date + Time
   datetimeShort12: 'D MMM, h:mm A',
   datetimeShort24: 'D MMM, HH:mm',
-  datetime12: 'D MMMM YYYY, h:mm A',
-  datetime24: 'D MMMM YYYY, HH:mm',
+  datetime12: 'D MMMM Y, h:mm A',
+  datetime24: 'D MMMM Y, HH:mm',
   // Stopwatch duration presets (realtime)
   stopwatchRealtimeFull: 'HH:mm:ss.SSS',
   stopwatchRealtimeNoMs: 'HH:mm:ss',

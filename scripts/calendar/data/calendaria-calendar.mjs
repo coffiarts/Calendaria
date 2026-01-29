@@ -9,7 +9,6 @@
 import { DEFAULT_MOON_PHASES } from '../../constants.mjs';
 import { format, localize } from '../../utils/localization.mjs';
 import CalendarRegistry from '../calendar-registry.mjs';
-import { formatEraTemplate } from '../calendar-utils.mjs';
 import * as LeapYearUtils from '../leap-year-utils.mjs';
 
 const { ArrayField, BooleanField, NumberField, SchemaField, StringField } = foundry.data.fields;
@@ -1108,7 +1107,7 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
   /**
    * Get the current era for a given year.
    * @param {number|object} [time]  Time to use, by default the current world time.
-   * @returns {{name: string, abbreviation: string, format: string, template: string|null, yearInEra: number}|null} - Era data or null
+   * @returns {{name: string, abbreviation: string, yearInEra: number}|null} - Era data or null
    */
   getCurrentEra(time = game.time.worldTime) {
     if (!this.eras?.length) return null;
@@ -1117,32 +1116,16 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     const sortedEras = [...this.eras].sort((a, b) => b.startYear - a.startYear);
     for (const era of sortedEras) {
       if (displayYear >= era.startYear && (era.endYear == null || displayYear <= era.endYear)) {
-        return { name: era.name, abbreviation: era.abbreviation, format: era.format || 'suffix', template: era.template || null, yearInEra: displayYear - era.startYear + 1 };
+        return { name: era.name, abbreviation: era.abbreviation, yearInEra: displayYear - era.startYear + 1 };
       }
     }
 
     if (this.eras.length > 0) {
       const era = this.eras[0];
-      return { name: era.name, abbreviation: era.abbreviation, format: era.format || 'suffix', template: era.template || null, yearInEra: displayYear };
+      return { name: era.name, abbreviation: era.abbreviation, yearInEra: displayYear };
     }
 
     return null;
-  }
-
-  /**
-   * Format a year with its era designation.
-   * @param {number} year  The display year to format.
-   * @returns {string}  Formatted year string (e.g., "1492 DR" or "CY 591").
-   */
-  formatYearWithEra(year) {
-    const eraData = this.getCurrentEra({ year: year - (this.years?.yearZero ?? 0), month: 0, dayOfMonth: 0 });
-    if (!eraData) return String(year);
-    const abbr = eraData.abbreviation ? localize(eraData.abbreviation) : '';
-    const eraName = eraData.name ? localize(eraData.name) : '';
-    if (eraData.template) return formatEraTemplate(eraData.template, { year, abbreviation: abbr, era: eraName, yearInEra: eraData.yearInEra });
-    if (!abbr) return String(year);
-    if (eraData.format === 'prefix') return `${abbr} ${year}`;
-    return `${year} ${abbr}`;
   }
 
   /**

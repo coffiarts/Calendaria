@@ -254,7 +254,7 @@
   "CALENDARIA.Editor.Era.FormatDisabled": "Format is overridden by template",
   "CALENDARIA.Editor.Era.PreviewEmpty": "Preview appears here",
   "CALENDARIA.Editor.Era.Template": "Template",
-  "CALENDARIA.Editor.Era.TemplateHint": "Tokens: YYYY (year), YY (2-digit), G (abbr), GGGG (name), yy (year-in-era)",
+  "CALENDARIA.Editor.Era.TemplateHint": "Tokens: YYYY (4-digit), YY (2-digit), Y (year), G/GG/GGG (abbr), GGGG (name), yy (year-in-era)",
   "CALENDARIA.Editor.Era.TemplatePlaceholder": "YYYY G",
   "CALENDARIA.Editor.Error.MinOneMonth": "Calendar must have at least one month.",
   "CALENDARIA.Editor.Error.MinOneWeekday": "Calendar must have at least one weekday.",

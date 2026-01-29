@@ -15,7 +15,7 @@
     "secondsPerMinute": 60
   },
   "seasons"       : {"values": []},
-  "eras"          : [ {"name": "Imperial Calendar", "abbreviation": "IC", "startYear": 0, "endYear": null, "format": "suffix"} ],
+  "eras"          : [ {"name": "Imperial Calendar", "abbreviation": "IC", "startYear": 0, "endYear": null} ],
   "moons"         : [],
   "festivals"     : [ {"name": "Holiday", "dayOfYear": 1, "countsForWeekday": false} ],
   "daylight"      : {"enabled": false},

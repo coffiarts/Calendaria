@@ -510,7 +510,7 @@ export class BigCal extends HandlebarsApplicationMixin(ApplicationV2) {
       year,
       month,
       monthName: localize(monthData.name),
-      yearDisplay: calendar.formatYearWithEra?.(year) ?? String(year),
+      yearDisplay: String(year),
       formattedHeader,
       formattedHeaderHtml: hasMoonIconMarkers(rawHeader),
       weeks,
@@ -601,7 +601,7 @@ export class BigCal extends HandlebarsApplicationMixin(ApplicationV2) {
     const currentEra = calendar.getCurrentEra?.();
     const weekdayData = calendar.days?.values ?? [];
     const displayWeek = weekNumber + 1;
-    const yearDisplay = calendar.formatYearWithEra?.(year) ?? String(year);
+    const yearDisplay = String(year);
     const formattedHeader = `${localize('CALENDARIA.Common.Week')} ${displayWeek}, ${yearDisplay}`;
 
     return {
@@ -752,7 +752,7 @@ export class BigCal extends HandlebarsApplicationMixin(ApplicationV2) {
       year: weekStartYear,
       month: weekStartMonth,
       monthName: calendar.months?.values?.[month]?.name ? localize(calendar.months.values[month].name) : '',
-      yearDisplay: calendar.formatYearWithEra?.(weekStartYear) ?? String(weekStartYear),
+      yearDisplay: String(weekStartYear),
       formattedHeader,
       formattedHeaderHtml: hasMoonIconMarkers(rawHeader),
       weekNumber,

@@ -43,7 +43,7 @@
       {"name": "Sun Ascending",  "icon": "fas fa-sun",       "color": "#ffcc00", "seasonalType": "spring", "dayStart": 250, "dayEnd": 374, "abbreviation": "SAs"}
     ]
   },
-  "eras"          : [ {"name": "Free Year", "abbreviation": "FY", "startYear": 1, "endYear": null, "format": "suffix", "template": null} ],
+  "eras"          : [ {"name": "Free Year", "abbreviation": "FY", "startYear": 1, "endYear": null} ],
   "moons"         : [ {"name": "Ral", "color": "#228B22", "cycleLength": 33}, {"name": "Guthay", "color": "#DAA520", "cycleLength": 125} ],
   "daylight"      : {"enabled": true, "shortestDay": 11, "longestDay": 14, "winterSolstice": 310, "summerSolstice": 60},
   "cycles"        : [
@@ -66,6 +66,6 @@
   "canonicalHours": [],
   "weeks"         : {"enabled": false, "type": "year-based", "names": []},
   "amPmNotation"  : {"am": "AM", "pm": "PM"},
-  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, YYYY", "full": "EEEE, MMMM D, YYYY", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
+  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, Y", "full": "EEEE, MMMM D, Y", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
   "metadata"      : {"id": "athasian", "description": "CALENDARIA.Calendar.Athasian.Description", "author": "calendaria", "system": "Dark Sun"}
 }

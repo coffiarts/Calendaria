@@ -9,6 +9,7 @@ import CalendarManager from '../calendar/calendar-manager.mjs';
 import { MODULE, SETTINGS, SOCKET_TYPES } from '../constants.mjs';
 import NoteManager from '../notes/note-manager.mjs';
 import { isRecurringMatch } from '../notes/utils/recurrence.mjs';
+import { formatCustom } from '../utils/format-utils.mjs';
 import { format, localize } from '../utils/localization.mjs';
 import { CalendariaSocket } from '../utils/socket.mjs';
 
@@ -380,15 +381,13 @@ export function injectContextMenuInfo(target, calendar) {
   const month = parseInt(target.dataset.month);
   const day = parseInt(target.dataset.day);
   const internalYear = year - (calendar.years?.yearZero ?? 0);
-  const monthData = calendar.months?.values?.[month];
-  const monthName = monthData ? localize(monthData.name) : '';
-  const yearDisplay = calendar.formatYearWithEra?.(year) ?? String(year);
-  const fullDate = `${monthName} ${day}, ${yearDisplay}`;
-  const targetComponents = { year: internalYear, month, dayOfMonth: day - 1, hour: 12, minute: 0, second: 0 };
-  const season = calendar.getCurrentSeason?.(targetComponents);
+  const internalComponents = { year: internalYear, month, dayOfMonth: day - 1, hour: 12, minute: 0, second: 0 };
+  const displayComponents = { year, month, dayOfMonth: day, hour: 12, minute: 0, second: 0 };
+  const fullDate = formatCustom(calendar, displayComponents, 'Do of MMMM, Y GGGG');
+  const season = calendar.getCurrentSeason?.(internalComponents);
   const seasonName = season ? localize(season.name) : null;
-  const sunriseHour = calendar.sunrise?.(targetComponents) ?? 6;
-  const sunsetHour = calendar.sunset?.(targetComponents) ?? 18;
+  const sunriseHour = calendar.sunrise?.(internalComponents) ?? 6;
+  const sunsetHour = calendar.sunset?.(internalComponents) ?? 18;
   const formatTime = (hours) => {
     let h = Math.floor(hours);
     let m = Math.round((hours - h) * 60);
@@ -438,15 +437,13 @@ function encodeHtmlAttribute(html) {
  */
 export function generateDayTooltip(calendar, year, month, day, festivalName = null) {
   const internalYear = year - (calendar.years?.yearZero ?? 0);
-  const monthData = calendar.months?.values?.[month];
-  const monthName = monthData ? localize(monthData.name) : '';
-  const yearDisplay = calendar.formatYearWithEra?.(year) ?? String(year);
-  const fullDate = `${monthName} ${day}, ${yearDisplay}`;
-  const targetComponents = { year: internalYear, month, dayOfMonth: day - 1, hour: 12, minute: 0, second: 0 };
-  const season = calendar.getCurrentSeason?.(targetComponents);
+  const internalComponents = { year: internalYear, month, dayOfMonth: day - 1, hour: 12, minute: 0, second: 0 };
+  const displayComponents = { year, month, dayOfMonth: day, hour: 12, minute: 0, second: 0 };
+  const fullDate = formatCustom(calendar, displayComponents, 'Do of MMMM, Y GGGG');
+  const season = calendar.getCurrentSeason?.(internalComponents);
   const seasonName = season ? localize(season.name) : null;
-  const sunriseHour = calendar.sunrise?.(targetComponents) ?? 6;
-  const sunsetHour = calendar.sunset?.(targetComponents) ?? 18;
+  const sunriseHour = calendar.sunrise?.(internalComponents) ?? 6;
+  const sunsetHour = calendar.sunset?.(internalComponents) ?? 18;
   const formatTime = (hours) => {
     let h = Math.floor(hours);
     let m = Math.round((hours - h) * 60);

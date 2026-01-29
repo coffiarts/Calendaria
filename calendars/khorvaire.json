@@ -29,7 +29,7 @@
       {"name": "CALENDARIA.Season.Winter", "icon": "fas fa-snowflake", "color": "#87ceeb", "seasonalType": "winter", "dayStart": 308, "dayEnd":  55, "abbreviation": "Win"}
     ]
   },
-  "eras"          : [ {"name": "Year of the Kingdom", "abbreviation": "YK", "startYear": 1, "endYear": null, "format": "suffix", "template": null} ],
+  "eras"          : [ {"name": "Year of the Kingdom", "abbreviation": "YK", "startYear": 1, "endYear": null} ],
   "moons"         : [
     {
       "name"         : "Zarantyr",
@@ -229,6 +229,6 @@
   "canonicalHours": [],
   "weeks"         : {"enabled": false, "type": "year-based", "names": []},
   "amPmNotation"  : {"am": "AM", "pm": "PM"},
-  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, YYYY", "full": "MMMM D, YYYY", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
+  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, Y", "full": "MMMM D, Y", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
   "metadata"      : {"id": "khorvaire", "description": "CALENDARIA.Calendar.Khorvaire.Description", "author": "calendaria", "system": "Eberron"}
 }

@@ -142,9 +142,9 @@
   },
   "daylight"      : {"enabled": true, "shortestDay": 8, "longestDay": 16, "winterSolstice": 281, "summerSolstice": 126},
   "eras"          : [
-    {"name": "First Age",      "abbreviation": "FA", "startYear": -2000, "endYear": -500, "template": "Year [yearInEra] of the GGGG"},
-    {"name": "Dark Centuries", "abbreviation": "DC", "startYear":  -500, "endYear":    0, "template": "Year [yearInEra] of the GGGG"},
-    {"name": "Second Age",     "abbreviation": "SA", "startYear":     1, "endYear": null, "template": "Year [year] of the GGGG"     }
+    {"name": "First Age",      "abbreviation": "FA", "startYear": -2000, "endYear": -500},
+    {"name": "Dark Centuries", "abbreviation": "DC", "startYear":  -500, "endYear":    0},
+    {"name": "Second Age",     "abbreviation": "SA", "startYear":     1, "endYear": null}
   ],
   "canonicalHours": [
     {"name": "Dawn Watch",      "abbreviation": "Dawn",  "startHour":  5, "endHour":  9},
@@ -170,7 +170,7 @@
     "type"   : "month-based",
     "names"  : [ {"name": "Week of Rising", "abbreviation": "Rising"}, {"name": "Week of Fullness", "abbreviation": "Fullness"}, {"name": "Week of Turning", "abbreviation": "Turning"}, {"name": "Week of Fading", "abbreviation": "Fading"} ]
   },
-  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, YYYY", "full": "MMMM D, YYYY ([ch])", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
+  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, Y", "full": "MMMM D, Y ([ch])", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
   "weather"       : {
     "zones": [
       {

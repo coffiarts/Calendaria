@@ -2590,11 +2590,6 @@ span.calendaria-moon-icon {
       width: 4.375rem;
     }
 
-    .col-format {
-      flex: none;
-      width: 8.4375rem;
-    }
-
     .col-controls {
       flex: none;
       width: 3.125rem;
@@ -2610,33 +2605,6 @@ span.calendaria-moon-icon {
       gap: 0.5rem;
       display: flex;
       align-items: center;
-    }
-
-    .era-template {
-      gap: 0.5rem;
-      display: flex;
-      align-items: center;
-
-      .col-template-label {
-        flex: 0.5;
-        color: var(--color-text-secondary);
-        font-weight: 600;
-        white-space: nowrap;
-      }
-
-      .col-template {
-        flex: 3;
-      }
-
-      .era-preview {
-        flex: 3;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.1875rem;
-        color: var(--color-text-secondary);
-        font-style: italic;
-        white-space: nowrap;
-        background: var(--color-cool-5);
-      }
     }
   }
 

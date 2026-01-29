@@ -88,27 +88,3 @@ export function formatMonthDayYear(calendar, components, options = {}) {
   const year = components.year + (calendar.years?.yearZero ?? 0);
   return format('CALENDARIA.Formatters.DayMonthYear', { day, month: localize(monthName), yyyy: year });
 }
-
-/**
- * Format era template string with UTS#35 token substitution.
- * @param {string} template - Template string (e.g., "YYYY G")
- * @param {object} context - Variable values to substitute
- * @param {number} context.year - Display year (YYYY, YY tokens)
- * @param {string} context.abbreviation - Era abbreviation (G token)
- * @param {string} context.era - Full era name (GGGG token)
- * @param {number} context.yearInEra - Year within the era (yy token)
- * @returns {string} Formatted string with tokens replaced
- */
-export function formatEraTemplate(template, context) {
-  const tokens = {
-    YYYY: context.year,
-    YY: String(context.year).slice(-2),
-    GGGG: context.era ?? context.name ?? '',
-    G: context.abbreviation ?? context.short ?? '',
-    yy: context.yearInEra ?? '',
-    '[yearInEra]': context.yearInEra ?? '',
-    '[year]': context.year
-  };
-  // Match tokens longest-first to prevent partial matches
-  return template.replace(/\[yearInEra\]|\[year\]|YYYY|GGGG|YY|yy|G/g, (match) => tokens[match] ?? match);
-}

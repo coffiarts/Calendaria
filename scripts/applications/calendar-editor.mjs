@@ -8,7 +8,6 @@
 import { isBundledCalendar } from '../calendar/calendar-loader.mjs';
 import CalendarManager from '../calendar/calendar-manager.mjs';
 import CalendarRegistry from '../calendar/calendar-registry.mjs';
-import { formatEraTemplate } from '../calendar/calendar-utils.mjs';
 import { ASSETS, DEFAULT_MOON_PHASES, MODULE, SETTINGS, TEMPLATES } from '../constants.mjs';
 import { createImporter } from '../importers/index.mjs';
 import { format, localize, preLocalizeCalendar } from '../utils/localization.mjs';
@@ -406,18 +405,10 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
       };
     });
 
-    const formatOptions = [
-      { value: 'suffix', label: 'CALENDARIA.Editor.Format.Suffix' },
-      { value: 'prefix', label: 'CALENDARIA.Editor.Format.Prefix' }
-    ];
-
     context.erasWithNav = this.#calendarData.eras.map((era, idx) => ({
       ...era,
-      index: idx,
-      formatOptions: formatOptions.map((opt) => ({ ...opt, selected: opt.value === (era.format || 'suffix') })),
-      preview: this.#generateEraPreview(era)
+      index: idx
     }));
-    context.formatOptions = formatOptions;
     const basedOnOptions = [
       { value: 'year', label: 'CALENDARIA.Editor.Cycle.BasedOn.Year' },
       { value: 'eraYear', label: 'CALENDARIA.Editor.Cycle.BasedOn.EraYear' },
@@ -498,27 +489,6 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
         preview.style.setProperty('--moon-color', color);
         preview.classList.toggle('tinted', !isDefault);
       });
-    }
-    for (const templateInput of this.element.querySelectorAll('input[name^="eras."][name$=".template"]')) {
-      const updatePreview = (input) => {
-        const eraItem = input.closest('.era-item');
-        if (!eraItem) return;
-        const template = input.value.trim();
-        const abbr = eraItem.querySelector('input[name$=".abbreviation"]')?.value || '';
-        const eraName = eraItem.querySelector('input[name$=".name"]')?.value || '';
-        const formatSelect = eraItem.querySelector('select[name$=".format"]');
-        const previewEl = eraItem.querySelector('.era-preview');
-        if (formatSelect) {
-          formatSelect.disabled = !!template;
-          formatSelect.dataset.tooltip = template ? localize('CALENDARIA.Editor.Era.FormatDisabled') : '';
-        }
-        if (!previewEl) return;
-        const sampleYear = 1492;
-        if (template) previewEl.textContent = formatEraTemplate(template, { year: sampleYear, abbreviation: abbr, era: eraName, yearInEra: 1 });
-        else previewEl.textContent = localize('CALENDARIA.Editor.Era.PreviewEmpty');
-      };
-      updatePreview(templateInput);
-      templateInput.addEventListener('input', (event) => updatePreview(event.target));
     }
     // Disable delete button for unsaved calendars
     const deleteBtn = this.element.querySelector('button[data-action="deleteCalendar"]');
@@ -905,14 +875,11 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const sortedIndices = [...indices].sort((a, b) => a - b);
     this.#calendarData.eras.length = 0;
     for (const idx of sortedIndices) {
-      const templateValue = data[`eras.${idx}.template`]?.trim();
       const era = {
         name: data[`eras.${idx}.name`] || '',
         abbreviation: data[`eras.${idx}.abbreviation`] || '',
         startYear: parseInt(data[`eras.${idx}.startYear`]) || 1,
-        endYear: this.#parseOptionalInt(data[`eras.${idx}.endYear`]),
-        format: data[`eras.${idx}.format`] || 'suffix',
-        template: templateValue || null
+        endYear: this.#parseOptionalInt(data[`eras.${idx}.endYear`])
       };
       this.#calendarData.eras.push(era);
     }
@@ -1455,19 +1422,6 @@ export class CalendarEditor extends HandlebarsApplicationMixin(ApplicationV2) {
     const idx = parseInt(target.dataset.index);
     this.#calendarData.eras.splice(idx, 1);
     this.render();
-  }
-
-  /**
-   * Generate a preview string for an era template.
-   * @param {object} era - Era object with template, abbreviation, name, format
-   * @returns {string} Preview string or empty placeholder
-   */
-  #generateEraPreview(era) {
-    if (!era.template) return localize('CALENDARIA.Editor.Era.PreviewEmpty');
-    const sampleYear = 1492;
-    const abbr = era.abbreviation ? localize(era.abbreviation) : '';
-    const eraName = era.name ? localize(era.name) : '';
-    return formatEraTemplate(era.template, { year: sampleYear, abbreviation: abbr, era: eraName, yearInEra: 1 });
   }
 
   /**

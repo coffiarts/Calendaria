@@ -35,7 +35,7 @@
       {"name": "CALENDARIA.Season.Winter", "icon": "fas fa-snowflake", "color": "#87ceeb", "seasonalType": "winter", "dayStart": 315, "dayEnd": 359, "abbreviation": "Win"}
     ]
   },
-  "eras"          : [ {"name": "Alderland Reckoning", "abbreviation": "AS", "startYear": 1, "endYear": null, "format": "suffix", "template": null} ],
+  "eras"          : [ {"name": "Alderland Reckoning", "abbreviation": "AS", "startYear": 1, "endYear": null} ],
   "moons"         : [
     {
       "name"         : "The Moon",
@@ -59,6 +59,6 @@
   "canonicalHours": [],
   "weeks"         : {"enabled": false, "type": "year-based", "names": []},
   "amPmNotation"  : {"am": "AM", "pm": "PM"},
-  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, YYYY", "full": "MMMM D, YYYY", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
+  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, Y", "full": "MMMM D, Y", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
   "metadata"      : {"id": "forbidden-lands", "description": "CALENDARIA.Calendar.ForbiddenLands.Description", "author": "calendaria", "system": "Forbidden Lands"}
 }

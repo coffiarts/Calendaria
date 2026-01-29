@@ -151,18 +151,6 @@ function migrateCalTokens(cal) {
       }
     }
   }
-  const eras = Array.isArray(cal?.eras) ? cal.eras : cal?.eras?.values;
-  if (eras?.length) {
-    for (const era of eras) {
-      if (era.template) {
-        const { migrated, changes: c } = migrateDeprecatedTokens(era.template);
-        if (c.length) {
-          era.template = migrated;
-          changes.push(...c);
-        }
-      }
-    }
-  }
   if (cal?.cycleFormat) {
     const { migrated, changes: c } = migrateDeprecatedTokens(cal.cycleFormat);
     if (c.length) {
@@ -298,14 +286,6 @@ async function migrateLegacyFormats() {
       for (const [k, v] of Object.entries(upd.dateFormats)) {
         if (typeof v === 'string' && isLegacyFormat(v)) {
           upd.dateFormats[k] = migrateLegacyFormat(v);
-          mod = true;
-        }
-      }
-    }
-    if (upd.eras?.length) {
-      for (const era of upd.eras) {
-        if (era.template && isLegacyFormat(era.template)) {
-          era.template = migrateLegacyFormat(era.template);
           mod = true;
         }
       }

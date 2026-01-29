@@ -43,8 +43,8 @@
     ]
   },
   "eras"          : [
-    {"name": "Michaelae Reckoning", "abbreviation": "MR", "startYear":    1, "endYear": null, "format": "suffix", "template": null},
-    {"name": "Haelyn's Count",      "abbreviation": "HC", "startYear": -973, "endYear":    0, "format": "suffix", "template": null}
+    {"name": "Michaelae Reckoning", "abbreviation": "MR", "startYear":    1, "endYear": null},
+    {"name": "Haelyn's Count",      "abbreviation": "HC", "startYear": -973, "endYear":    0}
   ],
   "moons"         : [
     {
@@ -69,6 +69,6 @@
   "canonicalHours": [],
   "weeks"         : {"enabled": false, "type": "year-based", "names": []},
   "amPmNotation"  : {"am": "AM", "pm": "PM"},
-  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, YYYY", "full": "MMMM D, YYYY", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
+  "dateFormats"   : {"short": "D MMM", "long": "D MMMM, Y", "full": "MMMM D, Y", "time": "HH:mm", "time12": "h:mm a", "weekHeader": "[Week] W [of] MMMM, Y", "yearHeader": "Y", "yearLabel": "Y G"},
   "metadata"      : {"id": "cerilian", "description": "CALENDARIA.Calendar.Cerilian.Description", "author": "calendaria", "system": "Birthright"}
 }
