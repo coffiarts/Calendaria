@@ -51,6 +51,14 @@ export default class NoteManager {
   }
 
   /**
+   * Re-sync note ownership after editNotes permissions change.
+   * @returns {Promise<void>}
+   */
+  static async syncNoteOwnership() {
+    if (game.user.isGM) await this.#syncNoteOwnership();
+  }
+
+  /**
    * Sync ownership for all calendar notes based on editNotes permission.
    * Grants OWNER to all users with editNotes permission for non-GM-only notes.
    * @returns {Promise<void>}
@@ -58,19 +66,30 @@ export default class NoteManager {
    */
   static async #syncNoteOwnership() {
     const usersWithPermission = getUsersWithPermission('editNotes');
-    if (usersWithPermission.length === 0) return;
-    const userIds = usersWithPermission.map((u) => u.id);
+    const permittedIds = new Set(usersWithPermission.map((u) => u.id));
     let updated = 0;
     for (const journal of game.journal) {
       if (!journal.getFlag(MODULE.ID, 'isCalendarNote')) continue;
       const page = journal.pages.contents[0];
       if (!page || page.system?.gmOnly) continue;
       const currentOwnership = journal.ownership || {};
-      const needsUpdate = userIds.some((id) => currentOwnership[id] !== 3);
-      if (needsUpdate) {
-        const newOwnership = { ...currentOwnership };
-        for (const id of userIds) newOwnership[id] = 3;
-        await journal.update({ ownership: newOwnership });
+      const authorId = page.system?.author?._id;
+      const updateData = {};
+      // Grant OWNER to users with editNotes permission
+      for (const id of permittedIds) {
+        if (currentOwnership[id] !== 3) updateData[`ownership.${id}`] = 3;
+      }
+      // Revoke OWNER from users who no longer have editNotes permission
+      for (const [userId, level] of Object.entries(currentOwnership)) {
+        if (userId === 'default') continue;
+        if (level !== 3) continue;
+        if (permittedIds.has(userId)) continue;
+        if (game.users.get(userId)?.isGM) continue;
+        if (userId === authorId) continue;
+        updateData[`ownership.-=${userId}`] = null;
+      }
+      if (Object.keys(updateData).length > 0) {
+        await journal.update(updateData);
         updated++;
       }
     }
@@ -158,8 +177,13 @@ export default class NoteManager {
         if (changes.system?.gmOnly !== undefined) {
           const journal = page.parent;
           if (journal?.getFlag(MODULE.ID, 'isCalendarNote')) {
-            const newOwnership = changes.system.gmOnly ? { default: 0 } : { default: 2 };
-            await journal.update({ ownership: newOwnership });
+            if (changes.system.gmOnly) {
+              await journal.update({ ownership: { default: 0 } });
+            } else {
+              const newOwnership = { default: 2 };
+              for (const user of getUsersWithPermission('editNotes')) newOwnership[user.id] = 3;
+              await journal.update({ ownership: newOwnership });
+            }
             log(3, `Updated journal ownership for gmOnly change: ${changes.system.gmOnly}`);
           }
         }

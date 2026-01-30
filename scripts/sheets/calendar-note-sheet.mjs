@@ -508,6 +508,7 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
     context.availableMacros = game.macros.contents.map((m) => ({ id: m.id, name: m.name, selected: m.id === currentMacro }));
     context.isViewMode = this.isViewMode;
     context.isEditMode = this.isEditMode;
+    context.isGM = game.user.isGM;
     context.canEdit = this.document.isOwner;
     if (this.isViewMode) {
       context.enrichedContent = await foundry.applications.ux.TextEditor.implementation.enrichHTML(this.document.text?.content || '', {

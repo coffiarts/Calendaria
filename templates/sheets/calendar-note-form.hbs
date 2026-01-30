@@ -30,11 +30,13 @@
     <fieldset>
       <legend>{{localize "CALENDARIA.Note.Visibility"}}</legend>
       <div class="checkbox-group">
+        {{#if isGM}}
         <label>
           <input type="checkbox" name="system.gmOnly" {{checked
             system.gmOnly}} data-tooltip aria-label="{{localize 'CALENDARIA.UI.GmOnlyTooltip'}}">
           {{localize "CALENDARIA.Common.GMOnly"}}
         </label>
+        {{/if}}
         <label>
           <input type="checkbox" name="system.silent" {{checked
             system.silent}} data-tooltip aria-label="{{localize 'CALENDARIA.UI.SilentTooltip'}}">

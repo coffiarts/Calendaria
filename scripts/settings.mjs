@@ -11,6 +11,7 @@ import { MiniCal } from './applications/mini-cal.mjs';
 import { SettingsPanel } from './applications/settings/settings-panel.mjs';
 import { TimeKeeper } from './applications/time-keeper.mjs';
 import { MODULE, SETTINGS } from './constants.mjs';
+import NoteManager from './notes/note-manager.mjs';
 import { localize } from './utils/localization.mjs';
 import { log } from './utils/logger.mjs';
 import * as StickyZones from './utils/sticky-zones.mjs';
@@ -1089,7 +1090,8 @@ export function registerSettings() {
         deleteNotes: { player: false, trusted: false, assistant: true },
         editCalendars: { player: false, trusted: false, assistant: false }
       }
-    })
+    }),
+    onChange: () => NoteManager.syncNoteOwnership()
   });
 
   // ========================================//
