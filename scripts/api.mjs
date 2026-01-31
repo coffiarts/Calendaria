@@ -343,7 +343,7 @@ export const CalendariaAPI = {
     const formatted = {
       ...raw,
       year: components ? raw.year : raw.year + (calendar.years?.yearZero ?? 0),
-      dayOfMonth: components ? (raw.day || 1) : (raw.dayOfMonth ?? 0) + 1
+      dayOfMonth: components ? raw.day || 1 : (raw.dayOfMonth ?? 0) + 1
     };
     if (PRESET_FORMATTERS[formatOrPreset]) return PRESET_FORMATTERS[formatOrPreset](calendar, formatted);
     const formatStr = resolveFormatString(formatOrPreset);

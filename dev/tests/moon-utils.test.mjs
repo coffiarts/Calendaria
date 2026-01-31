@@ -11,13 +11,7 @@ vi.mock('../../scripts/calendar/calendar-manager.mjs', async () => {
   return { default: CalendarManager };
 });
 
-import {
-  getMoonPhasePosition,
-  isMoonFull,
-  getNextFullMoon,
-  getNextConvergence,
-  getConvergencesInRange
-} from '../../scripts/utils/moon-utils.mjs';
+import { getMoonPhasePosition, isMoonFull, getNextFullMoon, getNextConvergence, getConvergencesInRange } from '../../scripts/utils/moon-utils.mjs';
 
 import CalendarManager from '../../scripts/calendar/calendar-manager.mjs';
 
@@ -218,40 +212,24 @@ describe('getNextConvergence()', () => {
 
 describe('getConvergencesInRange()', () => {
   it('returns empty array for empty moons', () => {
-    const result = getConvergencesInRange(
-      [],
-      { year: 2020, month: 0, day: 1 },
-      { year: 2020, month: 11, day: 31 }
-    );
+    const result = getConvergencesInRange([], { year: 2020, month: 0, day: 1 }, { year: 2020, month: 11, day: 31 });
     expect(result).toEqual([]);
   });
 
   it('returns empty array with no calendar', () => {
     CalendarManager.getActiveCalendar.mockReturnValueOnce(null);
-    const result = getConvergencesInRange(
-      [mockMoon],
-      { year: 2020, month: 0, day: 1 },
-      { year: 2020, month: 11, day: 31 }
-    );
+    const result = getConvergencesInRange([mockMoon], { year: 2020, month: 0, day: 1 }, { year: 2020, month: 11, day: 31 });
     expect(result).toEqual([]);
   });
 
   it('finds multiple full moons for single moon in range', () => {
     // In ~60 days, should find about 2 full moons for 28-day cycle
-    const result = getConvergencesInRange(
-      [mockMoon],
-      { year: 2020, month: 0, day: 1 },
-      { year: 2020, month: 2, day: 1 }
-    );
+    const result = getConvergencesInRange([mockMoon], { year: 2020, month: 0, day: 1 }, { year: 2020, month: 2, day: 1 });
     expect(result.length).toBeGreaterThanOrEqual(1);
   });
 
   it('returns array of date objects', () => {
-    const result = getConvergencesInRange(
-      [mockMoon],
-      { year: 2020, month: 0, day: 1 },
-      { year: 2020, month: 1, day: 28 }
-    );
+    const result = getConvergencesInRange([mockMoon], { year: 2020, month: 0, day: 1 }, { year: 2020, month: 1, day: 28 });
     if (result.length > 0) {
       expect(result[0]).toHaveProperty('year');
       expect(result[0]).toHaveProperty('month');

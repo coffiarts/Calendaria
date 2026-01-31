@@ -17,14 +17,7 @@ vi.mock('../../scripts/utils/localization.mjs', () => ({
   }
 }));
 
-import {
-  preLocalizeCalendar,
-  findFestivalDay,
-  getMonthAbbreviation,
-  formatMonthDay,
-  formatMonthDayYear,
-  formatEraTemplate
-} from '../../scripts/calendar/calendar-utils.mjs';
+import { preLocalizeCalendar, findFestivalDay, getMonthAbbreviation, formatMonthDay, formatMonthDayYear, formatEraTemplate } from '../../scripts/calendar/calendar-utils.mjs';
 
 /* -------------------------------------------- */
 /*  Mock Calendar Data                          */
@@ -79,10 +72,7 @@ describe('preLocalizeCalendar()', () => {
 
   it('recursively localizes arrays of objects', () => {
     const data = {
-      items: [
-        { name: 'Item1' },
-        { name: 'Item2' }
-      ]
+      items: [{ name: 'Item1' }, { name: 'Item2' }]
     };
     const result = preLocalizeCalendar(data);
     expect(result.items[0].name).toBe('Item1');

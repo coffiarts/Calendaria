@@ -108,9 +108,9 @@ const defaultCalendar = {
     let totalDays = components.year * daysPerYear;
     if (components.month != null || components.dayOfMonth != null) {
       for (let m = 0; m < (components.month || 0); m++) totalDays += days[m];
-      totalDays += (components.dayOfMonth || 0);
+      totalDays += components.dayOfMonth || 0;
     } else {
-      totalDays += (components.day || 0);
+      totalDays += components.day || 0;
     }
     const hours = components.hour || 0;
     const minutes = components.minute || 0;
@@ -162,7 +162,7 @@ const defaultCalendar = {
     totalDays += (components.year - refDate.year) * 365;
     // Days from ref month/day to current
     for (let m = 0; m < components.month; m++) totalDays += days[m];
-    totalDays += (components.dayOfMonth + 1);
+    totalDays += components.dayOfMonth + 1;
     for (let m = 0; m < refDate.month; m++) totalDays -= days[m];
     totalDays -= refDate.day;
     const cyclePosition = ((totalDays % moon.cycleLength) + moon.cycleLength) % moon.cycleLength;

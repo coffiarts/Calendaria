@@ -22,7 +22,6 @@ export default [
         ChatMessage: 'readonly',
         canvas: 'readonly',
         Macro: 'readonly',
-        dnd5e: 'readonly',
         Handlebars: 'readonly',
         TextEditor: 'readonly',
         Roll: 'readonly',
@@ -80,5 +79,5 @@ export default [
   },
   jsdoc.configs['flat/recommended'],
   { files: ['**/*.mjs'], rules: { 'no-undef': 'off' } },
-  { ignores: ['**/node_modules/*', '**/coverage/*', '**/dev/__mocks__/*', '**/foundry/*', '**/dnd5e/*'] }
+  { ignores: ['**/node_modules/*', '**/coverage/*', '**/dev/__mocks__/*', '**/foundry/*'] }
 ];

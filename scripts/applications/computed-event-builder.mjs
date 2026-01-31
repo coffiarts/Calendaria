@@ -124,9 +124,7 @@ export class ComputedEventBuilder extends HandlebarsApplicationMixin(Application
    */
   static async #onAddStep(_event, _target) {
     const isFirst = this.#config.chain.length === 0;
-    const step = isFirst
-      ? { type: 'anchor', value: 'springEquinox' }
-      : { type: 'firstAfter', condition: 'weekday', params: { weekday: 0 } };
+    const step = isFirst ? { type: 'anchor', value: 'springEquinox' } : { type: 'firstAfter', condition: 'weekday', params: { weekday: 0 } };
     this.#config.chain.push(step);
     this.render();
     this.#notifyChange();

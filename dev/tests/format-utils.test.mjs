@@ -17,16 +17,7 @@ vi.mock('../../scripts/utils/localization.mjs', () => ({
   }
 }));
 
-import {
-  ordinal,
-  toRomanNumeral,
-  dateFormattingParts,
-  formatShort,
-  formatLong,
-  formatFull,
-  formatTime,
-  formatTime12
-} from '../../scripts/utils/format-utils.mjs';
+import { ordinal, toRomanNumeral, dateFormattingParts, formatShort, formatLong, formatFull, formatTime, formatTime12 } from '../../scripts/utils/format-utils.mjs';
 
 /* -------------------------------------------- */
 /*  Mock Calendar Data                          */
@@ -71,9 +62,7 @@ const mockCalendar = {
   },
   isMonthless: false,
   eras: {
-    values: [
-      { name: 'Common Era', abbreviation: 'CE', startYear: 1 }
-    ]
+    values: [{ name: 'Common Era', abbreviation: 'CE', startYear: 1 }]
   }
 };
 

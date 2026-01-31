@@ -105,11 +105,7 @@ const EXPORTABLE_SETTINGS = [
 /**
  * Settings to skip when exporting with calendar data (to avoid duplicating calendar info).
  */
-const CALENDAR_DATA_SETTINGS = [
-  SETTINGS.CALENDARS,
-  SETTINGS.CUSTOM_CALENDARS,
-  SETTINGS.DEFAULT_OVERRIDES
-];
+const CALENDAR_DATA_SETTINGS = [SETTINGS.CALENDARS, SETTINGS.CUSTOM_CALENDARS, SETTINGS.DEFAULT_OVERRIDES];
 
 /**
  * Show export dialog and export settings to JSON file.
@@ -139,7 +135,9 @@ export async function exportSettings() {
       { action: 'cancel', label: localize('CALENDARIA.Common.Cancel'), icon: 'fas fa-times' }
     ],
     close: () => 'cancel',
-    render: (_event, dialog) => { dialogElement = dialog.element; }
+    render: (_event, dialog) => {
+      dialogElement = dialog.element;
+    }
   });
 
   if (result !== 'export') return;
@@ -219,7 +217,9 @@ export async function importSettings(onComplete) {
           { action: 'cancel', label: localize('CALENDARIA.Common.Cancel'), icon: 'fas fa-times' }
         ],
         close: () => 'cancel',
-        render: (_event, dialog) => { dialogElement = dialog.element; }
+        render: (_event, dialog) => {
+          dialogElement = dialog.element;
+        }
       });
 
       if (result !== 'import') return;

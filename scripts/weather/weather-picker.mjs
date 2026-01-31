@@ -181,7 +181,6 @@ class WeatherPickerApp extends HandlebarsApplicationMixin(ApplicationV2) {
     await this.close();
     Hooks.callAll(HOOKS.WEATHER_CHANGE);
   }
-
 }
 
 /**

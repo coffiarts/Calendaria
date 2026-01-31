@@ -103,10 +103,5 @@ export function formatEraTemplate(template, data = {}) {
   const year = data.year ?? 0;
   const yearInEra = data.yearInEra ?? year;
 
-  return template
-    .replace(/YYYY/g, String(year))
-    .replace(/YY/g, String(year).slice(-2))
-    .replace(/GGGG/g, era)
-    .replace(/yy/g, String(yearInEra))
-    .replace(/G/g, abbreviation);
+  return template.replace(/YYYY/g, String(year)).replace(/YY/g, String(year).slice(-2)).replace(/GGGG/g, era).replace(/yy/g, String(yearInEra)).replace(/G/g, abbreviation);
 }

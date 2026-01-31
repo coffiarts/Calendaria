@@ -273,11 +273,7 @@ describe('getOccurrencesInRange()', () => {
       startDate: { year: 2024, month: 0, day: 15 },
       repeat: 'never'
     };
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2024, month: 0, day: 1 },
-      { year: 2024, month: 0, day: 10 }
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2024, month: 0, day: 1 }, { year: 2024, month: 0, day: 10 });
     expect(occurrences).toEqual([]);
   });
 
@@ -286,11 +282,7 @@ describe('getOccurrencesInRange()', () => {
       startDate: { year: 2024, month: 0, day: 5 },
       repeat: 'never'
     };
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2024, month: 0, day: 1 },
-      { year: 2024, month: 0, day: 10 }
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2024, month: 0, day: 1 }, { year: 2024, month: 0, day: 10 });
     expect(occurrences.length).toBe(1);
     expect(occurrences[0]).toEqual({ year: 2024, month: 0, day: 5 });
   });
@@ -301,11 +293,7 @@ describe('getOccurrencesInRange()', () => {
       repeat: 'daily',
       repeatInterval: 1
     };
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2024, month: 0, day: 1 },
-      { year: 2024, month: 0, day: 5 }
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2024, month: 0, day: 1 }, { year: 2024, month: 0, day: 5 });
     expect(occurrences.length).toBe(5);
   });
 
@@ -315,11 +303,7 @@ describe('getOccurrencesInRange()', () => {
       repeat: 'weekly',
       repeatInterval: 1
     };
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2024, month: 0, day: 1 },
-      { year: 2024, month: 0, day: 31 }
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2024, month: 0, day: 1 }, { year: 2024, month: 0, day: 31 });
     // Jan has ~4-5 weeks, should have 4-5 occurrences
     expect(occurrences.length).toBeGreaterThanOrEqual(4);
     expect(occurrences.length).toBeLessThanOrEqual(5);
@@ -346,11 +330,7 @@ describe('getOccurrencesInRange()', () => {
       repeat: 'monthly',
       repeatInterval: 1
     };
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2024, month: 0, day: 1 },
-      { year: 2024, month: 5, day: 30 }
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2024, month: 0, day: 1 }, { year: 2024, month: 5, day: 30 });
     expect(occurrences.length).toBe(6);
     expect(occurrences[0]).toEqual({ year: 2024, month: 0, day: 15 });
     expect(occurrences[5]).toEqual({ year: 2024, month: 5, day: 15 });
@@ -362,11 +342,7 @@ describe('getOccurrencesInRange()', () => {
       repeat: 'yearly',
       repeatInterval: 1
     };
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2020, month: 0, day: 1 },
-      { year: 2025, month: 11, day: 31 }
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2020, month: 0, day: 1 }, { year: 2025, month: 11, day: 31 });
     expect(occurrences.length).toBe(6);
   });
 });
@@ -811,9 +787,7 @@ describe('conditions on events', () => {
       startDate: { year: 2020, month: 0, day: 1 },
       repeat: 'yearly',
       repeatInterval: 1,
-      conditions: [
-        { field: 'year', op: '>=', value: 2022 }
-      ]
+      conditions: [{ field: 'year', op: '>=', value: 2022 }]
     };
     expect(isRecurringMatch(noteData, { year: 2020, month: 0, day: 1 })).toBe(false);
     expect(isRecurringMatch(noteData, { year: 2022, month: 0, day: 1 })).toBe(true);
@@ -930,11 +904,7 @@ describe('getOccurrencesInRange() extended', () => {
       weekday: 2,
       weekNumber: 2
     };
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2024, month: 0, day: 1 },
-      { year: 2024, month: 2, day: 31 }
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2024, month: 0, day: 1 }, { year: 2024, month: 2, day: 31 });
     expect(occurrences.length).toBe(3);
   });
 
@@ -944,11 +914,7 @@ describe('getOccurrencesInRange() extended', () => {
       repeat: 'range',
       rangePattern: { year: null, month: null, day: 15 }
     };
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2024, month: 0, day: 1 },
-      { year: 2024, month: 2, day: 31 }
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2024, month: 0, day: 1 }, { year: 2024, month: 2, day: 31 });
     expect(occurrences.length).toBe(3); // 15th of Jan, Feb, Mar
   });
 
@@ -963,11 +929,7 @@ describe('getOccurrencesInRange() extended', () => {
         { year: 2024, month: 1, day: 10 }
       ]
     };
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2024, month: 0, day: 1 },
-      { year: 2024, month: 0, day: 31 }
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2024, month: 0, day: 1 }, { year: 2024, month: 0, day: 31 });
     expect(occurrences.length).toBe(2);
     expect(occurrences[0]).toEqual({ year: 2024, month: 0, day: 5 });
     expect(occurrences[1]).toEqual({ year: 2024, month: 0, day: 15 });
@@ -1004,12 +966,7 @@ describe('getOccurrencesInRange() extended', () => {
       repeat: 'moon',
       moonConditions: [{ moonIndex: 0, phaseStart: 0.45, phaseEnd: 0.55 }] // Full moon
     };
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2024, month: 0, day: 1 },
-      { year: 2024, month: 1, day: 28 },
-      10
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2024, month: 0, day: 1 }, { year: 2024, month: 1, day: 28 }, 10);
     // Should find some full moon occurrences
     expect(occurrences.length).toBeGreaterThanOrEqual(0);
   });
@@ -1067,12 +1024,7 @@ describe('moon recurrence', () => {
       maxOccurrences: 1
     };
     // With low maxOccurrences, later matches should fail
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2024, month: 0, day: 1 },
-      { year: 2024, month: 11, day: 31 },
-      100
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2024, month: 0, day: 1 }, { year: 2024, month: 11, day: 31 }, 100);
     expect(occurrences.length).toBeLessThanOrEqual(1);
   });
 });
@@ -1164,9 +1116,7 @@ describe('computed events', () => {
   it('resolveComputedDate handles daysAfter step', () => {
     CalendarManager._configure({
       seasons: {
-        values: [
-          { name: 'Spring', dayStart: 80, dayEnd: 171 }
-        ]
+        values: [{ name: 'Spring', dayStart: 80, dayEnd: 171 }]
       }
     });
     const config = {
@@ -1182,9 +1132,7 @@ describe('computed events', () => {
   it('resolveComputedDate handles weekdayOnOrAfter step', () => {
     CalendarManager._configure({
       seasons: {
-        values: [
-          { name: 'Spring', dayStart: 80, dayEnd: 171 }
-        ]
+        values: [{ name: 'Spring', dayStart: 80, dayEnd: 171 }]
       }
     });
     const config = {
@@ -1200,9 +1148,7 @@ describe('computed events', () => {
   it('resolveComputedDate handles firstAfter weekday condition', () => {
     CalendarManager._configure({
       seasons: {
-        values: [
-          { name: 'Spring', dayStart: 80, dayEnd: 171 }
-        ]
+        values: [{ name: 'Spring', dayStart: 80, dayEnd: 171 }]
       }
     });
     const config = {
@@ -1218,9 +1164,7 @@ describe('computed events', () => {
   it('isRecurringMatch with computed pattern', () => {
     CalendarManager._configure({
       seasons: {
-        values: [
-          { name: 'Spring', dayStart: 80, dayEnd: 171 }
-        ]
+        values: [{ name: 'Spring', dayStart: 80, dayEnd: 171 }]
       }
     });
     const noteData = {
@@ -1239,9 +1183,7 @@ describe('computed events', () => {
   it('getOccurrencesInRange with computed pattern', () => {
     CalendarManager._configure({
       seasons: {
-        values: [
-          { name: 'Spring', dayStart: 80, dayEnd: 171 }
-        ]
+        values: [{ name: 'Spring', dayStart: 80, dayEnd: 171 }]
       }
     });
     const noteData = {
@@ -1251,12 +1193,7 @@ describe('computed events', () => {
         chain: [{ type: 'anchor', value: 'springEquinox' }]
       }
     };
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2024, month: 0, day: 1 },
-      { year: 2026, month: 11, day: 31 },
-      10
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2024, month: 0, day: 1 }, { year: 2026, month: 11, day: 31 }, 10);
     expect(occurrences.length).toBeGreaterThan(0);
   });
 });
@@ -1296,12 +1233,7 @@ describe('random with different check intervals', () => {
       repeat: 'random',
       randomConfig: { seed: 42, probability: 50, checkInterval: 'weekly' }
     };
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2024, month: 0, day: 1 },
-      { year: 2024, month: 1, day: 28 },
-      20
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2024, month: 0, day: 1 }, { year: 2024, month: 1, day: 28 }, 20);
     // Should only include Mondays (same weekday as start)
     for (const occ of occurrences) {
       // All occurrences should be valid dates
@@ -1315,12 +1247,7 @@ describe('random with different check intervals', () => {
       repeat: 'random',
       randomConfig: { seed: 42, probability: 50, checkInterval: 'monthly' }
     };
-    const occurrences = getOccurrencesInRange(
-      noteData,
-      { year: 2024, month: 0, day: 1 },
-      { year: 2024, month: 5, day: 30 },
-      10
-    );
+    const occurrences = getOccurrencesInRange(noteData, { year: 2024, month: 0, day: 1 }, { year: 2024, month: 5, day: 30 }, 10);
     // All occurrences should be on day 15
     for (const occ of occurrences) {
       expect(occ.day).toBe(15);
@@ -1338,9 +1265,7 @@ describe('condition operators', () => {
       startDate: { year: 2024, month: 0, day: 1 },
       repeat: 'daily',
       repeatInterval: 1,
-      conditions: [
-        { field: 'day', op: '!=', value: 15 }
-      ]
+      conditions: [{ field: 'day', op: '!=', value: 15 }]
     };
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 14 })).toBe(true);
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 15 })).toBe(false);
@@ -1352,9 +1277,7 @@ describe('condition operators', () => {
       startDate: { year: 2024, month: 0, day: 1 },
       repeat: 'daily',
       repeatInterval: 1,
-      conditions: [
-        { field: 'day', op: '>', value: 20 }
-      ]
+      conditions: [{ field: 'day', op: '>', value: 20 }]
     };
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 20 })).toBe(false);
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 21 })).toBe(true);
@@ -1366,9 +1289,7 @@ describe('condition operators', () => {
       startDate: { year: 2024, month: 0, day: 1 },
       repeat: 'daily',
       repeatInterval: 1,
-      conditions: [
-        { field: 'day', op: '<', value: 5 }
-      ]
+      conditions: [{ field: 'day', op: '<', value: 5 }]
     };
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 4 })).toBe(true);
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 5 })).toBe(false);
@@ -1380,9 +1301,7 @@ describe('condition operators', () => {
       startDate: { year: 2024, month: 0, day: 1 },
       repeat: 'daily',
       repeatInterval: 1,
-      conditions: [
-        { field: 'day', op: '<=', value: 5 }
-      ]
+      conditions: [{ field: 'day', op: '<=', value: 5 }]
     };
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 5 })).toBe(true);
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 6 })).toBe(false);
@@ -1393,9 +1312,7 @@ describe('condition operators', () => {
       startDate: { year: 2024, month: 0, day: 1 },
       repeat: 'daily',
       repeatInterval: 1,
-      conditions: [
-        { field: 'day', op: '==', value: 15 }
-      ]
+      conditions: [{ field: 'day', op: '==', value: 15 }]
     };
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 15 })).toBe(true);
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 16 })).toBe(false);
@@ -1410,7 +1327,7 @@ describe('condition operators', () => {
         { field: 'day', op: '%', value: 7, offset: 3 } // (day - 3) % 7 === 0
       ]
     };
-    expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 3 })).toBe(true);  // (3-3)%7=0
+    expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 3 })).toBe(true); // (3-3)%7=0
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 10 })).toBe(true); // (10-3)%7=0
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 5 })).toBe(false); // (5-3)%7=2
   });
@@ -1420,9 +1337,7 @@ describe('condition operators', () => {
       startDate: { year: 2024, month: 0, day: 1 },
       repeat: 'daily',
       repeatInterval: 1,
-      conditions: [
-        { field: 'day', op: '%', value: 0 }
-      ]
+      conditions: [{ field: 'day', op: '%', value: 0 }]
     };
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 5 })).toBe(false);
   });
@@ -1432,9 +1347,7 @@ describe('condition operators', () => {
       startDate: { year: 2024, month: 0, day: 1 },
       repeat: 'daily',
       repeatInterval: 1,
-      conditions: [
-        { field: 'day', op: '~=', value: 5 }
-      ]
+      conditions: [{ field: 'day', op: '~=', value: 5 }]
     };
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 5 })).toBe(false);
   });
@@ -1444,9 +1357,7 @@ describe('condition operators', () => {
       startDate: { year: 2024, month: 0, day: 1 },
       repeat: 'daily',
       repeatInterval: 1,
-      conditions: [
-        { field: 'unknownField', op: '==', value: 5 }
-      ]
+      conditions: [{ field: 'unknownField', op: '==', value: 5 }]
     };
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 5 })).toBe(false);
   });
@@ -1492,7 +1403,7 @@ describe('condition field types', () => {
         { field: 'weekNumberInMonth', op: '==', value: 2 } // 2nd week
       ]
     };
-    expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 8 })).toBe(true);  // Day 8 is in week 2
+    expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 8 })).toBe(true); // Day 8 is in week 2
     expect(isRecurringMatch(noteData, { year: 2024, month: 0, day: 1 })).toBe(false); // Day 1 is in week 1
   });
 

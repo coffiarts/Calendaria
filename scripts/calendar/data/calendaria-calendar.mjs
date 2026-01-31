@@ -1463,8 +1463,14 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
       template = format;
     } else {
       const defaults = {
-        dateShort: 'D MMM', dateMedium: 'D MMMM', dateLong: 'D MMMM, YYYY', dateFull: 'EEEE, D MMMM YYYY',
-        time24: 'HH:mm', time12: 'h:mm A', time24Sec: 'HH:mm:ss', time12Sec: 'h:mm:ss A'
+        dateShort: 'D MMM',
+        dateMedium: 'D MMMM',
+        dateLong: 'D MMMM, YYYY',
+        dateFull: 'EEEE, D MMMM YYYY',
+        time24: 'HH:mm',
+        time12: 'h:mm A',
+        time24Sec: 'HH:mm:ss',
+        time12Sec: 'h:mm:ss A'
       };
       template = defaults[format] ?? defaults.dateLong;
     }

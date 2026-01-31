@@ -611,12 +611,7 @@ export class HUD extends HandlebarsApplicationMixin(ApplicationV2) {
       if (e.target.closest('#context-menu')) return;
       e.preventDefault();
       document.getElementById('context-menu')?.remove();
-      const menu = new foundry.applications.ux.ContextMenu.implementation(
-        this.element,
-        '.calendaria-hud-bar',
-        this.#getContextMenuItems(),
-        { fixed: true, jQuery: false }
-      );
+      const menu = new foundry.applications.ux.ContextMenu.implementation(this.element, '.calendaria-hud-bar', this.#getContextMenuItems(), { fixed: true, jQuery: false });
       menu._onActivate(e);
     });
   }
