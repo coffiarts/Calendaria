@@ -9,7 +9,6 @@
 import { DEFAULT_MOON_PHASES } from '../../constants.mjs';
 import { format, localize } from '../../utils/localization.mjs';
 import CalendarRegistry from '../calendar-registry.mjs';
-import { formatEraTemplate } from '../calendar-utils.mjs';
 import * as LeapYearUtils from '../leap-year-utils.mjs';
 
 const { ArrayField, BooleanField, NumberField, SchemaField, StringField } = foundry.data.fields;
@@ -51,28 +50,26 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     const hoursPerDay = calendar.time?.hoursPerDay ?? 24;
     const secondsPerHour = minutesPerHour * secondsPerMinute;
     const secondsPerDay = hoursPerDay * secondsPerHour;
-    const dayOfYear = dt.ordinal - 1;
     const daysPerYear = calendar.days?.daysPerYear ?? 365;
     const yearZero = calendar.years?.yearZero ?? 0;
     const golarionYear = wc.year;
-    const totalDays = (golarionYear - yearZero) * daysPerYear + dayOfYear;
+    const internalYear = golarionYear - yearZero;
+    let dayOfYear = dt.day - 1;
+    for (let m = 0; m < dt.month - 1; m++) dayOfYear += calendar.getDaysInMonth?.(m, internalYear) ?? 30;
+    let totalDays = 0;
+    if (internalYear > 0) for (let y = 0; y < internalYear; y++) totalDays += calendar.getDaysInYear?.(y) ?? daysPerYear;
+    else if (internalYear < 0) for (let y = -1; y >= internalYear; y--) totalDays -= calendar.getDaysInYear?.(y) ?? daysPerYear;
+    totalDays += dayOfYear;
     const internalTime = totalDays * secondsPerDay + dt.hour * secondsPerHour + dt.minute * secondsPerMinute + dt.second;
     this.#epochOffset = internalTime - game.time.worldTime;
     const numWeekdays = calendar.days?.values?.length ?? 7;
-    const internalYear = golarionYear - yearZero;
-    let calendarDayOfYear = dt.day - 1;
-    for (let m = 0; m < dt.month - 1; m++) calendarDayOfYear += calendar.getDaysInMonth?.(m, internalYear) ?? 30;
-    let totalDaysFromPriorYears = 0;
-    if (internalYear > 0) for (let y = 0; y < internalYear; y++) totalDaysFromPriorYears += calendar.getDaysInYear?.(y) ?? daysPerYear;
-    else if (internalYear < 0) for (let y = -1; y >= internalYear; y--) totalDaysFromPriorYears -= calendar.getDaysInYear?.(y) ?? daysPerYear;
-    const calendarTotalDays = totalDaysFromPriorYears + calendarDayOfYear;
     const components = { year: internalYear, month: dt.month - 1, dayOfMonth: dt.day - 1 };
     const nonCountingFestivalsInYear = calendar.countNonWeekdayFestivalsBefore?.(components) ?? 0;
     const nonCountingFestivalsFromPriorYears = calendar.countNonWeekdayFestivalsBeforeYear?.(internalYear) ?? 0;
     const intercalaryInYear = calendar.countIntercalaryDaysBefore?.(components) ?? 0;
     const intercalaryFromPriorYears = calendar.countIntercalaryDaysBeforeYear?.(internalYear) ?? 0;
     const totalNonCounting = nonCountingFestivalsFromPriorYears + nonCountingFestivalsInYear + intercalaryFromPriorYears + intercalaryInYear;
-    const countingDays = calendarTotalDays - totalNonCounting;
+    const countingDays = totalDays - totalNonCounting;
     const expectedWeekday = dt.weekday - 1;
     const correctFirstWeekday = (((expectedWeekday - (countingDays % numWeekdays)) % numWeekdays) + numWeekdays) % numWeekdays;
     if (calendar.years && calendar.years.firstWeekday !== correctFirstWeekday) calendar.years.firstWeekday = correctFirstWeekday;
@@ -131,12 +128,63 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
 
   /** @override */
   timeToComponents(time) {
-    return super.timeToComponents(time + CalendariaCalendar.epochOffset);
+    const adjustedTime = time + CalendariaCalendar.epochOffset;
+    const secondsPerMinute = this.days?.secondsPerMinute ?? 60;
+    const minutesPerHour = this.days?.minutesPerHour ?? 60;
+    const hoursPerDay = this.days?.hoursPerDay ?? 24;
+    const secondsPerHour = secondsPerMinute * minutesPerHour;
+    const secondsPerDay = secondsPerHour * hoursPerDay;
+
+    let totalDays = Math.floor(adjustedTime / secondsPerDay);
+    const daySeconds = adjustedTime - totalDays * secondsPerDay;
+    const hour = Math.floor(daySeconds / secondsPerHour);
+    const minute = Math.floor((daySeconds % secondsPerHour) / secondsPerMinute);
+    const second = Math.floor(daySeconds % secondsPerMinute);
+
+    let year = 0;
+    if (totalDays >= 0) {
+      while (totalDays >= this.getDaysInYear(year)) {
+        totalDays -= this.getDaysInYear(year);
+        year++;
+      }
+    } else {
+      while (totalDays < 0) {
+        year--;
+        totalDays += this.getDaysInYear(year);
+      }
+    }
+
+    let month = 0;
+    const months = this.months?.values ?? [];
+    while (month < months.length && totalDays >= this.getDaysInMonth(month, year)) {
+      totalDays -= this.getDaysInMonth(month, year);
+      month++;
+    }
+
+    return { year, month, dayOfMonth: totalDays, hour, minute, second };
   }
 
   /** @override */
   componentsToTime(components) {
-    return super.componentsToTime(components) - CalendariaCalendar.epochOffset;
+    const { year = 0, month = 0, dayOfMonth = 0, hour = 0, minute = 0, second = 0 } = components;
+    const secondsPerMinute = this.days?.secondsPerMinute ?? 60;
+    const minutesPerHour = this.days?.minutesPerHour ?? 60;
+    const hoursPerDay = this.days?.hoursPerDay ?? 24;
+    const secondsPerHour = secondsPerMinute * minutesPerHour;
+    const secondsPerDay = secondsPerHour * hoursPerDay;
+
+    let totalDays = 0;
+    if (year >= 0) {
+      for (let y = 0; y < year; y++) totalDays += this.getDaysInYear(y);
+    } else {
+      for (let y = -1; y >= year; y--) totalDays -= this.getDaysInYear(y);
+    }
+
+    for (let m = 0; m < month; m++) totalDays += this.getDaysInMonth(m, year);
+    totalDays += dayOfMonth;
+
+    const totalSeconds = totalDays * secondsPerDay + hour * secondsPerHour + minute * secondsPerMinute + second;
+    return totalSeconds - CalendariaCalendar.epochOffset;
   }
 
   /** @override */
@@ -562,16 +610,10 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     const components = { ...game.time.components };
     year ??= components.year + this.years.yearZero;
     month ??= components.month;
-    day ??= components.dayOfMonth;
+    day ??= components.dayOfMonth + 1; // Default to current day (1-indexed)
     components.year = year - this.years.yearZero;
-    const { leapYear } = this._decomposeTimeYears(this.componentsToTime(components));
-    let dayOfYear = day - 1;
-    for (let idx = 0; idx < month; idx++) {
-      const m = this.months.values[idx];
-      dayOfYear += leapYear ? (m.leapDays ?? m.days) : m.days;
-    }
-    components.day = dayOfYear;
     components.month = month;
+    components.dayOfMonth = day - 1; // Convert 1-indexed to 0-indexed
     await game.time.set(components);
   }
 
@@ -592,7 +634,7 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
           return currentDayOfYear >= f.dayOfYear && currentDayOfYear < f.dayOfYear + duration;
         }
         if (f.month != null && f.day != null) {
-          const festivalDayOfYear = this._calculateDayOfYearFromMonthDay(f.month - 1, f.day - 1) + 1;
+          const festivalDayOfYear = this._calculateDayOfYearFromMonthDay(f.month - 1, f.day - 1, components.year) + 1;
           return currentDayOfYear >= festivalDayOfYear && currentDayOfYear < festivalDayOfYear + duration;
         }
         return false;
@@ -601,16 +643,17 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
   }
 
   /**
-   * Calculate day of year (1-indexed) from month and day.
+   * Calculate day of year (0-indexed) from month and day.
    * @param {number} month - Month index (0-indexed)
    * @param {number} day - Day of month (0-indexed)
+   * @param {number} [year] - Year for leap year calculation
    * @returns {number} Day of year (0-indexed)
    * @private
    */
-  _calculateDayOfYearFromMonthDay(month, day) {
+  _calculateDayOfYearFromMonthDay(month, day, year) {
     if (this.isMonthless) return day;
     let dayOfYear = day;
-    for (let i = 0; i < month; i++) dayOfYear += this.months?.values?.[i]?.days ?? 0;
+    for (let i = 0; i < month; i++) dayOfYear += year !== undefined ? this.getDaysInMonth(i, year) : (this.months?.values?.[i]?.days ?? 0);
     return dayOfYear;
   }
 
@@ -623,7 +666,7 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
   _calculateDayOfYear(components) {
     if (this.isMonthless) return components.dayOfMonth;
     let dayOfYear = components.dayOfMonth;
-    for (let i = 0; i < components.month; i++) dayOfYear += this.months?.values?.[i]?.days ?? 0;
+    for (let i = 0; i < components.month; i++) dayOfYear += components.year !== undefined ? this.getDaysInMonth(i, components.year) : (this.months?.values?.[i]?.days ?? 0);
     return dayOfYear;
   }
 
@@ -655,7 +698,7 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
       if (festival.dayOfYear != null) {
         festivalStart = festival.dayOfYear;
       } else if (festival.month != null && festival.day != null) {
-        festivalStart = this._calculateDayOfYearFromMonthDay(festival.month - 1, festival.day - 1) + 1;
+        festivalStart = this._calculateDayOfYearFromMonthDay(festival.month - 1, festival.day - 1, components.year) + 1;
       } else {
         continue;
       }
@@ -833,19 +876,18 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     let phaseDuration = 1;
 
     if (hasRanges) {
-      // Match phase by normalized position against start/end ranges
+      // Convert fractional start/end to integer day boundaries to avoid floating-point precision issues
+      const totalCycleDays = Math.round(moon.cycleLength);
       for (let i = 0; i < phases.length; i++) {
         const phase = phases[i];
-        const start = phase.start ?? 0;
-        const end = phase.end ?? 1;
-        // Handle wrap-around (e.g., start=0.9, end=0.1)
-        const inRange = end > start ? normalizedPosition >= start && normalizedPosition < end : normalizedPosition >= start || normalizedPosition < end;
+        const startDay = Math.round((phase.start ?? 0) * moon.cycleLength);
+        const endDay = Math.round((phase.end ?? 1) * moon.cycleLength);
+        // Handle wrap-around (e.g., startDay=25, endDay=3 in a 28-day cycle)
+        const inRange = endDay > startDay ? dayIndex >= startDay && dayIndex < endDay : dayIndex >= startDay || dayIndex < endDay;
         if (inRange) {
           phaseArrayIndex = i;
-          const phaseLength = end > start ? end - start : 1 - start + end;
-          phaseDuration = Math.max(1, Math.round(phaseLength * moon.cycleLength));
-          const posInPhase = end > start ? normalizedPosition - start : normalizedPosition >= start ? normalizedPosition - start : normalizedPosition + (1 - start);
-          dayWithinPhase = Math.floor(posInPhase * moon.cycleLength);
+          phaseDuration = Math.max(1, endDay > startDay ? endDay - startDay : totalCycleDays - startDay + endDay);
+          dayWithinPhase = dayIndex >= startDay ? dayIndex - startDay : dayIndex + totalCycleDays - startDay;
           break;
         }
       }
@@ -951,10 +993,7 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     const year = Number(components.year) || 0;
     const month = Number(components.month) || 0;
     const dayOfMonth = components.dayOfMonth ?? (Number(components.day) || 1) - 1;
-    let dayOfYear = dayOfMonth;
-    const monthDays = this.months?.values || [];
-    for (let i = 0; i < month && i < monthDays.length; i++) dayOfYear += monthDays[i]?.days || 30;
-    const normalized = { year, day: dayOfYear, hour: Number(components.hour) || 0, minute: Number(components.minute) || 0, second: Number(components.second) || 0 };
+    const normalized = { year, month, dayOfMonth, hour: Number(components.hour) || 0, minute: Number(components.minute) || 0, second: Number(components.second) || 0 };
     const worldTime = this.componentsToTime(normalized);
     const secondsPerDay = (this.days?.hoursPerDay || 24) * (this.days?.minutesPerHour || 60) * (this.days?.secondsPerMinute || 60);
     return Math.floor(worldTime / secondsPerDay);
@@ -1056,16 +1095,47 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
   getWeekdayForDate(time = game.time.worldTime) {
     const components = typeof time === 'number' ? this.timeToComponents(time) : time;
     const weekdays = this.getWeekdaysForMonth(components.month);
-    const weekdayIndex = components.dayOfWeek ?? 0;
+    const weekdayIndex = this._computeDayOfWeek(components);
     const weekday = weekdays[weekdayIndex];
     if (!weekday) return null;
     return { ...weekday, index: weekdayIndex };
   }
 
   /**
+   * Compute the day-of-week index for decomposed time components.
+   * @param {object} components - Components from timeToComponents ({year, month, dayOfMonth})
+   * @returns {number} 0-based weekday index
+   */
+  _computeDayOfWeek(components) {
+    const daysInWeek = this.days?.values?.length || 7;
+    const monthData = this.months?.values?.[components.month];
+    if (monthData?.startingWeekday != null) {
+      const dayIndex = components.dayOfMonth ?? 0;
+      const ctx = { year: components.year, month: components.month, dayOfMonth: dayIndex };
+      const nonCounting = (this.countNonWeekdayFestivalsBefore?.(ctx) ?? 0) + (this.countIntercalaryDaysBefore?.(ctx) ?? 0);
+      return (monthData.startingWeekday + dayIndex - nonCounting + daysInWeek * 100) % daysInWeek;
+    }
+    let dayOfYear = components.dayOfMonth ?? 0;
+    for (let m = 0; m < components.month; m++) dayOfYear += this.getDaysInMonth(m, components.year);
+    let totalDaysFromPriorYears = 0;
+    if (components.year > 0) for (let y = 0; y < components.year; y++) totalDaysFromPriorYears += this.getDaysInYear(y);
+    else if (components.year < 0) for (let y = -1; y >= components.year; y--) totalDaysFromPriorYears -= this.getDaysInYear(y);
+    const totalDays = totalDaysFromPriorYears + dayOfYear;
+    const ctx = { year: components.year, month: components.month, dayOfMonth: components.dayOfMonth ?? 0 };
+    const totalNonCounting =
+      (this.countNonWeekdayFestivalsBeforeYear?.(components.year) ?? 0) +
+      (this.countNonWeekdayFestivalsBefore?.(ctx) ?? 0) +
+      (this.countIntercalaryDaysBeforeYear?.(components.year) ?? 0) +
+      (this.countIntercalaryDaysBefore?.(ctx) ?? 0);
+    const firstWeekday = this.years?.firstWeekday ?? 0;
+    const countingDays = totalDays - totalNonCounting;
+    return (((countingDays + firstWeekday) % daysInWeek) + daysInWeek) % daysInWeek;
+  }
+
+  /**
    * Get the current era for a given year.
    * @param {number|object} [time]  Time to use, by default the current world time.
-   * @returns {{name: string, abbreviation: string, format: string, template: string|null, yearInEra: number}|null} - Era data or null
+   * @returns {{name: string, abbreviation: string, yearInEra: number}|null} - Era data or null
    */
   getCurrentEra(time = game.time.worldTime) {
     if (!this.eras?.length) return null;
@@ -1074,32 +1144,16 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     const sortedEras = [...this.eras].sort((a, b) => b.startYear - a.startYear);
     for (const era of sortedEras) {
       if (displayYear >= era.startYear && (era.endYear == null || displayYear <= era.endYear)) {
-        return { name: era.name, abbreviation: era.abbreviation, format: era.format || 'suffix', template: era.template || null, yearInEra: displayYear - era.startYear + 1 };
+        return { name: era.name, abbreviation: era.abbreviation, yearInEra: displayYear - era.startYear + 1 };
       }
     }
 
     if (this.eras.length > 0) {
       const era = this.eras[0];
-      return { name: era.name, abbreviation: era.abbreviation, format: era.format || 'suffix', template: era.template || null, yearInEra: displayYear };
+      return { name: era.name, abbreviation: era.abbreviation, yearInEra: displayYear };
     }
 
     return null;
-  }
-
-  /**
-   * Format a year with its era designation.
-   * @param {number} year  The display year to format.
-   * @returns {string}  Formatted year string (e.g., "1492 DR" or "CY 591").
-   */
-  formatYearWithEra(year) {
-    const eraData = this.getCurrentEra({ year: year - (this.years?.yearZero ?? 0), month: 0, dayOfMonth: 0 });
-    if (!eraData) return String(year);
-    const abbr = eraData.abbreviation ? localize(eraData.abbreviation) : '';
-    const eraName = eraData.name ? localize(eraData.name) : '';
-    if (eraData.template) return formatEraTemplate(eraData.template, { year, abbreviation: abbr, era: eraName, yearInEra: eraData.yearInEra });
-    if (!abbr) return String(year);
-    if (eraData.format === 'prefix') return `${abbr} ${year}`;
-    return `${year} ${abbr}`;
   }
 
   /**
@@ -1358,7 +1412,9 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
    * @returns {string} Formatted date string.
    */
   static formatMonthDay(calendar, components, _options = {}) {
-    const festivalDay = calendar.findFestivalDay?.(components);
+    const yearZero = calendar?.years?.yearZero ?? 0;
+    const internalYear = components.year - yearZero;
+    const festivalDay = calendar.findFestivalDay?.({ ...components, year: internalYear, dayOfMonth: components.dayOfMonth - 1 });
     if (festivalDay) return localize(festivalDay.name);
     const context = CalendariaCalendar.dateFormattingParts(calendar, components);
     return format('CALENDARIA.Formatters.DayMonth', { day: context.d, month: context.B });
@@ -1372,7 +1428,9 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
    * @returns {string} Formatted date string.
    */
   static formatMonthDayYear(calendar, components, _options = {}) {
-    const festivalDay = calendar.findFestivalDay?.(components);
+    const yearZero = calendar?.years?.yearZero ?? 0;
+    const internalYear = components.year - yearZero;
+    const festivalDay = calendar.findFestivalDay?.({ ...components, year: internalYear, dayOfMonth: components.dayOfMonth - 1 });
     if (festivalDay) {
       const context = CalendariaCalendar.dateFormattingParts(calendar, components);
       return format('CALENDARIA.Formatters.FestivalDayYear', { day: localize(festivalDay.name), yyyy: context.y });
@@ -1436,8 +1494,14 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
       template = format;
     } else {
       const defaults = {
-        dateShort: 'D MMM', dateMedium: 'D MMMM', dateLong: 'D MMMM, YYYY', dateFull: 'EEEE, D MMMM YYYY',
-        time24: 'HH:mm', time12: 'h:mm A', time24Sec: 'HH:mm:ss', time12Sec: 'h:mm:ss A'
+        dateShort: 'D MMM',
+        dateMedium: 'D MMMM',
+        dateLong: 'D MMMM, YYYY',
+        dateFull: 'EEEE, D MMMM YYYY',
+        time24: 'HH:mm',
+        time12: 'h:mm A',
+        time24Sec: 'HH:mm:ss',
+        time12Sec: 'h:mm:ss A'
       };
       template = defaults[format] ?? defaults.dateLong;
     }

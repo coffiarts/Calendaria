@@ -6,41 +6,30 @@ Eras define historical periods with custom year formatting. Configure eras in th
 
 ### Era Fields
 
-| Field        | Description                                      |
-| ------------ | ------------------------------------------------ |
-| Name         | Full era name (e.g., "Dale Reckoning")           |
-| Abbreviation | Short form (e.g., "DR")                          |
-| Start Year   | First year of this era                           |
-| End Year     | Last year (leave empty if ongoing)               |
-| Format       | Position of abbreviation: `prefix` or `suffix`   |
-| Template     | Custom format template (overrides Format if set) |
+| Field        | Description                            |
+| ------------ | -------------------------------------- |
+| Name         | Full era name (e.g., "Dale Reckoning") |
+| Abbreviation | Short form (e.g., "DR")                |
+| Start Year   | First year of this era                 |
+| End Year     | Last year (leave empty if ongoing)     |
 
 ### Era Resolution
 
 When displaying a year, Calendaria finds the matching era by checking which era contains that year. The `yearInEra` is calculated as `displayYear - startYear + 1`.
 
-### Era Templates
+### Displaying Eras in Date Formats
 
-Custom templates use these placeholders:
+Use era format tokens in date format strings to include era information:
 
 | Token  | Description                          |
 | ------ | ------------------------------------ |
-| `YYYY` | Absolute display year (e.g., 1492)   |
-| `YY`   | 2-digit year (e.g., 92)              |
-| `yy`   | Year within current era              |
 | `G`    | Era abbreviation (e.g., DR)          |
 | `GGGG` | Full era name (e.g., Dale Reckoning) |
 
 Examples:
 
-- `YYYY G` produces "1492 DR"
-- `G yy` produces "DR 5"
-- `Year yy of the GGGG` produces "Year 5 of the Dale Reckoning"
-
-When no template is set, the Format field controls output:
-
-- `suffix`: "1492 DR"
-- `prefix`: "DR 1492"
+- `Y G` produces "1492 DR"
+- `Do of MMMM, Y GGGG` produces "15th of Hammer, 1492 Dale Reckoning"
 
 ---
 

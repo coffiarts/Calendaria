@@ -15,6 +15,7 @@ import { log } from '../../utils/logger.mjs';
 import { canChangeActiveCalendar, canViewMiniCal, canViewTimeKeeper } from '../../utils/permissions.mjs';
 import { exportSettings, importSettings } from '../../utils/settings-io.mjs';
 import { COLOR_CATEGORIES, COLOR_DEFINITIONS, COMPONENT_CATEGORIES, DEFAULT_COLORS, applyCustomColors, applyPreset } from '../../utils/theme-utils.mjs';
+import { fromDisplayUnit, getTemperatureUnit, toDisplayUnit } from '../../weather/climate-data.mjs';
 import WeatherManager from '../../weather/weather-manager.mjs';
 import { BigCal } from '../big-cal.mjs';
 import { CalendarEditor } from '../calendar-editor.mjs';
@@ -704,8 +705,6 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     'module-sync': [SETTINGS.PRIMARY_GM],
     'module-integration': [SETTINGS.SHOW_TOOLBAR_BUTTON, SETTINGS.TOOLBAR_APPS, SETTINGS.SHOW_JOURNAL_FOOTER],
     'module-debugging': [SETTINGS.DEV_MODE, SETTINGS.LOGGING_LEVEL],
-    // Stopwatch tab sections
-    'stopwatch-display': [SETTINGS.STOPWATCH_AUTO_START_TIME],
     // Permissions tab sections
     permissions: [SETTINGS.PERMISSIONS],
     // Theme tab sections
@@ -834,6 +833,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     context.miniCalShowEra = game.settings.get(MODULE.ID, SETTINGS.MINI_CAL_SHOW_ERA);
     context.miniCalShowCycles = game.settings.get(MODULE.ID, SETTINGS.MINI_CAL_SHOW_CYCLES);
     context.miniCalShowMoonPhases = game.settings.get(MODULE.ID, SETTINGS.MINI_CAL_SHOW_MOON_PHASES);
+    context.miniCalHeaderShowSelected = game.settings.get(MODULE.ID, SETTINGS.MINI_CAL_HEADER_SHOW_SELECTED);
 
     const miniCalWeatherDisplayMode = game.settings.get(MODULE.ID, SETTINGS.MINI_CAL_WEATHER_DISPLAY_MODE);
     context.miniCalWeatherDisplayModeOptions = [
@@ -993,6 +993,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     context.bigCalShowEra = game.settings.get(MODULE.ID, SETTINGS.BIG_CAL_SHOW_ERA);
     context.bigCalShowCycles = game.settings.get(MODULE.ID, SETTINGS.BIG_CAL_SHOW_CYCLES);
     context.bigCalShowMoonPhases = game.settings.get(MODULE.ID, SETTINGS.BIG_CAL_SHOW_MOON_PHASES);
+    context.bigCalHeaderShowSelected = game.settings.get(MODULE.ID, SETTINGS.BIG_CAL_HEADER_SHOW_SELECTED);
 
     const bigCalWeatherDisplayMode = game.settings.get(MODULE.ID, SETTINGS.BIG_CAL_WEATHER_DISPLAY_MODE);
     context.bigCalWeatherDisplayModeOptions = [
@@ -1070,6 +1071,10 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       { value: 'ordinalEra', label: localize('CALENDARIA.Format.Preset.OrdinalEra') },
       { value: 'ordinalFull', label: localize('CALENDARIA.Format.Preset.OrdinalFull') },
       { value: 'seasonDate', label: localize('CALENDARIA.Format.Preset.SeasonDate') },
+      // Year/Week
+      { value: 'weekHeader', label: localize('CALENDARIA.Format.Preset.WeekHeader') },
+      { value: 'yearOnly', label: localize('CALENDARIA.Format.Preset.YearOnly') },
+      { value: 'yearEra', label: localize('CALENDARIA.Format.Preset.YearEra') },
       // Time
       { value: 'time12', label: localize('CALENDARIA.Format.Preset.Time12') },
       { value: 'time12Sec', label: localize('CALENDARIA.Format.Preset.Time12Sec') },
@@ -1083,7 +1088,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     ];
 
     // Locations that support "Off" option
-    const supportsOff = ['timekeeperDate'];
+    const supportsOff = ['hudDate', 'timekeeperDate'];
 
     // Stopwatch preset configurations
     const stopwatchRealtimePresets = [
@@ -1110,6 +1115,9 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       { id: 'miniCalHeader', label: localize('CALENDARIA.Format.Location.MiniCalHeader'), category: 'miniCal', contextType: 'date' },
       { id: 'miniCalTime', label: localize('CALENDARIA.Format.Location.MiniCalTime'), category: 'miniCal', contextType: 'time' },
       { id: 'bigCalHeader', label: localize('CALENDARIA.Format.Location.BigCalHeader'), category: 'bigcal', contextType: 'date' },
+      { id: 'bigCalWeekHeader', label: localize('CALENDARIA.Format.Location.BigCalWeekHeader'), category: 'bigcal', contextType: 'date' },
+      { id: 'bigCalYearHeader', label: localize('CALENDARIA.Format.Location.BigCalYearHeader'), category: 'bigcal', contextType: 'date' },
+      { id: 'bigCalYearLabel', label: localize('CALENDARIA.Format.Location.BigCalYearLabel'), category: 'bigcal', contextType: 'date' },
       { id: 'chatTimestamp', label: localize('CALENDARIA.Format.Location.ChatTimestamp'), category: 'chat', contextType: 'date' },
       { id: 'stopwatchRealtime', label: localize('CALENDARIA.Format.Location.StopwatchRealtime'), category: 'stopwatch', contextType: 'stopwatch', gmOnly: true },
       { id: 'stopwatchGametime', label: localize('CALENDARIA.Format.Location.StopwatchGametime'), category: 'stopwatch', contextType: 'stopwatch', gmOnly: true }
@@ -1244,7 +1252,13 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       { value: 'celsius', label: localize('CALENDARIA.Settings.TemperatureUnit.Celsius'), selected: tempUnit === 'celsius' },
       { value: 'fahrenheit', label: localize('CALENDARIA.Settings.TemperatureUnit.Fahrenheit'), selected: tempUnit === 'fahrenheit' }
     ];
-    context.customWeatherPresets = game.settings.get(MODULE.ID, SETTINGS.CUSTOM_WEATHER_PRESETS) || [];
+    context.temperatureUnitSymbol = tempUnit === 'fahrenheit' ? '°F' : '°C';
+    const rawPresets = game.settings.get(MODULE.ID, SETTINGS.CUSTOM_WEATHER_PRESETS) || [];
+    context.customWeatherPresets = rawPresets.map((p) => ({
+      ...p,
+      tempMin: toDisplayUnit(p.tempMin),
+      tempMax: toDisplayUnit(p.tempMax)
+    }));
     const zones = WeatherManager.getCalendarZones() || [];
     const activeZone = WeatherManager.getActiveZone();
     context.hasZones = zones.length > 0;
@@ -1547,6 +1561,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     if ('miniCalShowEra' in data) await game.settings.set(MODULE.ID, SETTINGS.MINI_CAL_SHOW_ERA, data.miniCalShowEra);
     if ('miniCalShowCycles' in data) await game.settings.set(MODULE.ID, SETTINGS.MINI_CAL_SHOW_CYCLES, data.miniCalShowCycles);
     if ('miniCalShowMoonPhases' in data) await game.settings.set(MODULE.ID, SETTINGS.MINI_CAL_SHOW_MOON_PHASES, data.miniCalShowMoonPhases);
+    if ('miniCalHeaderShowSelected' in data) await game.settings.set(MODULE.ID, SETTINGS.MINI_CAL_HEADER_SHOW_SELECTED, data.miniCalHeaderShowSelected);
     if ('miniCalWeatherDisplayMode' in data) await game.settings.set(MODULE.ID, SETTINGS.MINI_CAL_WEATHER_DISPLAY_MODE, data.miniCalWeatherDisplayMode);
     if ('miniCalSeasonDisplayMode' in data) await game.settings.set(MODULE.ID, SETTINGS.MINI_CAL_SEASON_DISPLAY_MODE, data.miniCalSeasonDisplayMode);
     if ('miniCalEraDisplayMode' in data) await game.settings.set(MODULE.ID, SETTINGS.MINI_CAL_ERA_DISPLAY_MODE, data.miniCalEraDisplayMode);
@@ -1558,6 +1573,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     if ('bigCalShowEra' in data) await game.settings.set(MODULE.ID, SETTINGS.BIG_CAL_SHOW_ERA, data.bigCalShowEra);
     if ('bigCalShowCycles' in data) await game.settings.set(MODULE.ID, SETTINGS.BIG_CAL_SHOW_CYCLES, data.bigCalShowCycles);
     if ('bigCalShowMoonPhases' in data) await game.settings.set(MODULE.ID, SETTINGS.BIG_CAL_SHOW_MOON_PHASES, data.bigCalShowMoonPhases);
+    if ('bigCalHeaderShowSelected' in data) await game.settings.set(MODULE.ID, SETTINGS.BIG_CAL_HEADER_SHOW_SELECTED, data.bigCalHeaderShowSelected);
     if ('bigCalWeatherDisplayMode' in data) await game.settings.set(MODULE.ID, SETTINGS.BIG_CAL_WEATHER_DISPLAY_MODE, data.bigCalWeatherDisplayMode);
     if ('bigCalSeasonDisplayMode' in data) await game.settings.set(MODULE.ID, SETTINGS.BIG_CAL_SEASON_DISPLAY_MODE, data.bigCalSeasonDisplayMode);
     if ('bigCalEraDisplayMode' in data) await game.settings.set(MODULE.ID, SETTINGS.BIG_CAL_ERA_DISPLAY_MODE, data.bigCalEraDisplayMode);
@@ -2166,6 +2182,9 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     const data = preset || { label: '', icon: 'fa-cloud', color: '#888888', tempMin: 10, tempMax: 25, darknessPenalty: 0, environmentBase: null, environmentDark: null };
     const envBase = data.environmentBase ?? {};
     const envDark = data.environmentDark ?? {};
+    const unitSymbol = getTemperatureUnit() === 'fahrenheit' ? '°F' : '°C';
+    const displayMin = toDisplayUnit(data.tempMin);
+    const displayMax = toDisplayUnit(data.tempMax);
 
     const content = `
       <form class="weather-preset-dialog">
@@ -2185,10 +2204,10 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
         <div class="form-group">
           <label>${localize('CALENDARIA.SettingsPanel.WeatherPresets.TempRange')}</label>
           <div class="form-fields">
-            <input type="number" name="tempMin" value="${data.tempMin}" placeholder="0">
+            <input type="number" name="tempMin" value="${displayMin}" placeholder="0">
             <span>–</span>
-            <input type="number" name="tempMax" value="${data.tempMax}" placeholder="25">
-            <span>°C</span>
+            <input type="number" name="tempMax" value="${displayMax}" placeholder="25">
+            <span>${unitSymbol}</span>
           </div>
         </div>
         <div class="form-group">
@@ -2245,8 +2264,8 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
             label: form.elements.label.value.trim(),
             icon: form.elements.icon.value.trim() || 'fa-cloud',
             color: form.elements.color.value || '#888888',
-            tempMin: Number(form.elements.tempMin.value) || 10,
-            tempMax: Number(form.elements.tempMax.value) || 25,
+            tempMin: fromDisplayUnit(Number(form.elements.tempMin.value) || 10),
+            tempMax: fromDisplayUnit(Number(form.elements.tempMax.value) || 25),
             darknessPenalty: Number(form.elements.darknessPenalty.value) || 0,
             environmentBase: baseHue !== null || baseSat !== null ? { hue: baseHue, saturation: baseSat } : null,
             environmentDark: darkHue !== null || darkSat !== null ? { hue: darkHue, saturation: darkSat } : null

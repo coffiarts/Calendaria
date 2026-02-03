@@ -49,21 +49,21 @@ await CALENDARIA.api.createNote({
 
 ### Recurrence Fields
 
-| Field            | Type   | Description                                                    |
-| ---------------- | ------ | -------------------------------------------------------------- |
-| `repeat`         | String | Recurrence pattern                                             |
-| `repeatInterval` | Number | Interval for repeating (e.g., every N days/weeks)              |
-| `repeatEndDate`  | Object | Stop repeating after this date `{year, month, day}`            |
-| `maxOccurrences` | Number | Limit total recurrences (0 = unlimited)                        |
-| `weekday`        | Number | Target weekday for `weekOfMonth` pattern (0-indexed)           |
-| `weekNumber`     | Number | Week ordinal for `weekOfMonth` (1-5, or -1 to -5 for last)     |
-| `moonConditions` | Array  | Moon phase conditions `[{moonIndex, phaseStart, phaseEnd}]`    |
-| `randomConfig`   | Object | Random event config `{seed, probability, checkInterval}`       |
-| `linkedEvent`    | Object | Linked event config `{noteId, offset}`                         |
-| `rangePattern`   | Object | Range pattern `{year, month, day}` with values or `[min, max]` |
-| `seasonalConfig` | Object | Seasonal config `{seasonIndex, trigger}`                       |
-| `computedConfig` | Object | Computed event chain `{chain, yearOverrides}`                  |
-| `conditions`     | Array  | Advanced conditions `[{field, op, value, value2?, offset?}]`   |
+| Field            | Type   | Description                                                           |
+| ---------------- | ------ | --------------------------------------------------------------------- |
+| `repeat`         | String | Recurrence pattern                                                    |
+| `repeatInterval` | Number | Interval for repeating (e.g., every N days/weeks)                     |
+| `repeatEndDate`  | Object | Stop repeating after this date `{year, month, day}`                   |
+| `maxOccurrences` | Number | Limit total recurrences (0 = unlimited)                               |
+| `weekday`        | Number | Target weekday for `weekOfMonth` pattern (0-indexed)                  |
+| `weekNumber`     | Number | Week ordinal for `weekOfMonth` (1-5, or -1 to -5 for last)            |
+| `moonConditions` | Array  | Moon phase conditions `[{moonIndex, phaseStart, phaseEnd, modifier}]` |
+| `randomConfig`   | Object | Random event config `{seed, probability, checkInterval}`              |
+| `linkedEvent`    | Object | Linked event config `{noteId, offset}`                                |
+| `rangePattern`   | Object | Range pattern `{year, month, day}` with values or `[min, max]`        |
+| `seasonalConfig` | Object | Seasonal config `{seasonIndex, trigger}`                              |
+| `computedConfig` | Object | Computed event chain `{chain, yearOverrides}`                         |
+| `conditions`     | Array  | Advanced conditions `[{field, op, value, value2?, offset?}]`          |
 
 ### Display Fields
 
@@ -165,9 +165,14 @@ Events triggered by moon phases:
 
 1. Set Repeat to **moon**
 2. Add moon conditions by selecting a moon and phase
-3. Multiple conditions can be added (any match triggers)
+3. Optionally select a modifier to target a specific portion of the phase:
+   - **Any**: Triggers during any part of the phase (default)
+   - **Rising**: First third of the phase
+   - **True**: Middle third of the phase
+   - **Fading**: Last third of the phase
+4. Multiple conditions can be added (any match triggers)
 
-Moon conditions specify a phase range (0-1 position in cycle).
+Moon conditions specify a phase range (0-1 position in cycle). The modifier label is shown in parentheses after the phase name (e.g., "Full Moon (Rising)").
 
 ### Random Events
 
@@ -260,6 +265,14 @@ Predefined categories:
 
 Custom categories are stored in world settings and available to all notes.
 
+### Category Style Confirmation
+
+When adding a category to a note, a confirmation dialog appears offering to apply that category's icon and color to the note. The dialog previews the category's emblem and lets you accept or decline.
+
+- Triggers each time a new category is added
+- Detects the specific newly-added category rather than always using the first one
+- Declining keeps the note's current icon and color unchanged
+
 ## Icons
 
 Notes support two icon types:
@@ -271,8 +284,10 @@ Right-click the icon picker to switch between modes. The icon color is controlle
 
 ## Visibility
 
-- **GM Only**: Note is only visible to GMs (uses Foundry ownership system)
+- **GM Only**: Note is only visible to GMs (uses Foundry ownership system). This checkbox is only visible to GMs.
 - **Silent**: Suppresses reminders and event announcements
+
+Note visibility also respects Foundry's journal-level permissions. Non-GM users must have at least OBSERVER permission on the parent journal entry to see a note on the calendar and in search results.
 
 ## Reminders
 
@@ -318,19 +333,23 @@ Select a macro to execute when the event triggers. The macro runs when the event
 
 ## Player Permissions
 
-Players can create, edit, and delete their own notes. Ownership is determined by standard Foundry document permissions.
+Players can create and edit notes based on Calendaria permissions. Ownership is determined by standard Foundry document permissions combined with the "Edit Notes" permission.
+
+> [!NOTE]
+> Players with the "Manage Notes" Calendaria permission but without Foundry's core `JOURNAL_CREATE` permission can still create notes. The request is relayed via socket to a connected GM who creates the note on their behalf.
 
 ### What Players Can Do
 
 - **Create notes**: Using the Add Note button on calendar UI
 - **Edit own notes**: Notes they created (Owner permission)
-- **Delete own notes**: Notes they created
+- **Edit others' notes**: If granted the "Edit Notes" permission (does not apply to GM-only notes)
+- **Delete own notes**: Authors can delete notes they created
 - **View shared notes**: Notes with appropriate permissions
 
 ### What Players Cannot Do
 
 - **View GM-only notes**: Hidden via ownership settings
-- **Edit others' notes**: Unless given explicit permission
+- **Delete others' notes**: Only the original author or a GM can delete
 - **Modify time/date**: All time controls are GM-only
 - **Change weather**: Weather picker is GM-only
 
@@ -339,14 +358,15 @@ Players can create, edit, and delete their own notes. Ownership is determined by
 When a player creates a note:
 
 1. The JournalEntry is created with the player as owner
-2. Other players see it based on default permissions
-3. GM always has full access
+2. Users with the "Edit Notes" permission automatically receive owner-level access
+3. Other players see it based on default permissions
+4. GM always has full access
 
 When a GM creates a note:
 
 1. "GM Only" checkbox controls player visibility
-2. If checked, ownership is set to GM-only
-3. If unchecked, default permissions apply
+2. If checked, ownership is set to GM-only (Edit Notes permission does not apply)
+3. If unchecked, users with "Edit Notes" permission receive owner-level access
 
 ## For Developers
 

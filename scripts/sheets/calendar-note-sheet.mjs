@@ -61,6 +61,11 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
     return this._mode === CalendarNoteSheet.MODES.EDIT;
   }
 
+  /** @returns {boolean} Whether user is the original author of this note. */
+  get isAuthor() {
+    return this.document.system.author?._id === game.user.id;
+  }
+
   /** @inheritdoc */
   _configureRenderOptions(options) {
     if (options.isFirstRender) {
@@ -207,6 +212,41 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
   }
 
   /**
+   * Selectors for temporary form fields not backed by the data model.
+   * @type {string[]}
+   */
+  static TRANSIENT_FIELDS = [
+    'select[name="newCondition.field"]',
+    'select[name="newCondition.op"]',
+    'input[name="newCondition.value"]',
+    'input[name="newCondition.offset"]',
+    'select[name="newMoonCondition.moonIndex"]',
+    'select[name="newMoonCondition.phase"]',
+    'select[name="newMoonCondition.modifier"]',
+    '.new-category-input'
+  ];
+
+  /** @inheritdoc */
+  _preSyncPartState(partId, newElement, priorElement, state) {
+    super._preSyncPartState(partId, newElement, priorElement, state);
+    state.transientValues = {};
+    for (const selector of this.constructor.TRANSIENT_FIELDS) {
+      const el = priorElement.querySelector(selector);
+      if (el) state.transientValues[selector] = el.value;
+    }
+  }
+
+  /** @inheritdoc */
+  _syncPartState(partId, newElement, priorElement, state) {
+    super._syncPartState(partId, newElement, priorElement, state);
+    if (!state.transientValues) return;
+    for (const [selector, value] of Object.entries(state.transientValues)) {
+      const el = newElement.querySelector(selector);
+      if (el && value) el.value = value;
+    }
+  }
+
+  /**
    * Render header control buttons based on current mode.
    * Creates mode toggle, save, reset, and delete buttons as appropriate.
    * @private
@@ -247,7 +287,7 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
       resetBtn.dataset.tooltip = 'Reset Form';
       resetBtn.setAttribute('aria-label', 'Reset Form');
       controlsContainer.appendChild(resetBtn);
-      if (this.document.isOwner && this.document.id) {
+      if ((this.isAuthor || game.user.isGM) && this.document.id) {
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
         deleteBtn.className = 'header-control icon fas fa-trash';
@@ -296,10 +336,26 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
         phases: moon.phases?.map((phase) => ({ name: localize(phase.name), start: phase.start, end: phase.end })) || []
       })) || [];
     context.hasMoons = context.moons.length > 0;
+    const modifierLabels = {
+      any: null,
+      rising: localize('CALENDARIA.Note.MoonModifier.Rising'),
+      true: localize('CALENDARIA.Note.MoonModifier.True'),
+      fading: localize('CALENDARIA.Note.MoonModifier.Fading')
+    };
     context.moonConditions = (this.document.system.moonConditions || []).map((cond, index) => {
       const moon = context.moons[cond.moonIndex];
       const matchingPhase = moon?.phases?.find((p) => Math.abs(p.start - cond.phaseStart) < 0.01 && Math.abs(p.end - cond.phaseEnd) < 0.01);
-      return { index, moonIndex: cond.moonIndex, moonName: moon?.name, phaseStart: cond.phaseStart, phaseEnd: cond.phaseEnd, phaseName: matchingPhase?.name };
+      const modifier = cond.modifier || 'any';
+      return {
+        index,
+        moonIndex: cond.moonIndex,
+        moonName: moon?.name,
+        phaseStart: cond.phaseStart,
+        phaseEnd: cond.phaseEnd,
+        phaseName: matchingPhase?.name,
+        modifier,
+        modifierLabel: modifierLabels[modifier]
+      };
     });
     context.showMoonConditions = this.document.system.repeat === 'moon' || this.document.system.moonConditions?.length > 0;
     context.showRandomConfig = this.document.system.repeat === 'random';
@@ -452,9 +508,14 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
     context.availableMacros = game.macros.contents.map((m) => ({ id: m.id, name: m.name, selected: m.id === currentMacro }));
     context.isViewMode = this.isViewMode;
     context.isEditMode = this.isEditMode;
+    context.isGM = game.user.isGM;
     context.canEdit = this.document.isOwner;
     if (this.isViewMode) {
-      context.enrichedContent = await foundry.applications.ux.TextEditor.implementation.enrichHTML(this.document.text?.content || '', { async: true, relativeTo: this.document });
+      context.enrichedContent = await foundry.applications.ux.TextEditor.implementation.enrichHTML(this.document.text?.content || '', {
+        async: true,
+        relativeTo: this.document,
+        secrets: this.document.isOwner
+      });
       const allCategories = getAllCategories();
       context.displayCategories = selectedCategories.map((id) => allCategories.find((c) => c.id === id)?.label).filter(Boolean);
       context.hasEndDate = endYear !== startYear || endMonth !== startMonth || endDay !== startDay;
@@ -498,6 +559,28 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
       this.element.querySelector('select[name="system.reminderTargets"]').disabled = disabled;
       this.element.querySelector('input[name="system.reminderOffset"]').disabled = disabled;
     }
+  }
+
+  /**
+   * Offer to apply icon and color from a newly added category.
+   * @param {string} categoryId - The ID of the newly added category
+   * @private
+   */
+  async #applyCategoryStyle(categoryId) {
+    const category = getAllCategories().find((c) => c.id === categoryId);
+    if (!category) return;
+    const updates = {};
+    if (category.icon) updates['system.icon'] = `fas ${category.icon}`;
+    if (category.color) updates['system.color'] = category.color;
+    if (Object.keys(updates).length === 0) return;
+    const confirmed = await foundry.applications.api.DialogV2.confirm({
+      window: { title: localize('CALENDARIA.Note.ApplyCategoryStyleTitle') },
+      content: `<p style="text-align:center;font-size:2rem;margin:0.5rem 0"><i class="fas ${category.icon}" style="color:${category.color}"></i></p><p>${format('CALENDARIA.Note.ApplyCategoryStyleConfirm', { label: category.label })}</p>`,
+      rejectClose: false,
+      modal: true
+    });
+    if (!confirmed) return;
+    await this.document.update(updates);
   }
 
   /**
@@ -569,7 +652,7 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
       const currentIcon = target.querySelector('i')?.className.replace('icon-preview', '').trim() || '';
       const newIcon = await foundry.applications.api.DialogV2.prompt({
         window: { title: localize('CALENDARIA.Note.FontAwesomeIconTitle') },
-        content: `<div class="form-group"><label>${localize('CALENDARIA.Note.FontAwesomeClasses')}</label><input type="text" name="icon-class" value="${currentIcon}" placeholder="fas fa-calendar" /></div>`,
+        content: `<div class="form-group"><label>${localize('CALENDARIA.Note.FontAwesomeClasses')}</label><input type="text" name="icon-class" value="${currentIcon}" placeholder="fas fa-calendar" /><p class="hint">${localize('CALENDARIA.Common.IconHint')}</p></div>`,
         ok: {
           callback: (_event, button) => {
             return button.form.elements['icon-class'].value;
@@ -769,7 +852,7 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
    * @param {HTMLElement} _target - The clicked element
    */
   static async _onDeleteNote(_event, _target) {
-    if (!this.document.isOwner) return;
+    if (!this.isAuthor && !game.user.isGM) return;
     const confirmed = await foundry.applications.api.DialogV2.confirm({
       window: { title: localize('CALENDARIA.ContextMenu.DeleteNote') },
       content: `<p>${format('CALENDARIA.ContextMenu.DeleteConfirm', { name: this.document.name })}</p>`,
@@ -914,15 +997,17 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
     const form = target.closest('form');
     const moonSelect = form?.querySelector('select[name="newMoonCondition.moonIndex"]');
     const phaseSelect = form?.querySelector('select[name="newMoonCondition.phase"]');
+    const modifierSelect = form?.querySelector('select[name="newMoonCondition.modifier"]');
     if (!moonSelect || !phaseSelect) return;
     const moonIndex = parseInt(moonSelect.value);
     const phaseValue = phaseSelect.value;
+    const modifier = modifierSelect?.value || 'any';
     if (isNaN(moonIndex) || !phaseValue) return;
     const [phaseStart, phaseEnd] = phaseValue.split('-').map(Number);
     const currentConditions = foundry.utils.deepClone(this.document.system.moonConditions || []);
-    const isDuplicate = currentConditions.some((c) => c.moonIndex === moonIndex && c.phaseStart === phaseStart && c.phaseEnd === phaseEnd);
+    const isDuplicate = currentConditions.some((c) => c.moonIndex === moonIndex && c.phaseStart === phaseStart && c.phaseEnd === phaseEnd && c.modifier === modifier);
     if (isDuplicate) return;
-    currentConditions.push({ moonIndex, phaseStart, phaseEnd });
+    currentConditions.push({ moonIndex, phaseStart, phaseEnd, modifier });
     await this.document.update({ 'system.moonConditions': currentConditions });
   }
 
@@ -974,8 +1059,12 @@ export class CalendarNoteSheet extends HandlebarsApplicationMixin(foundry.applic
 
   /** @inheritdoc */
   async _processSubmitData(event, form, submitData, options = {}) {
+    const newCategories = submitData.system?.categories || [];
+    const oldCategories = this.document.system.categories || [];
+    const addedCategory = newCategories.find((id) => !oldCategories.includes(id));
     await super._processSubmitData(event, form, submitData, options);
     if (submitData.system?.repeat === 'random') setTimeout(() => this.#regenerateRandomOccurrences(), 100);
+    if (addedCategory) await this.#applyCategoryStyle(addedCategory);
   }
 
   /**

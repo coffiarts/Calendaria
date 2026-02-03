@@ -8,7 +8,7 @@
 
 import CalendarManager from '../calendar/calendar-manager.mjs';
 import { isBundledCalendar } from '../calendar/calendar-loader.mjs';
-import { HOOKS, MODULE, SETTINGS } from '../constants.mjs';
+import { HOOKS, MODULE, SCENE_FLAGS, SETTINGS } from '../constants.mjs';
 import { format, localize } from '../utils/localization.mjs';
 import { log } from '../utils/logger.mjs';
 import { canChangeWeather } from '../utils/permissions.mjs';
@@ -155,6 +155,7 @@ export default class WeatherManager {
   /**
    * Clear the current weather.
    * @param {boolean} [broadcast] - Whether to broadcast
+   * @param {boolean} [fromSocket] - Whether this was triggered by a socket event
    * @returns {Promise<void>}
    */
   static async clearWeather(broadcast = true, fromSocket = false) {
@@ -339,12 +340,14 @@ export default class WeatherManager {
   /**
    * Get the active climate zone config from the calendar.
    * @param {string} [zoneId] - Optional zone ID override
+   * @param {object} [scene] - Optional scene to check for scene-level override
    * @returns {object|null} Zone config object
    */
-  static getActiveZone(zoneId) {
+  static getActiveZone(zoneId, scene) {
     const calendar = CalendarManager.getActiveCalendar();
     if (!calendar?.weather?.zones?.length) return null;
-    const targetId = zoneId ?? calendar.weather.activeZone ?? 'temperate';
+    const sceneOverride = scene?.getFlag?.(MODULE.ID, SCENE_FLAGS.CLIMATE_ZONE_OVERRIDE);
+    const targetId = zoneId ?? sceneOverride ?? calendar.weather.activeZone ?? 'temperate';
     return calendar.weather.zones.find((z) => z.id === targetId) ?? calendar.weather.zones[0] ?? null;
   }
 

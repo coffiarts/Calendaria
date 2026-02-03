@@ -5,7 +5,6 @@
  */
 
 import { format, localize } from './localization.mjs';
-import { log } from './logger.mjs';
 
 /**
  * Get ordinal suffix for a number.
@@ -46,17 +45,17 @@ export function toRomanNumeral(n) {
 export function dateFormattingParts(calendar, components) {
   const { year, month, dayOfMonth, hour = 0, minute = 0, second = 0 } = components;
   const displayYear = year;
+  const yearZero = calendar?.years?.yearZero ?? 0;
+  const internalYear = displayYear - yearZero;
   const isMonthless = calendar?.isMonthless ?? false;
   const monthData = isMonthless ? null : calendar?.months?.values?.[month];
-  const festivalDay = calendar?.findFestivalDay?.(components);
+  const festivalDay = calendar?.findFestivalDay?.({ ...components, year: internalYear, dayOfMonth: dayOfMonth - 1 });
   const isIntercalaryMonth = monthData?.type === 'intercalary';
   const isIntercalaryFestival = festivalDay?.countsForWeekday === false || isIntercalaryMonth;
   const intercalaryName = festivalDay ? localize(festivalDay.name) : monthData ? localize(monthData.name) : '';
   const monthName = isIntercalaryFestival ? intercalaryName : isMonthless ? '' : monthData ? localize(monthData.name) : format('CALENDARIA.Calendar.MonthFallback', { num: month + 1 });
   const monthAbbr = isIntercalaryFestival ? intercalaryName.slice(0, 3) : isMonthless ? '' : monthData?.abbreviation ? localize(monthData.abbreviation) : monthName.slice(0, 3);
   const weekdays = calendar?.days?.values || [];
-  const yearZero = calendar?.years?.yearZero ?? 0;
-  const internalYear = displayYear - yearZero;
   let daysInMonthsBefore = 0;
   if (!isMonthless && calendar?.getDaysInMonth) for (let m = 0; m < month; m++) daysInMonthsBefore += calendar.getDaysInMonth(m, internalYear);
   else if (!isMonthless) daysInMonthsBefore = (calendar?.months?.values || []).slice(0, month).reduce((sum, m) => sum + (m.days || 0), 0);
@@ -518,36 +517,24 @@ export function formatCustom(calendar, components, formatStr) {
  * @param {string} formatStr - The format string to validate
  * @param {object} [calendar] - Optional calendar data for preview
  * @param {object} [components] - Optional date components for preview
- * @returns {{valid: boolean, preview?: string, error?: string}} Validation result
+ * @returns {{valid: boolean, preview: string, error: string}} Validation result
  */
 export function validateFormatString(formatStr, calendar, components) {
-  // Empty/missing strings are handled by UI reset logic
   if (!formatStr || typeof formatStr !== 'string') return { valid: true };
-
-  // Check for unclosed brackets
   const openBrackets = (formatStr.match(/\[/g) || []).length;
   const closeBrackets = (formatStr.match(/]/g) || []).length;
-  if (openBrackets !== closeBrackets) {
-    return { valid: false, error: 'CALENDARIA.Format.Error.UnclosedBracket' };
-  }
-
-  // Check for empty brackets
-  if (/\[\]/.test(formatStr)) {
-    return { valid: false, error: 'CALENDARIA.Format.Error.EmptyBracket' };
-  }
-
-  // Generate preview if calendar and components provided
+  if (openBrackets !== closeBrackets) return { valid: false, error: 'CALENDARIA.Format.Error.UnclosedBracket' };
+  if (/\[]/.test(formatStr)) return { valid: false, error: 'CALENDARIA.Format.Error.EmptyBracket' };
   if (calendar && components) {
     try {
       const preview = formatCustom(calendar, components, formatStr);
-      // Strip moon icon markers for text preview
       const cleanPreview = stripMoonIconMarkers(preview);
       return { valid: true, preview: cleanPreview };
     } catch (e) {
+      log(1, e);
       return { valid: false, error: 'CALENDARIA.Format.Error.Invalid' };
     }
   }
-
   return { valid: true };
 }
 
@@ -607,7 +594,13 @@ function getMoonPhaseIcon(calendar, components, moonSelector) {
   if (!moon) return '';
   let phase;
   if (calendar.getMoonPhase && calendar.componentsToTime) {
-    const worldTime = calendar.componentsToTime(components);
+    const yearZero = calendar.years?.yearZero ?? 0;
+    const internalComponents = {
+      ...components,
+      year: components.year - yearZero,
+      dayOfMonth: (components.dayOfMonth ?? 1) - 1
+    };
+    const worldTime = calendar.componentsToTime(internalComponents);
     const phaseData = calendar.getMoonPhase(moonIndex, worldTime);
     if (phaseData) phase = { name: phaseData.name, icon: phaseData.icon };
   }
@@ -827,78 +820,6 @@ export function formatGameDuration(totalSecs, calendar, format = 'HH:mm:ss') {
 // ==================== Legacy Format Migration ====================
 
 /**
- * Check if a format string uses legacy {{var}} syntax.
- * @param {string} formatStr - Format string
- * @returns {boolean} - True if legacy syntax detected
- */
-export function isLegacyFormat(formatStr) {
-  return /{{[^}]+}}/.test(formatStr);
-}
-
-/**
- * Migrate a legacy {{var}} format string to new token format.
- * @param {string} legacyFormat - Legacy format string with {{var}} syntax
- * @returns {string} - New format string with standard tokens
- */
-export function migrateLegacyFormat(legacyFormat) {
-  const migrations = {
-    '{{y}}': 'YY',
-    '{{yyyy}}': 'YYYY',
-    '{{Y}}': 'YYYY',
-    '{{B}}': 'MMMM',
-    '{{b}}': 'MMM',
-    '{{m}}': 'M',
-    '{{mm}}': 'MM',
-    '{{d}}': 'D',
-    '{{dd}}': 'DD',
-    '{{0}}': 'Do',
-    '{{j}}': 'DDD',
-    '{{w}}': 'd',
-    '{{A}}': 'dddd',
-    '{{a}}': 'ddd',
-    '{{H}}': 'HH',
-    '{{h}}': 'h',
-    '{{hh}}': 'hh',
-    '{{M}}': 'mm',
-    '{{S}}': 'ss',
-    '{{p}}': 'a',
-    '{{P}}': 'A',
-    '{{W}}': 'W',
-    '{{WW}}': 'WW',
-    '{{WN}}': '[namedWeek]',
-    '{{Wn}}': '[namedWeekAbbr]',
-    '{{ch}}': '[ch]',
-    '{{chAbbr}}': '[chAbbr]',
-    '{{E}}': 'GGGG',
-    '{{e}}': '[yearInEra]',
-    '{{season}}': 'QQQQ',
-    '{{moon}}': '[moon]',
-    // Era template tokens (convert directly to UTS#35)
-    '{{era}}': 'GGGG',
-    '{{eraYear}}': '[yearInEra]',
-    '{{yearInEra}}': '[yearInEra]',
-    '{{year}}': 'YYYY',
-    '{{abbreviation}}': 'G',
-    '{{short}}': 'G'
-  };
-
-  let newFormat = legacyFormat;
-
-  // Handle cycle tokens like {{c12}} -> [cycle]
-  newFormat = newFormat.replace(/{{c\d+}}/g, '[cycle]');
-
-  // Handle numbered cycle tokens like {{1}}, {{2}} -> [1], [2]
-  newFormat = newFormat.replace(/{{(\d+)}}/g, '[$1]');
-
-  // Apply standard migrations
-  for (const [legacy, modern] of Object.entries(migrations)) {
-    newFormat = newFormat.replace(new RegExp(legacy.replace(/[{}]/g, '\\$&'), 'g'), modern);
-  }
-
-  return newFormat;
-}
-
-/**
  * Map of preset names to formatter functions.
  * Most presets use formatCustom with a format string from DEFAULT_FORMAT_PRESETS.
  */
@@ -919,20 +840,24 @@ export const DEFAULT_FORMAT_PRESETS = {
   // Date - Standard
   dateShort: 'D MMM',
   dateMedium: 'D MMMM',
-  dateLong: 'D MMMM, YYYY',
-  dateFull: 'EEEE, D MMMM YYYY',
+  dateLong: 'D MMMM, Y',
+  dateFull: 'EEEE, D MMMM Y',
   // Date - Regional
-  dateUS: 'MMMM D, YYYY',
-  dateUSFull: 'EEEE, MMMM D, YYYY',
+  dateUS: 'MMMM D, Y',
+  dateUSFull: 'EEEE, MMMM D, Y',
   dateISO: 'YYYY-MM-DD',
   dateNumericUS: 'MM/DD/YYYY',
   dateNumericEU: 'DD/MM/YYYY',
   // Date - Ordinal/Fantasy
   ordinal: 'Do of MMMM',
-  ordinalLong: 'Do of MMMM, YYYY',
-  ordinalEra: 'Do of MMMM, YYYY GGGG',
-  ordinalFull: 'EEEE, Do of MMMM, YYYY GGGG',
+  ordinalLong: 'Do of MMMM, Y',
+  ordinalEra: 'Do of MMMM, Y GGGG',
+  ordinalFull: 'EEEE, Do of MMMM, Y GGGG',
   seasonDate: 'QQQQ, Do of MMMM',
+  // Year/Week
+  weekHeader: '[Week] W [of] MMMM, Y',
+  yearOnly: 'Y',
+  yearEra: 'Y G',
   // Time
   time12: 'h:mm A',
   time12Sec: 'h:mm:ss A',
@@ -941,8 +866,8 @@ export const DEFAULT_FORMAT_PRESETS = {
   // Date + Time
   datetimeShort12: 'D MMM, h:mm A',
   datetimeShort24: 'D MMM, HH:mm',
-  datetime12: 'D MMMM YYYY, h:mm A',
-  datetime24: 'D MMMM YYYY, HH:mm',
+  datetime12: 'D MMMM Y, h:mm A',
+  datetime24: 'D MMMM Y, HH:mm',
   // Stopwatch duration presets (realtime)
   stopwatchRealtimeFull: 'HH:mm:ss.SSS',
   stopwatchRealtimeNoMs: 'HH:mm:ss',
@@ -966,6 +891,9 @@ const LOCATION_FORMAT_KEYS = {
   miniCalHeader: 'dateLong',
   miniCalTime: 'time24',
   bigCalHeader: 'dateFull',
+  bigCalWeekHeader: 'weekHeader',
+  bigCalYearHeader: 'yearHeader',
+  bigCalYearLabel: 'yearLabel',
   chatTimestamp: 'dateLong'
 };
 
@@ -981,6 +909,9 @@ export const LOCATION_DEFAULTS = {
   miniCalHeader: 'dateLong',
   miniCalTime: 'time24',
   bigCalHeader: 'dateFull',
+  bigCalWeekHeader: 'weekHeader',
+  bigCalYearHeader: 'yearOnly',
+  bigCalYearLabel: 'yearEra',
   chatTimestamp: 'dateShort',
   stopwatchRealtime: 'stopwatchRealtimeFull',
   stopwatchGametime: 'stopwatchGametimeFull'
@@ -1018,7 +949,8 @@ export function getDisplayFormat(locationId) {
 function resolveCalendarDefault(calendar, locationId) {
   const formatKey = LOCATION_FORMAT_KEYS[locationId] || 'dateLong';
   const calendarFormat = calendar?.dateFormats?.[formatKey];
-  return calendarFormat || formatKey;
+  // Fall back to the preset format if calendar doesn't have this format key
+  return calendarFormat || DEFAULT_FORMAT_PRESETS[formatKey] || LOCATION_DEFAULTS[locationId] || 'dateLong';
 }
 
 /**
@@ -1057,6 +989,9 @@ export function getDisplayLocationDefinitions() {
     { id: 'miniCalHeader', label: 'CALENDARIA.Format.Location.MiniCalHeader', category: 'miniCal' },
     { id: 'miniCalTime', label: 'CALENDARIA.Format.Location.MiniCalTime', category: 'miniCal' },
     { id: 'bigCalHeader', label: 'CALENDARIA.Format.Location.BigCalHeader', category: 'bigcal' },
+    { id: 'bigCalWeekHeader', label: 'CALENDARIA.Format.Location.BigCalWeekHeader', category: 'bigcal' },
+    { id: 'bigCalYearHeader', label: 'CALENDARIA.Format.Location.BigCalYearHeader', category: 'bigcal' },
+    { id: 'bigCalYearLabel', label: 'CALENDARIA.Format.Location.BigCalYearLabel', category: 'bigcal' },
     { id: 'chatTimestamp', label: 'CALENDARIA.Format.Location.ChatTimestamp', category: 'chat' }
   ];
 }
@@ -1177,327 +1112,4 @@ export function getAvailableTokens() {
     { token: '[approxTime]', descriptionKey: 'CALENDARIA.Format.Token.approxTime', type: 'custom' },
     { token: '[approxDate]', descriptionKey: 'CALENDARIA.Format.Token.approxDate', type: 'custom' }
   ];
-}
-
-/**
- * Deprecated tokens that will be removed in 0.7.0.
- * Maps deprecated token to its replacement.
- */
-const DEPRECATED_TOKENS = {
-  dddd: 'EEEE',
-  ddd: 'EEE',
-  dd: 'EE',
-  d: 'e',
-  '[era]': 'GGGG',
-  '[eraAbbr]': 'G',
-  '[year]': 'YYYY',
-  '[short]': 'G',
-  '[season]': 'QQQQ',
-  '[seasonAbbr]': 'QQQ'
-};
-
-/**
- * Replace deprecated tokens in a format string with their replacements.
- * @param {string} formatStr - Format string to migrate
- * @returns {{migrated: string, changes: Array<{from: string, to: string}>}} Migrated string and list of changes
- */
-export function migrateDeprecatedTokens(formatStr) {
-  if (!formatStr || typeof formatStr !== 'string') return { migrated: formatStr, changes: [] };
-  let migrated = formatStr;
-  const changes = [];
-  const sortedTokens = Object.entries(DEPRECATED_TOKENS).sort((a, b) => b[0].length - a[0].length);
-  for (const [token, replacement] of sortedTokens) {
-    if (token.startsWith('[')) {
-      if (migrated.includes(token)) {
-        migrated = migrated.split(token).join(replacement);
-        changes.push({ from: token, to: replacement });
-      }
-    } else {
-      const regex = new RegExp(`(?<![a-zA-Z])${token}(?![a-zA-Z])`, 'g');
-      if (regex.test(migrated)) {
-        migrated = migrated.replace(regex, replacement);
-        changes.push({ from: token, to: replacement });
-      }
-    }
-  }
-  return { migrated, changes };
-}
-
-/**
- * Migrate deprecated tokens in a single calendar data object (in-place).
- * @param {object} calendar - Raw calendar data object to migrate
- * @returns {Array<{from: string, to: string}>} List of token changes made
- */
-function migrateCalendarDataDeprecatedTokens(calendar) {
-  const allChanges = [];
-  if (calendar?.dateFormats) {
-    for (const [key, fmt] of Object.entries(calendar.dateFormats)) {
-      if (typeof fmt === 'string') {
-        const { migrated, changes } = migrateDeprecatedTokens(fmt);
-        if (changes.length) {
-          calendar.dateFormats[key] = migrated;
-          allChanges.push(...changes);
-        }
-      }
-    }
-  }
-
-  const eras = Array.isArray(calendar?.eras) ? calendar.eras : calendar?.eras?.values;
-  if (eras?.length) {
-    for (const era of eras) {
-      if (era.template) {
-        const { migrated, changes } = migrateDeprecatedTokens(era.template);
-        if (changes.length) {
-          era.template = migrated;
-          allChanges.push(...changes);
-        }
-      }
-    }
-  }
-
-  if (calendar?.cycleFormat) {
-    const { migrated, changes } = migrateDeprecatedTokens(calendar.cycleFormat);
-    if (changes.length) {
-      calendar.cycleFormat = migrated;
-      allChanges.push(...changes);
-    }
-  }
-
-  return allChanges;
-}
-
-/**
- * Migrate deprecated tokens in display format settings.
- * @returns {Promise<Array<{from: string, to: string}>>} List of all token changes made
- */
-export async function migrateDisplayFormatsDeprecatedTokens() {
-  if (!game.user?.isGM) return [];
-  const MODULE_ID = 'calendaria';
-  const SETTINGS_KEY = 'displayFormats';
-  const allChanges = [];
-
-  try {
-    const formats = game.settings.get(MODULE_ID, SETTINGS_KEY);
-    if (!formats || typeof formats !== 'object') return [];
-    let modified = false;
-    for (const [, locationFormats] of Object.entries(formats)) {
-      if (locationFormats?.gm) {
-        const { migrated, changes } = migrateDeprecatedTokens(locationFormats.gm);
-        if (changes.length) {
-          locationFormats.gm = migrated;
-          allChanges.push(...changes);
-          modified = true;
-        }
-      }
-      if (locationFormats?.player) {
-        const { migrated, changes } = migrateDeprecatedTokens(locationFormats.player);
-        if (changes.length) {
-          locationFormats.player = migrated;
-          allChanges.push(...changes);
-          modified = true;
-        }
-      }
-    }
-
-    if (modified) {
-      await game.settings.set(MODULE_ID, SETTINGS_KEY, formats);
-      const uniqueChanges = [...new Map(allChanges.map((c) => [`${c.from}→${c.to}`, c])).values()];
-      const changeList = uniqueChanges.map((c) => `${c.from} → ${c.to}`).join(', ');
-      log(3, `Migrated deprecated tokens in display formats: ${changeList}`);
-    }
-  } catch {}
-  return allChanges;
-}
-
-/**
- * Run all deprecated token migrations on settings data and save changes.
- * @returns {Promise<void>}
- */
-export async function migrateAllDeprecatedTokens() {
-  if (!game.user?.isGM) return;
-  const MODULE_ID = 'calendaria';
-  const allChanges = [];
-  try {
-    const customCalendars = game.settings.get(MODULE_ID, 'customCalendars') || {};
-    let customModified = false;
-    for (const [id, calendar] of Object.entries(customCalendars)) {
-      const changes = migrateCalendarDataDeprecatedTokens(calendar);
-      if (changes.length) {
-        const name = game.i18n?.localize(calendar?.metadata?.name || calendar?.name || id) || id;
-        log(3, `Migrated deprecated tokens in custom calendar "${name}": ${changes.map((c) => `${c.from} → ${c.to}`).join(', ')}`);
-        allChanges.push(...changes);
-        customModified = true;
-      }
-    }
-    if (customModified) await game.settings.set(MODULE_ID, 'customCalendars', customCalendars);
-  } catch (e) {
-    log(2, 'Could not migrate custom calendars deprecated tokens', e);
-  }
-
-  try {
-    const defaultOverrides = game.settings.get(MODULE_ID, 'defaultOverrides') || {};
-    let overridesModified = false;
-    for (const [id, calendar] of Object.entries(defaultOverrides)) {
-      const changes = migrateCalendarDataDeprecatedTokens(calendar);
-      if (changes.length) {
-        const name = game.i18n?.localize(calendar?.metadata?.name || calendar?.name || id) || id;
-        log(3, `Migrated deprecated tokens in calendar override "${name}": ${changes.map((c) => `${c.from} → ${c.to}`).join(', ')}`);
-        allChanges.push(...changes);
-        overridesModified = true;
-      }
-    }
-    if (overridesModified) await game.settings.set(MODULE_ID, 'defaultOverrides', defaultOverrides);
-  } catch (e) {
-    log(2, 'Could not migrate default overrides deprecated tokens', e);
-  }
-
-  const displayChanges = await migrateDisplayFormatsDeprecatedTokens();
-  allChanges.push(...displayChanges);
-  if (allChanges.length > 0) {
-    const uniqueChanges = [...new Map(allChanges.map((c) => [`${c.from}→${c.to}`, c])).values()];
-    const changeList = uniqueChanges.map((c) => `${c.from} → ${c.to}`).join(', ');
-    ui.notifications?.info(`Calendaria: Auto-migrated deprecated format tokens: ${changeList}`, { permanent: true });
-  }
-}
-
-/**
- * Migrate all custom calendars to new bracket token format.
- * Handles dateFormats, era templates, and cycleFormat.
- * Runs once per version.
- * @returns {Promise<void>}
- */
-export async function migrateCustomCalendars() {
-  const MODULE_ID = 'calendaria';
-  const SETTINGS_KEY = 'customCalendars';
-  const MIGRATION_KEY = 'formatMigrationComplete';
-
-  try {
-    const migrationDone = game.settings.get(MODULE_ID, MIGRATION_KEY);
-    if (migrationDone) return;
-  } catch {
-    // Setting not registered yet
-  }
-
-  if (!game.user.isGM) return;
-
-  try {
-    const customCalendars = game.settings.get(MODULE_ID, SETTINGS_KEY);
-    if (!customCalendars || typeof customCalendars !== 'object') {
-      await game.settings.set(MODULE_ID, MIGRATION_KEY, true);
-      return;
-    }
-
-    let migrated = false;
-    const updatedCalendars = {};
-
-    for (const [id, calendar] of Object.entries(customCalendars)) {
-      const updated = { ...calendar };
-
-      // Migrate dateFormats
-      if (updated.dateFormats) {
-        const formats = updated.dateFormats;
-        for (const [key, fmt] of Object.entries(formats)) {
-          if (typeof fmt === 'string' && isLegacyFormat(fmt)) {
-            formats[key] = migrateLegacyFormat(fmt);
-            migrated = true;
-          }
-        }
-      }
-
-      // Migrate era templates
-      if (updated.eras && Array.isArray(updated.eras)) {
-        for (const era of updated.eras) {
-          if (era.template && isLegacyFormat(era.template)) {
-            era.template = migrateLegacyFormat(era.template);
-            migrated = true;
-          }
-        }
-      }
-
-      // Migrate cycleFormat
-      if (updated.cycleFormat && isLegacyFormat(updated.cycleFormat)) {
-        updated.cycleFormat = migrateLegacyFormat(updated.cycleFormat);
-        migrated = true;
-      }
-
-      updatedCalendars[id] = updated;
-    }
-
-    if (migrated) {
-      await game.settings.set(MODULE_ID, SETTINGS_KEY, updatedCalendars);
-      log(3, 'Migrated custom calendar formats to new bracket token syntax');
-    }
-
-    await game.settings.set(MODULE_ID, MIGRATION_KEY, true);
-  } catch (e) {
-    log(2, 'Could not migrate custom calendars', e);
-  }
-}
-
-/**
- * Migrate Harptos calendar festivals to add countsForWeekday: false.
- * This fixes intercalary days not being excluded from weekday calculations.
- * @returns {Promise<void>}
- */
-export async function migrateIntercalaryFestivals() {
-  const MODULE_ID = 'calendaria';
-  const SETTINGS_KEY = 'customCalendars';
-  const MIGRATION_KEY = 'intercalaryMigrationComplete';
-
-  try {
-    const migrationDone = game.settings.get(MODULE_ID, MIGRATION_KEY);
-    if (migrationDone) return;
-  } catch {
-    // Setting not registered yet
-  }
-
-  if (!game.user.isGM) return;
-
-  // Known Harptos festival names that should not count for weekday
-  const HARPTOS_FESTIVALS = [
-    'CALENDARIA.Calendar.Harptos.Festival.Midwinter',
-    'CALENDARIA.Calendar.Harptos.Festival.Greengrass',
-    'CALENDARIA.Calendar.Harptos.Festival.Midsummer',
-    'CALENDARIA.Calendar.Harptos.Festival.Shieldmeet',
-    'CALENDARIA.Calendar.Harptos.Festival.Highharvestide',
-    'CALENDARIA.Calendar.Harptos.Festival.FeastOfTheMoon'
-  ];
-
-  try {
-    const customCalendars = game.settings.get(MODULE_ID, SETTINGS_KEY);
-    if (!customCalendars || typeof customCalendars !== 'object') {
-      await game.settings.set(MODULE_ID, MIGRATION_KEY, true);
-      return;
-    }
-
-    let migrated = false;
-    const updatedCalendars = {};
-
-    for (const [id, calendar] of Object.entries(customCalendars)) {
-      const updated = { ...calendar };
-
-      // Check if this is a Harptos-based calendar
-      if (id === 'harptos' || calendar.metadata?.id === 'harptos') {
-        if (updated.festivals && Array.isArray(updated.festivals)) {
-          for (const festival of updated.festivals) {
-            if (HARPTOS_FESTIVALS.includes(festival.name) && festival.countsForWeekday === undefined) {
-              festival.countsForWeekday = false;
-              migrated = true;
-            }
-          }
-        }
-      }
-
-      updatedCalendars[id] = updated;
-    }
-
-    if (migrated) {
-      await game.settings.set(MODULE_ID, SETTINGS_KEY, updatedCalendars);
-      log(3, 'Migrated Harptos festivals to set countsForWeekday: false');
-    }
-
-    await game.settings.set(MODULE_ID, MIGRATION_KEY, true);
-  } catch (e) {
-    log(2, 'Could not migrate intercalary festivals', e);
-  }
 }

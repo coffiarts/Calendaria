@@ -1,0 +1,31 @@
+{
+  "name": "calendaria",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Calendaria — a calendar module for FoundryVTT",
+  "license": "MIT",
+  "scripts": {
+    "setup": "node dev/tools/setup-links.mjs",
+    "lint": "eslint . --ext .js,.mjs,.cjs",
+    "lint:fix": "eslint . --ext .js,.mjs,.cjs --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "stylelint": "stylelint \"**/*.css\"",
+    "stylelint:fix": "stylelint \"**/*.css\" --fix",
+    "test": "vitest run --config vitest.config.mjs",
+    "test:watch": "vitest --config vitest.config.mjs",
+    "test:coverage": "vitest run --coverage --config vitest.config.mjs",
+    "validate": "npm run lint && npm run format:check && npm run stylelint"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@vitest/coverage-v8": "^4.0.16",
+    "eslint": "^9.27.0",
+    "eslint-plugin-jsdoc": "^50.8.0",
+    "globals": "^15.15.0",
+    "prettier": "^3.3.3",
+    "stylelint": "^16.19.1",
+    "stylelint-config-standard": "^37.0.0",
+    "vitest": "^4.0.16"
+  }
+}

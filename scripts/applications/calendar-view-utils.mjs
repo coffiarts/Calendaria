@@ -6,9 +6,10 @@
  */
 
 import CalendarManager from '../calendar/calendar-manager.mjs';
-import { MODULE, SETTINGS, SOCKET_TYPES } from '../constants.mjs';
+import { MODULE, SOCKET_TYPES } from '../constants.mjs';
 import NoteManager from '../notes/note-manager.mjs';
 import { isRecurringMatch } from '../notes/utils/recurrence.mjs';
+import { formatCustom } from '../utils/format-utils.mjs';
 import { format, localize } from '../utils/localization.mjs';
 import { CalendariaSocket } from '../utils/socket.mjs';
 
@@ -100,7 +101,12 @@ export function getCalendarNotes() {
  * @returns {object[]} Notes visible to the current user
  */
 export function getVisibleNotes(notes) {
-  return notes.filter((page) => !page.system.gmOnly || game.user.isGM);
+  if (game.user.isGM) return notes;
+  return notes.filter((page) => {
+    if (page.system.gmOnly) return false;
+    const journal = page.parent;
+    return journal ? journal.testUserPermission(game.user, 'OBSERVER') : page.testUserPermission(game.user, 'OBSERVER');
+  });
 }
 
 /**
@@ -202,9 +208,7 @@ export function getFirstMoonPhase(calendar, year, month, day) {
     if (overrideMoon) moon = overrideMoon;
   }
   const internalYear = year - (calendar.years?.yearZero ?? 0);
-  let dayOfYear = day - 1;
-  for (let idx = 0; idx < month; idx++) dayOfYear += calendar.getDaysInMonth(idx, internalYear);
-  const dayComponents = { year: internalYear, month, day: dayOfYear, hour: 12, minute: 0, second: 0 };
+  const dayComponents = { year: internalYear, month, dayOfMonth: day - 1, hour: 12, minute: 0, second: 0 };
   const dayWorldTime = calendar.componentsToTime(dayComponents);
   const phase = calendar.getMoonPhase(moon.originalIndex, dayWorldTime);
   if (!phase) return null;
@@ -223,9 +227,7 @@ export function getFirstMoonPhase(calendar, year, month, day) {
 export function getAllMoonPhases(calendar, year, month, day) {
   if (!calendar?.moons?.length) return null;
   const internalYear = year - (calendar.years?.yearZero ?? 0);
-  let dayOfYear = day - 1;
-  for (let idx = 0; idx < month; idx++) dayOfYear += calendar.getDaysInMonth(idx, internalYear);
-  const dayComponents = { year: internalYear, month, day: dayOfYear, hour: 12, minute: 0, second: 0 };
+  const dayComponents = { year: internalYear, month, dayOfMonth: day - 1, hour: 12, minute: 0, second: 0 };
   const dayWorldTime = calendar.componentsToTime(dayComponents);
   return calendar.moons
     .map((moon, index) => {
@@ -281,10 +283,8 @@ export async function setDateTo(year, month, day, calendar = null) {
   calendar = calendar || CalendarManager.getActiveCalendar();
   const yearZero = calendar?.years?.yearZero ?? 0;
   const internalYear = year - yearZero;
-  let dayOfYear = day - 1;
-  for (let i = 0; i < month; i++) dayOfYear += calendar.getDaysInMonth(i, internalYear);
   const currentComponents = game.time.components;
-  const newComponents = { year: internalYear, month, day: dayOfYear, hour: currentComponents.hour, minute: currentComponents.minute, second: currentComponents.second };
+  const newComponents = { year: internalYear, month, dayOfMonth: day - 1, hour: currentComponents.hour, minute: currentComponents.minute, second: currentComponents.second };
   const newWorldTime = calendar.componentsToTime(newComponents);
   const delta = newWorldTime - game.time.worldTime;
   if (!game.user.isGM) {
@@ -386,17 +386,13 @@ export function injectContextMenuInfo(target, calendar) {
   const month = parseInt(target.dataset.month);
   const day = parseInt(target.dataset.day);
   const internalYear = year - (calendar.years?.yearZero ?? 0);
-  const monthData = calendar.months?.values?.[month];
-  const monthName = monthData ? localize(monthData.name) : '';
-  const yearDisplay = calendar.formatYearWithEra?.(year) ?? String(year);
-  const fullDate = `${monthName} ${day}, ${yearDisplay}`;
-  let dayOfYear = day - 1;
-  for (let idx = 0; idx < month; idx++) dayOfYear += calendar.getDaysInMonth(idx, internalYear);
-  const targetComponents = { year: internalYear, month, day: dayOfYear, dayOfMonth: day - 1, hour: 12, minute: 0, second: 0 };
-  const season = calendar.getCurrentSeason?.(targetComponents);
+  const internalComponents = { year: internalYear, month, dayOfMonth: day - 1, hour: 12, minute: 0, second: 0 };
+  const displayComponents = { year, month, dayOfMonth: day, hour: 12, minute: 0, second: 0 };
+  const fullDate = formatCustom(calendar, displayComponents, 'Do of MMMM, Y GGGG');
+  const season = calendar.getCurrentSeason?.(internalComponents);
   const seasonName = season ? localize(season.name) : null;
-  const sunriseHour = calendar.sunrise?.(targetComponents) ?? 6;
-  const sunsetHour = calendar.sunset?.(targetComponents) ?? 18;
+  const sunriseHour = calendar.sunrise?.(internalComponents) ?? 6;
+  const sunsetHour = calendar.sunset?.(internalComponents) ?? 18;
   const formatTime = (hours) => {
     let h = Math.floor(hours);
     let m = Math.round((hours - h) * 60);
@@ -446,17 +442,13 @@ function encodeHtmlAttribute(html) {
  */
 export function generateDayTooltip(calendar, year, month, day, festivalName = null) {
   const internalYear = year - (calendar.years?.yearZero ?? 0);
-  const monthData = calendar.months?.values?.[month];
-  const monthName = monthData ? localize(monthData.name) : '';
-  const yearDisplay = calendar.formatYearWithEra?.(year) ?? String(year);
-  const fullDate = `${monthName} ${day}, ${yearDisplay}`;
-  let dayOfYear = day - 1;
-  for (let idx = 0; idx < month; idx++) dayOfYear += calendar.getDaysInMonth(idx, internalYear);
-  const targetComponents = { year: internalYear, month, day: dayOfYear, dayOfMonth: day - 1, hour: 12, minute: 0, second: 0 };
-  const season = calendar.getCurrentSeason?.(targetComponents);
+  const internalComponents = { year: internalYear, month, dayOfMonth: day - 1, hour: 12, minute: 0, second: 0 };
+  const displayComponents = { year, month, dayOfMonth: day, hour: 12, minute: 0, second: 0 };
+  const fullDate = formatCustom(calendar, displayComponents, 'Do of MMMM, Y GGGG');
+  const season = calendar.getCurrentSeason?.(internalComponents);
   const seasonName = season ? localize(season.name) : null;
-  const sunriseHour = calendar.sunrise?.(targetComponents) ?? 6;
-  const sunsetHour = calendar.sunset?.(targetComponents) ?? 18;
+  const sunriseHour = calendar.sunrise?.(internalComponents) ?? 6;
+  const sunsetHour = calendar.sunset?.(internalComponents) ?? 18;
   const formatTime = (hours) => {
     let h = Math.floor(hours);
     let m = Math.round((hours - h) * 60);
@@ -489,63 +481,57 @@ export function generateDayTooltip(calendar, year, month, day, festivalName = nu
  */
 export function setupDayContextMenu(container, selector, calendar, options = {}) {
   const itemsGenerator = getDayContextMenuItems({ calendar, ...options });
-  container.addEventListener('contextmenu', (event) => {
-    const target = event.target.closest(selector);
-    if (!target) return;
-    if (target.classList.contains('empty')) return;
-    event.preventDefault();
-    event.stopPropagation();
-    if (activeDayContextMenu) {
-      activeDayContextMenu.close();
-      activeDayContextMenu = null;
-    }
+  let currentItems = [];
 
-    const items = itemsGenerator(target);
-    activeDayContextMenu = new ContextMenu(container, selector, items, { fixed: true, jQuery: false });
-    activeDayContextMenu._onActivate(event);
-    const postProcessMenu = () => {
-      const menu = document.getElementById('context-menu');
-      if (!menu) return;
-      const menuItems = menu.querySelectorAll('.context-item');
-      menuItems.forEach((li, idx) => {
-        const item = items[idx];
-        if (!item?._noteData) return;
-        const { note, isOwner } = item._noteData;
-        const nameSpan = li.querySelector('span:not(.note-row)');
-        if (!nameSpan) return;
-        nameSpan.classList.add('note-row');
-        nameSpan.innerHTML = `<span class="note-name">${note.name}</span>`;
-        if (isOwner) {
-          const actions = document.createElement('span');
-          actions.className = 'note-actions';
-          actions.innerHTML = `<i class="fas fa-edit" data-action="edit" data-tooltip="${localize('CALENDARIA.ContextMenu.Edit')}"></i><i class="fas fa-trash" data-action="delete" data-tooltip="${localize('CALENDARIA.ContextMenu.Delete')}"></i>`;
-          nameSpan.appendChild(actions);
-          actions.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            const action = e.target.closest('[data-action]')?.dataset?.action;
-            if (action === 'edit') {
-              note.sheet.render(true, { mode: 'edit' });
-              activeDayContextMenu?.close();
-            } else if (action === 'delete') {
-              activeDayContextMenu?.close();
-              const confirmed = await foundry.applications.api.DialogV2.confirm({
-                window: { title: localize('CALENDARIA.ContextMenu.DeleteNote') },
-                content: `<p>${format('CALENDARIA.ContextMenu.DeleteConfirm', { name: note.name })}</p>`,
-                rejectClose: false,
-                modal: true
-              });
-              if (confirmed) {
-                const journal = note.parent;
-                if (journal.pages.size === 1) await journal.delete();
-                else await note.delete();
+  activeDayContextMenu = new ContextMenu(container, selector, [], {
+    fixed: true,
+    jQuery: false,
+    onOpen: (target) => {
+      currentItems = itemsGenerator(target);
+      ui.context.menuItems = currentItems;
+      setTimeout(() => {
+        const menu = document.getElementById('context-menu');
+        if (!menu) return;
+        const menuItems = menu.querySelectorAll('.context-item');
+        menuItems.forEach((li, idx) => {
+          const item = currentItems[idx];
+          if (!item?._noteData) return;
+          const { note, isOwner } = item._noteData;
+          const nameSpan = li.querySelector('span:not(.note-row)');
+          if (!nameSpan) return;
+          nameSpan.classList.add('note-row');
+          nameSpan.innerHTML = `<span class="note-name">${note.name}</span>`;
+          if (isOwner) {
+            const actions = document.createElement('span');
+            actions.className = 'note-actions';
+            actions.innerHTML = `<i class="fas fa-edit" data-action="edit" data-tooltip="${localize('CALENDARIA.ContextMenu.Edit')}"></i><i class="fas fa-trash" data-action="delete" data-tooltip="${localize('CALENDARIA.ContextMenu.Delete')}"></i>`;
+            nameSpan.appendChild(actions);
+            actions.addEventListener('click', async (e) => {
+              e.stopPropagation();
+              const action = e.target.closest('[data-action]')?.dataset?.action;
+              if (action === 'edit') {
+                note.sheet.render(true, { mode: 'edit' });
+                ui.context?.close();
+              } else if (action === 'delete') {
+                ui.context?.close();
+                const confirmed = await foundry.applications.api.DialogV2.confirm({
+                  window: { title: localize('CALENDARIA.ContextMenu.DeleteNote') },
+                  content: `<p>${format('CALENDARIA.ContextMenu.DeleteConfirm', { name: note.name })}</p>`,
+                  rejectClose: false,
+                  modal: true
+                });
+                if (confirmed) {
+                  const journal = note.parent;
+                  if (journal.pages.size === 1) await journal.delete();
+                  else await note.delete();
+                }
               }
-            }
-          });
-        }
-      });
-    };
-    setTimeout(postProcessMenu, 220);
+            });
+          }
+        });
+      }, 220);
+    }
   });
 
-  return null;
+  return activeDayContextMenu;
 }

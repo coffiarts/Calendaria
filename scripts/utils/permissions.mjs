@@ -117,3 +117,20 @@ export function canDeleteNotes() {
 export function canEditCalendars() {
   return hasPermission('editCalendars');
 }
+
+/**
+ * Get all users who have a specific permission.
+ * @param {string} permissionKey - The permission key to check
+ * @returns {object[]} Array of users with the permission
+ */
+export function getUsersWithPermission(permissionKey) {
+  const saved = game.settings.get(MODULE.ID, SETTINGS.PERMISSIONS) || {};
+  const perms = saved[permissionKey] || DEFAULTS[permissionKey] || {};
+  return game.users.filter((user) => {
+    if (user.isGM) return true;
+    if (perms.player) return true;
+    if (perms.trusted && user.isTrusted) return true;
+    if (perms.assistant && user.role === CONST.USER_ROLES.ASSISTANT) return true;
+    return false;
+  });
+}

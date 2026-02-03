@@ -99,7 +99,7 @@ export default class BaseImporter {
    * Extract the current date from source data.
    * Override in subclasses to return the date the source module was displaying.
    * @param {object} _data - Raw source data
-   * @returns {{year: number, month: number, day: number, hour?: number, minute?: number}|null} Current date or null
+   * @returns {{year: number, month: number, day: number, hour: number, minute: number}|null} Current date or null
    */
   extractCurrentDate(_data) {
     return null;
@@ -108,7 +108,7 @@ export default class BaseImporter {
   /**
    * Apply a date to the imported calendar by setting worldTime.
    * Uses the calendar's jumpToDate method to set the correct time.
-   * @param {{year: number, month: number, day: number, hour?: number, minute?: number}} dateComponents - Date to apply
+   * @param {{year: number, month: number, day: number, hour: number, minute: number}} dateComponents - Date to apply
    * @param {string} calendarId - Calendar ID to apply the date to
    * @returns {Promise<boolean>} True if date was applied successfully
    */

@@ -293,9 +293,18 @@ Replaces Journal sidebar footer with app toggle buttons.
 
 #### Export Settings
 
+Opens an export dialog with options:
+
+- **Include active calendar**: When checked, exports the active calendar data along with settings. The exported file can then be used with the Calendar Importer or Import Settings.
+
 Downloads all Calendaria settings as a JSON file for backup or transfer between worlds.
 
 #### Import Settings
+
+Opens a file picker, then shows an import dialog with options (when the file contains calendar data):
+
+- **Import calendar**: Import the embedded calendar data as a custom calendar
+- **Set as active calendar**: Automatically switch to the imported calendar
 
 Loads settings from a previously exported JSON file.
 
@@ -308,6 +317,9 @@ Loads settings from a previously exported JSON file.
 Display the HUD when the world loads.
 
 - Default: `false`
+
+> [!NOTE]
+> This setting is also accessible from **Settings > Module Settings > Calendaria** in Foundry's native settings menu.
 
 ### HUD Mode
 
@@ -489,6 +501,9 @@ Button to reset HUD to default position.
 Display the MiniCal when the world loads.
 
 - Default: `true`
+
+> [!NOTE]
+> This setting is also accessible from **Settings > Module Settings > Calendaria** in Foundry's native settings menu.
 
 ### Confirm Set Current Date (GM Only)
 
@@ -699,6 +714,9 @@ Display the TimeKeeper when the world loads.
 
 - Default: `false`
 
+> [!NOTE]
+> This setting is also accessible from **Settings > Module Settings > Calendaria** in Foundry's native settings menu.
+
 ### Custom Time Jumps
 
 Configure custom time jump buttons per increment. Each increment can have its own forward/reverse jump values.
@@ -788,7 +806,7 @@ Click the help icon (?) next to Display Formats headings to open an interactive 
 
 #### Utility
 
-- `off`: Hide the element entirely (only available for specific locations)
+- `off`: Hide the element entirely (available for HUD Date and TimeKeeper Date formats)
 - `calendarDefault`: Uses the active calendar's built-in format for that location
 - `custom`: User-defined format string
 
@@ -952,3 +970,15 @@ Override the global brightness multiplier for this specific scene.
 
 - Range: `0.5` to `1.5`
 - Default: Uses global setting
+
+### Hide HUD for Players
+
+Automatically hide the Calendaria HUD for players when this scene becomes active. When navigating to a non-hidden scene, HUD visibility is restored for users who have "Show HUD on load" enabled.
+
+- Default: `false`
+
+### Climate Zone Override
+
+Override the calendar's default climate zone for this specific scene. Affects weather generation, darkness calculations, and environment lighting.
+
+- Default: Uses calendar's default zone

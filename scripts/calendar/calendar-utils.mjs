@@ -90,25 +90,18 @@ export function formatMonthDayYear(calendar, components, options = {}) {
 }
 
 /**
- * Format era template string with UTS#35 token substitution.
- * @param {string} template - Template string (e.g., "YYYY G")
- * @param {object} context - Variable values to substitute
- * @param {number} context.year - Display year (YYYY, YY tokens)
- * @param {string} context.abbreviation - Era abbreviation (G token)
- * @param {string} context.era - Full era name (GGGG token)
- * @param {number} context.yearInEra - Year within the era (yy token)
- * @returns {string} Formatted string with tokens replaced
+ * Format an era template string by replacing tokens with era data.
+ * Supported tokens: YYYY (4-digit year), YY (2-digit year), GGGG (era name),
+ * G (era abbreviation), yy (year in era).
+ * @param {string} template - Template string with tokens
+ * @param {object} data - Era data object
+ * @returns {string} Formatted string
  */
-export function formatEraTemplate(template, context) {
-  const tokens = {
-    YYYY: context.year,
-    YY: String(context.year).slice(-2),
-    GGGG: context.era ?? context.name ?? '',
-    G: context.abbreviation ?? context.short ?? '',
-    yy: context.yearInEra ?? '',
-    '[yearInEra]': context.yearInEra ?? '',
-    '[year]': context.year
-  };
-  // Match tokens longest-first to prevent partial matches
-  return template.replace(/\[yearInEra\]|\[year\]|YYYY|GGGG|YY|yy|G/g, (match) => tokens[match] ?? match);
+export function formatEraTemplate(template, data = {}) {
+  const era = data.era ?? data.name ?? '';
+  const abbreviation = data.abbreviation ?? data.short ?? '';
+  const year = data.year ?? 0;
+  const yearInEra = data.yearInEra ?? year;
+
+  return template.replace(/YYYY/g, String(year)).replace(/YY/g, String(year).slice(-2)).replace(/GGGG/g, era).replace(/yy/g, String(yearInEra)).replace(/G/g, abbreviation);
 }

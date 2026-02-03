@@ -22,3 +22,26 @@
   </div>
   <p class="hint">{{localize "CALENDARIA.Scene.BrightnessMultiplier.Hint"}}</p>
 </div>
+<div class="form-group slim">
+  <label>{{localize "CALENDARIA.Scene.HudHideForPlayers.Name"}}</label>
+  <input type="checkbox" name="flags.{{moduleId}}.{{hudHideFlag}}" {{#if hudHideForPlayers}}checked{{/if}}>
+  <p class="hint">{{localize "CALENDARIA.Scene.HudHideForPlayers.Hint"}}</p>
+</div>
+<div class="form-group slim">
+  <label>{{localize "CALENDARIA.Scene.ClimateZoneOverride.Name"}}</label>
+  <select name="flags.{{moduleId}}.{{climateZoneFlag}}" {{#unless climateZones.length}}disabled{{/unless}}>
+    <option value="" {{#unless climateZoneOverride}}selected{{/unless}}>
+      {{localize "CALENDARIA.Scene.ClimateZoneOverride.Choices.Default"}}
+    </option>
+    {{#each climateZones}}
+    <option value="{{this.id}}" {{#if (eq this.id ../climateZoneOverride)}}selected{{/if}}>
+      {{this.name}}
+    </option>
+    {{/each}}
+  </select>
+  {{#if climateZones.length}}
+  <p class="hint">{{localize "CALENDARIA.Scene.ClimateZoneOverride.Hint"}}</p>
+  {{else}}
+  <p class="hint">{{localize "CALENDARIA.Scene.ClimateZoneOverride.NoZones"}}</p>
+  {{/if}}
+</div>

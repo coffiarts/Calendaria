@@ -27,7 +27,7 @@
             <input type="text" name="categories.{{@index}}.name" value="{{this.name}}"
               placeholder="{{localize 'CALENDARIA.SettingsPanel.Category.NamePlaceholder'}}">
             <input type="text" name="categories.{{@index}}.icon" value="{{this.icon}}" placeholder="fas fa-bookmark"
-              class="icon-input">
+              class="icon-input" data-tooltip="{{localize 'CALENDARIA.Common.IconHint'}}">
             <button type="button" data-action="removeCategory" data-category-id="{{this.id}}"
               class="icon-button danger">
               <i class="fas fa-trash"></i>

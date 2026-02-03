@@ -1,6 +1,6 @@
 /**
  * Chat Commands for Calendaria
- * Handlers for /date, /time, /note, /weather, /moon, /season, /today, /sunrise, /sunset, /advance, /calendar commands.
+ * Native handlers for all chat commands.
  * @module Chat/ChatCommands
  * @author Tyler
  */
@@ -8,21 +8,30 @@
 import { CalendariaAPI } from '../api.mjs';
 import { format, localize } from '../utils/localization.mjs';
 import { log } from '../utils/logger.mjs';
+import { canChangeActiveCalendar, canChangeDateTime } from '../utils/permissions.mjs';
 import WeatherManager from '../weather/weather-manager.mjs';
 
 /** Command patterns for parsing chat input. */
 const COMMAND_PATTERNS = {
-  date: /^\/date(?:\s+(.*))?$/i,
-  time: /^\/time(?:\s+(.*))?$/i,
-  note: /^\/note(?:\s+(.*))?$/i,
-  weather: /^\/weather$/i,
-  moon: /^\/moon$/i,
+  date: /^\/(?:date|d)(?:\s+(.*))?$/i,
+  time: /^\/(?:time|t)(?:\s+(.*))?$/i,
+  datetime: /^\/(?:datetime|dt)(?:\s+(.*))?$/i,
+  note: /^\/(?:note|n)(?:\s+(.*))?$/i,
+  weather: /^\/(?:weather|w)$/i,
+  moon: /^\/moon(?:\s+(.*))?$/i,
   season: /^\/season$/i,
   today: /^\/today$/i,
   sunrise: /^\/sunrise(?:\s+(.*))?$/i,
   sunset: /^\/sunset(?:\s+(.*))?$/i,
-  advance: /^\/advance\s+(.+)$/i,
-  calendar: /^\/calendar$/i
+  advance: /^\/(?:advance|adv)\s+(.+)$/i,
+  setdate: /^\/setdate\s+(.+)$/i,
+  settime: /^\/settime\s+(.+)$/i,
+  calendar: /^\/(?:calendar|cal)$/i,
+  calendars: /^\/(?:calendars|cals)$/i,
+  switchcal: /^\/switchcal\s+(.+)$/i,
+  festival: /^\/festival$/i,
+  weekday: /^\/weekday$/i,
+  cycle: /^\/(?:cycle|zodiac)$/i
 };
 
 /** Time unit aliases mapping to component fields. */
@@ -89,15 +98,23 @@ function handleCommand(cmd, match) {
   const handlers = {
     date: () => cmdDate(match[1]?.trim() || ''),
     time: () => cmdTime(match[1]?.trim() || ''),
+    datetime: () => cmdDateTime(match[1]?.trim() || ''),
     note: () => cmdNote(match[1]?.trim() || ''),
     weather: cmdWeather,
-    moon: cmdMoon,
+    moon: () => cmdMoon(match[1]?.trim() || ''),
     season: cmdSeason,
     today: cmdToday,
     sunrise: () => cmdSunrise(match[1]?.trim() || ''),
     sunset: () => cmdSunset(match[1]?.trim() || ''),
     advance: () => cmdAdvance(match[1]),
-    calendar: cmdCalendar
+    setdate: () => cmdSetDate(match[1]),
+    settime: () => cmdSetTime(match[1]),
+    calendar: cmdCalendar,
+    calendars: cmdCalendars,
+    switchcal: () => cmdSwitchCal(match[1]),
+    festival: cmdFestival,
+    weekday: cmdWeekday,
+    cycle: cmdCycle
   };
   handlers[cmd]?.();
 }
@@ -194,18 +211,29 @@ async function cmdWeather() {
 
 /**
  * Handle /moon command - output current moon phases.
+ * @param {string} args - Optional moon index
  * @returns {Promise<void>}
  */
-async function cmdMoon() {
+async function cmdMoon(args) {
   const calendar = CalendariaAPI.getActiveCalendar();
   if (!calendar) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.NoCalendar'));
   if (!calendar.moons?.length) return sendChat(localize('CALENDARIA.ChatCommand.NoMoons'));
-  const lines = calendar.moons.map((moon, index) => {
-    const phase = calendar.getMoonPhase(index);
-    if (!phase) return null;
+  const moonIndex = args ? parseInt(args, 10) : null;
+  if (moonIndex !== null && !isNaN(moonIndex)) {
+    const moon = calendar.moons[moonIndex];
+    const phase = calendar.getMoonPhase(moonIndex);
+    if (!moon || !phase) return sendChat(localize('CALENDARIA.ChatCommand.NoMoons'));
     const icon = phase.icon ? `<img src="${phase.icon}" style="height:1.2em;vertical-align:middle;margin-right:0.25rem;">` : '';
-    return `${icon}<strong>${localize(moon.name)}:</strong> ${phase.subPhaseName || localize(phase.name)}`;
-  }).filter(Boolean);
+    return sendChat(`${icon}<strong>${localize(moon.name)}:</strong> ${phase.subPhaseName || localize(phase.name)}`);
+  }
+  const lines = calendar.moons
+    .map((moon, index) => {
+      const phase = calendar.getMoonPhase(index);
+      if (!phase) return null;
+      const icon = phase.icon ? `<img src="${phase.icon}" style="height:1.2em;vertical-align:middle;margin-right:0.25rem;">` : '';
+      return `${icon}<strong>${localize(moon.name)}:</strong> ${phase.subPhaseName || localize(phase.name)}`;
+    })
+    .filter(Boolean);
   if (!lines.length) return sendChat(localize('CALENDARIA.ChatCommand.NoMoons'));
   await sendChat(lines.join('<br>'));
 }
@@ -335,15 +363,154 @@ async function cmdCalendar() {
   }
 
   if (calendar.moons?.length) {
-    const moonStrs = calendar.moons.map((moon, index) => {
-      const phase = calendar.getMoonPhase(index);
-      return phase ? `${localize(moon.name)}: ${phase.subPhaseName || localize(phase.name)}` : null;
-    }).filter(Boolean);
+    const moonStrs = calendar.moons
+      .map((moon, index) => {
+        const phase = calendar.getMoonPhase(index);
+        return phase ? `${localize(moon.name)}: ${phase.subPhaseName || localize(phase.name)}` : null;
+      })
+      .filter(Boolean);
     if (moonStrs.length) lines.push(`<strong>${localize('CALENDARIA.ChatCommand.Moons')}:</strong> ${moonStrs.join(', ')}`);
   }
 
   const sunrise = CalendariaAPI.getSunrise();
   const sunset = CalendariaAPI.getSunset();
   if (sunrise != null && sunset != null) lines.push(`<strong>${localize('CALENDARIA.ChatCommand.Daylight')}:</strong> ${formatHours(sunrise)} - ${formatHours(sunset)}`);
+  await sendChat(lines.join('<br>'));
+}
+
+/**
+ * Handle /datetime command - output formatted date and time.
+ * @param {string} formatStr - Optional format string
+ * @returns {Promise<void>}
+ */
+async function cmdDateTime(formatStr) {
+  const calendar = CalendariaAPI.getActiveCalendar();
+  if (!calendar) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.NoCalendar'));
+  const formatted = CalendariaAPI.formatDate(null, formatStr || 'dateTimeLong');
+  await sendChat(formatted);
+}
+
+/**
+ * Handle /setdate command - set specific date (GM only).
+ * @param {string} args - Year month day
+ * @returns {Promise<void>}
+ */
+async function cmdSetDate(args) {
+  if (!canChangeDateTime()) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.NoPermission'));
+  const calendar = CalendariaAPI.getActiveCalendar();
+  if (!calendar) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.NoCalendar'));
+  const match = args?.trim().match(/^(\d+)\s+(\d+)\s+(\d+)$/);
+  if (!match) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.InvalidDateFormat'));
+  const year = parseInt(match[1], 10);
+  const month = parseInt(match[2], 10) - 1;
+  const day = parseInt(match[3], 10);
+  try {
+    await CalendariaAPI.jumpToDate({ year, month, day });
+    ui.notifications.info(localize('CALENDARIA.ChatCommand.DateSet'));
+    log(3, `Set date to ${year}-${month + 1}-${day}`);
+  } catch (error) {
+    log(1, 'Error setting date:', error);
+    ui.notifications.error(localize('CALENDARIA.ChatCommand.SetDateError'));
+  }
+}
+
+/**
+ * Handle /settime command - set specific time (GM only).
+ * @param {string} args - Hour minute [second]
+ * @returns {Promise<void>}
+ */
+async function cmdSetTime(args) {
+  if (!canChangeDateTime()) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.NoPermission'));
+  const calendar = CalendariaAPI.getActiveCalendar();
+  if (!calendar) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.NoCalendar'));
+  const match = args?.trim().match(/^(\d+)\s+(\d+)(?:\s+(\d+))?$/);
+  if (!match) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.InvalidTimeFormat'));
+  const hour = parseInt(match[1], 10);
+  const minute = parseInt(match[2], 10);
+  const second = match[3] ? parseInt(match[3], 10) : 0;
+  const dt = CalendariaAPI.getCurrentDateTime();
+  try {
+    await CalendariaAPI.setDateTime({ ...dt, hour, minute, second });
+    ui.notifications.info(localize('CALENDARIA.ChatCommand.TimeSet'));
+    log(3, `Set time to ${hour}:${minute}:${second}`);
+  } catch (error) {
+    log(1, 'Error setting time:', error);
+    ui.notifications.error(localize('CALENDARIA.ChatCommand.SetTimeError'));
+  }
+}
+
+/**
+ * Handle /calendars command - list all calendars.
+ * @returns {Promise<void>}
+ */
+async function cmdCalendars() {
+  const calendars = CalendariaAPI.getAllCalendarMetadata();
+  if (!calendars?.length) return sendChat(localize('CALENDARIA.ChatCommand.NoCalendars'));
+  const active = CalendariaAPI.getActiveCalendar();
+  const lines = calendars.map((cal) => {
+    const isActive = cal.id === active?.id;
+    const marker = isActive ? ' <i class="fas fa-check"></i>' : '';
+    return `• <strong>${cal.name}</strong>${marker}`;
+  });
+  await sendChat(`<strong>${localize('CALENDARIA.ChatCommand.AvailableCalendars')}:</strong><br>${lines.join('<br>')}`);
+}
+
+/**
+ * Handle /switchcal command - switch active calendar (GM only).
+ * @param {string} args - Calendar ID
+ * @returns {Promise<void>}
+ */
+async function cmdSwitchCal(args) {
+  if (!canChangeActiveCalendar()) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.NoPermission'));
+  const calendarId = args?.trim();
+  if (!calendarId) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.CalendarIdRequired'));
+  const calendar = CalendariaAPI.getCalendar(calendarId);
+  if (!calendar) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.CalendarNotFound'));
+  try {
+    await CalendariaAPI.switchCalendar(calendarId);
+    ui.notifications.info(format('CALENDARIA.ChatCommand.CalendarSwitched', { name: calendar.name }));
+    log(3, `Switched calendar to ${calendarId}`);
+  } catch (error) {
+    log(1, 'Error switching calendar:', error);
+    ui.notifications.error(localize('CALENDARIA.ChatCommand.SwitchCalError'));
+  }
+}
+
+/**
+ * Handle /festival command - output current festival.
+ * @returns {Promise<void>}
+ */
+async function cmdFestival() {
+  const calendar = CalendariaAPI.getActiveCalendar();
+  if (!calendar) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.NoCalendar'));
+  const festival = CalendariaAPI.getCurrentFestival();
+  if (!festival) return sendChat(localize('CALENDARIA.ChatCommand.NoFestival'));
+  const icon = festival.icon ? `<i class="${festival.icon}"></i> ` : '<i class="fas fa-star"></i> ';
+  await sendChat(`${icon}<strong>${localize(festival.name)}</strong>`);
+}
+
+/**
+ * Handle /weekday command - output current weekday.
+ * @returns {Promise<void>}
+ */
+async function cmdWeekday() {
+  const calendar = CalendariaAPI.getActiveCalendar();
+  if (!calendar) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.NoCalendar'));
+  const weekday = CalendariaAPI.getCurrentWeekday();
+  if (!weekday) return sendChat(localize('CALENDARIA.ChatCommand.NoWeekday'));
+  const restDay = weekday.isRestDay ? ` (${localize('CALENDARIA.ChatCommand.RestDay')})` : '';
+  await sendChat(`<i class="fas fa-calendar-week"></i> <strong>${localize(weekday.name)}</strong>${restDay}`);
+}
+
+/**
+ * Handle /cycle command - output zodiac/cycle values.
+ * @returns {Promise<void>}
+ */
+async function cmdCycle() {
+  const calendar = CalendariaAPI.getActiveCalendar();
+  if (!calendar) return ui.notifications.warn(localize('CALENDARIA.ChatCommand.NoCalendar'));
+  const cycleData = CalendariaAPI.getCycleValues();
+  if (!cycleData?.values?.length) return sendChat(localize('CALENDARIA.ChatCommand.NoCycles'));
+  const lines = cycleData.values.map((cycle) => `• <strong>${cycle.cycleName}:</strong> ${cycle.entryName}`);
   await sendChat(lines.join('<br>'));
 }

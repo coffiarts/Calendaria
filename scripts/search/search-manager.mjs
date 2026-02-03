@@ -63,14 +63,49 @@ export default class SearchManager {
    */
   static #searchNotes(term, limit, searchContent) {
     const results = [];
-    const allNotes = NoteManager.getAllNotes();
+    const allNotes = NoteManager.getAllNotes().filter((stub) => stub.visible);
+    const allCategories = getAllCategories();
+
+    // Handle category: prefix search
+    if (term.startsWith('category:')) {
+      const categoryName = term.slice(9).trim();
+      if (!categoryName) return results;
+      const matchingCategories = allCategories.filter((c) => c.label.toLowerCase().includes(categoryName));
+      if (matchingCategories.length === 0) return results;
+      const matchingCategoryIds = matchingCategories.map((c) => c.id);
+
+      for (const note of allNotes) {
+        if (results.length >= limit) break;
+        const noteCategories = note.flagData?.categories ?? [];
+        if (noteCategories.some((id) => matchingCategoryIds.includes(id))) {
+          results.push(this.#buildSearchResult(note, this.#formatNoteDate(note)));
+        }
+      }
+      return results;
+    }
+
+    // Standard search with category matching
     for (const note of allNotes) {
       if (results.length >= limit) break;
+
+      // Match by name
       if (this.#matches(note.name, term)) {
         results.push(this.#buildSearchResult(note, this.#formatNoteDate(note)));
         continue;
       }
 
+      // Match by category name
+      const noteCategories = note.flagData?.categories ?? [];
+      const matchedCategory = noteCategories.some((catId) => {
+        const cat = allCategories.find((c) => c.id === catId);
+        return cat && this.#matches(cat.label, term);
+      });
+      if (matchedCategory) {
+        results.push(this.#buildSearchResult(note, this.#formatNoteDate(note)));
+        continue;
+      }
+
+      // Match by content
       if (searchContent) {
         const page = NoteManager.getFullNote(note.id);
         if (page?.text?.content && this.#matches(page.text.content, term)) {

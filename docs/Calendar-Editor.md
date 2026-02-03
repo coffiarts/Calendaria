@@ -205,13 +205,16 @@ Define named time periods like "Dawn", "Midday", or "Dusk".
 
 Customize how dates and times display using template variables.
 
-| Format             | Purpose                    | Example Output                  |
-| ------------------ | -------------------------- | ------------------------------- |
-| **Short**          | Compact date display       | "15 Jan 1492"                   |
-| **Long**           | Detailed date display      | "15th of January, 1492"         |
-| **Full**           | Complete date with weekday | "Sunday, 15th of January, 1492" |
-| **Time**           | 24-hour time format        | "14:30"                         |
-| **Time (12-hour)** | 12-hour time format        | "2:30 PM"                       |
+| Format               | Purpose                           | Example Output                  |
+| -------------------- | --------------------------------- | ------------------------------- |
+| **Short**            | Compact date display              | "15 Jan 1492"                   |
+| **Long**             | Detailed date display             | "15th of January, 1492"         |
+| **Full**             | Complete date with weekday        | "Sunday, 15th of January, 1492" |
+| **Time**             | 24-hour time format               | "14:30"                         |
+| **Time (12-hour)**   | 12-hour time format               | "2:30 PM"                       |
+| **Week View Header** | BigCal week view header           | "Week 3 of January, 1492"       |
+| **Year View Header** | BigCal year view header           | "1492"                          |
+| **Year View Label**  | BigCal year view grid cell labels | "1492 DR"                       |
 
 ---
 
@@ -267,29 +270,12 @@ Define historical periods for your calendar.
 
 ### Era Fields
 
-| Column           | Description                                           |
-| ---------------- | ----------------------------------------------------- |
-| **Name**         | Era name (e.g., "Age of Humanity")                    |
-| **Abbreviation** | Short form (e.g., "AH")                               |
-| **Start Year**   | First year of this era                                |
-| **End Year**     | Last year of this era (leave blank for ongoing)       |
-| **Format**       | How years display: Before/After, prefix, suffix, etc. |
-
-### Era Template
-
-- **Template** — Custom format string for year display using UTS#35 tokens:
-  - `YYYY` — Absolute display year (e.g., 1492)
-  - `YY` — 2-digit year (e.g., 92)
-  - `yy` — Year within current era
-  - `G` — Era abbreviation (e.g., DR)
-  - `GGGG` — Full era name (e.g., Dale Reckoning)
-- **Preview** — Live preview of the template output
-
-**Examples:**
-
-- `YYYY G` → "1492 DR"
-- `G yy` → "DR 5"
-- `Year yy of the GGGG` → "Year 5 of the Dale Reckoning"
+| Column           | Description                                     |
+| ---------------- | ----------------------------------------------- |
+| **Name**         | Era name (e.g., "Age of Humanity")              |
+| **Abbreviation** | Short form (e.g., "AH")                         |
+| **Start Year**   | First year of this era                          |
+| **End Year**     | Last year of this era (leave blank for ongoing) |
 
 ### Era Controls
 

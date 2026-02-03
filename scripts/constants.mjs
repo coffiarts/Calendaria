@@ -65,6 +65,7 @@ export const SETTINGS = {
   BIG_CAL_SEASON_DISPLAY_MODE: 'bigCalSeasonDisplayMode',
   BIG_CAL_ERA_DISPLAY_MODE: 'bigCalEraDisplayMode',
   BIG_CAL_CYCLES_DISPLAY_MODE: 'bigCalCyclesDisplayMode',
+  BIG_CAL_HEADER_SHOW_SELECTED: 'bigCalHeaderShowSelected',
   LOGGING_LEVEL: 'loggingLevel',
   MACRO_TRIGGERS: 'macroTriggers',
   MINI_CAL_AUTO_FADE: 'miniCalAutoFade',
@@ -81,6 +82,7 @@ export const SETTINGS = {
   MINI_CAL_SEASON_DISPLAY_MODE: 'miniCalSeasonDisplayMode',
   MINI_CAL_ERA_DISPLAY_MODE: 'miniCalEraDisplayMode',
   MINI_CAL_CYCLES_DISPLAY_MODE: 'miniCalCyclesDisplayMode',
+  MINI_CAL_HEADER_SHOW_SELECTED: 'miniCalHeaderShowSelected',
   MINI_CAL_STICKY_STATES: 'miniCalStickyStates',
   MINI_CAL_TIME_JUMPS: 'miniCalTimeJumps',
   PERMISSIONS: 'permissions',
@@ -130,8 +132,10 @@ export const DISPLAY_LOCATIONS = {
 
 /** @enum {string} Scene flags for scene-specific configuration */
 export const SCENE_FLAGS = {
+  BRIGHTNESS_MULTIPLIER: 'brightnessMultiplier',
+  CLIMATE_ZONE_OVERRIDE: 'climateZoneOverride',
   DARKNESS_SYNC: 'darknessSync',
-  BRIGHTNESS_MULTIPLIER: 'brightnessMultiplier'
+  HUD_HIDE_FOR_PLAYERS: 'hudHideForPlayers'
 };
 
 /** Template file paths for UI components */
@@ -271,6 +275,8 @@ export const SOCKET_TYPES = {
   CALENDAR_REQUEST: 'calendarRequest',
   CALENDAR_SWITCH: 'calendarSwitch',
   CLOCK_UPDATE: 'clockUpdate',
+  CREATE_NOTE: 'createNote',
+  CREATE_NOTE_COMPLETE: 'createNoteComplete',
   DATE_CHANGE: 'dateChange',
   HUD_VISIBILITY: 'hudVisibility',
   MINI_CAL_VISIBILITY: 'miniCalVisibility',

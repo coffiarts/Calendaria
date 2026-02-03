@@ -11,7 +11,7 @@ import { MiniCal } from './applications/mini-cal.mjs';
 import { SettingsPanel } from './applications/settings/settings-panel.mjs';
 import { TimeKeeper } from './applications/time-keeper.mjs';
 import { MODULE, SETTINGS } from './constants.mjs';
-import { migrateCustomCalendars, migrateIntercalaryFestivals } from './utils/format-utils.mjs';
+import NoteManager from './notes/note-manager.mjs';
 import { localize } from './utils/localization.mjs';
 import { log } from './utils/logger.mjs';
 import * as StickyZones from './utils/sticky-zones.mjs';
@@ -263,6 +263,16 @@ export function registerSettings() {
     onChange: () => foundry.applications.instances.get('mini-cal')?.render()
   });
 
+  /** Show selected date in MiniCal header instead of viewed date */
+  game.settings.register(MODULE.ID, SETTINGS.MINI_CAL_HEADER_SHOW_SELECTED, {
+    name: 'CALENDARIA.Settings.MiniCalHeaderShowSelected.Name',
+    hint: 'CALENDARIA.Settings.MiniCalHeaderShowSelected.Hint',
+    scope: 'user',
+    config: false,
+    type: new BooleanField({ initial: false }),
+    onChange: () => foundry.applications.instances.get('mini-cal')?.render()
+  });
+
   // ========================================//
   //  BigCal Block Visibility                //
   // ========================================//
@@ -388,6 +398,16 @@ export function registerSettings() {
     onChange: () => foundry.applications.instances.get('calendaria')?.render()
   });
 
+  /** Show selected date in BigCal header instead of viewed date */
+  game.settings.register(MODULE.ID, SETTINGS.BIG_CAL_HEADER_SHOW_SELECTED, {
+    name: 'CALENDARIA.Settings.BigCalHeaderShowSelected.Name',
+    hint: 'CALENDARIA.Settings.BigCalHeaderShowSelected.Hint',
+    scope: 'user',
+    config: false,
+    type: new BooleanField({ initial: false }),
+    onChange: () => foundry.applications.instances.get('calendaria')?.render()
+  });
+
   /** Track if format migration has been run */
   game.settings.register(MODULE.ID, 'formatMigrationComplete', {
     name: 'Format Migration Complete',
@@ -406,6 +426,13 @@ export function registerSettings() {
 
   game.settings.register(MODULE.ID, 'intercalaryMigrationComplete', {
     name: 'Intercalary Migration Complete',
+    scope: 'world',
+    config: false,
+    type: new BooleanField({ initial: false })
+  });
+
+  game.settings.register(MODULE.ID, 'weatherZoneMigrationComplete', {
+    name: 'Weather Zone Migration Complete',
     scope: 'world',
     config: false,
     type: new BooleanField({ initial: false })
@@ -454,21 +481,6 @@ export function registerSettings() {
     scope: 'world',
     config: false,
     type: new NumberField({ initial: 1.0, min: 0.5, max: 1.5, step: 0.1 })
-  });
-
-  /** Show TimeKeeper on world load (GM only) */
-  game.settings.register(MODULE.ID, SETTINGS.SHOW_TIME_KEEPER, {
-    name: 'CALENDARIA.Settings.ShowTimeKeeper.Name',
-    hint: 'CALENDARIA.Settings.ShowTimeKeeper.Hint',
-    scope: 'world',
-    config: false,
-    type: new BooleanField({ initial: false }),
-    requiresReload: false,
-    onChange: (value) => {
-      if (!game.user.isGM) return;
-      if (value) TimeKeeper.show();
-      else TimeKeeper.hide();
-    }
   });
 
   /** TimeKeeper auto-fade on idle */
@@ -570,27 +582,46 @@ export function registerSettings() {
     requiresReload: true
   });
 
+  // ========================================//
+  //  Show on Load (visible in settings menu)  //
+  // ========================================//
+
+  /** Show HUD on world load */
+  game.settings.register(MODULE.ID, SETTINGS.SHOW_CALENDAR_HUD, {
+    name: 'CALENDARIA.Settings.ShowCalendarHUD.Name',
+    hint: 'CALENDARIA.Settings.ShowCalendarHUD.Hint',
+    scope: 'user',
+    config: true,
+    type: new BooleanField({ initial: false })
+  });
+
   /** Show MiniCal on world load */
   game.settings.register(MODULE.ID, SETTINGS.SHOW_MINI_CAL, {
     name: 'CALENDARIA.Settings.ShowMiniCal.Name',
     hint: 'CALENDARIA.Settings.ShowMiniCal.Hint',
     scope: 'user',
-    config: false,
+    config: true,
     type: new BooleanField({ initial: true })
+  });
+
+  /** Show TimeKeeper on world load (GM only) */
+  game.settings.register(MODULE.ID, SETTINGS.SHOW_TIME_KEEPER, {
+    name: 'CALENDARIA.Settings.ShowTimeKeeper.Name',
+    hint: 'CALENDARIA.Settings.ShowTimeKeeper.Hint',
+    scope: 'world',
+    config: true,
+    type: new BooleanField({ initial: false }),
+    requiresReload: false,
+    onChange: (value) => {
+      if (!game.user.isGM) return;
+      if (value) TimeKeeper.show();
+      else TimeKeeper.hide();
+    }
   });
 
   // ========================================//
   //  Calendar HUD                            //
   // ========================================//
-
-  /** Show Calendar HUD on world load */
-  game.settings.register(MODULE.ID, SETTINGS.SHOW_CALENDAR_HUD, {
-    name: 'CALENDARIA.Settings.ShowCalendarHUD.Name',
-    hint: 'CALENDARIA.Settings.ShowCalendarHUD.Hint',
-    scope: 'user',
-    config: false,
-    type: new BooleanField({ initial: false })
-  });
 
   /** Calendar HUD display mode (fullsize or compact) */
   game.settings.register(MODULE.ID, SETTINGS.CALENDAR_HUD_MODE, {
@@ -1059,7 +1090,8 @@ export function registerSettings() {
         deleteNotes: { player: false, trusted: false, assistant: true },
         editCalendars: { player: false, trusted: false, assistant: false }
       }
-    })
+    }),
+    onChange: () => NoteManager.syncNoteOwnership()
   });
 
   // ========================================//
@@ -1216,50 +1248,4 @@ export function registerReadySettings() {
       initial: ''
     })
   });
-
-  // Run migrations for custom calendars
-  migrateCustomCalendars();
-  migrateIntercalaryFestivals();
-  migrateSettingKeys();
-}
-
-/**
- * Migrate old setting keys to new names.
- * Runs once per world to preserve user settings across the rename.
- * @async
- */
-async function migrateSettingKeys() {
-  if (!game.user.isGM) return;
-  if (game.settings.get(MODULE.ID, 'settingKeyMigrationComplete')) return;
-
-  // Key mapping: oldKey -> newKey
-  const keyMap = {
-    'forceMiniCalendar': 'forceMiniCal',
-    'miniCalendarAutoFade': 'miniCalAutoFade',
-    'miniCalendarConfirmSetDate': 'miniCalConfirmSetDate',
-    'miniCalendarControlsDelay': 'miniCalControlsDelay',
-    'miniCalendarIdleOpacity': 'miniCalIdleOpacity',
-    'miniCalendarPosition': 'miniCalPosition',
-    'miniCalendarStickyStates': 'miniCalStickyStates',
-    'showMiniCalendar': 'showMiniCal'
-  };
-
-  let migrated = 0;
-  for (const [oldKey, newKey] of Object.entries(keyMap)) {
-    const storage = game.settings.storage.get('world');
-    const oldSetting = storage.getSetting(`${MODULE.ID}.${oldKey}`);
-    if (oldSetting) {
-      const newSetting = storage.getSetting(`${MODULE.ID}.${newKey}`);
-      if (!newSetting) {
-        await game.settings.set(MODULE.ID, newKey, oldSetting.value);
-        log(2, `Migrated setting: ${oldKey} -> ${newKey}`);
-        migrated++;
-      }
-    }
-  }
-
-  if (migrated > 0) {
-    log(2, `Setting key migration complete: ${migrated} settings migrated`);
-  }
-  await game.settings.set(MODULE.ID, 'settingKeyMigrationComplete', true);
 }

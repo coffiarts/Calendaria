@@ -162,10 +162,10 @@ function renderButton(widget, location) {
 /**
  * Render an indicator widget to HTML.
  * @param {object} widget - Widget config
- * @param {string} location - Location identifier
+ * @param {string} _location - Location identifier
  * @returns {string} HTML string
  */
-function renderIndicator(widget, location) {
+function renderIndicator(widget, _location) {
   const icon = resolveValue(widget.icon);
   const label = resolveValue(widget.label);
   const color = resolveValue(widget.color);

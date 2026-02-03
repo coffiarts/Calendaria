@@ -72,6 +72,16 @@ Notes can repeat on specific moon phases. In the note editor:
 1. Set repeat pattern to **Moon Phase**
 2. Select which moon(s) to track
 3. Choose the phase range (e.g., Full Moon only, or a range like 0.5-0.625)
+4. Optionally select a **modifier** to target a specific portion of multi-day phases:
+
+| Modifier | Description                         |
+| -------- | ----------------------------------- |
+| Any      | Any time during the phase (default) |
+| Rising   | First third of the phase            |
+| True     | Middle third of the phase           |
+| Fading   | Last third of the phase             |
+
+The modifier aligns with the sub-phase system used for display (Rising/True/Fading). For example, "Full Moon (Rising)" triggers only during the first third of the Full Moon phase.
 
 See [Notes and Events](Notes-and-Events#recurrence-patterns) for more on recurrence patterns.
 

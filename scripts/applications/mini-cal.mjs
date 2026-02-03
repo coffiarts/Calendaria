@@ -524,7 +524,9 @@ export class MiniCal extends HandlebarsApplicationMixin(ApplicationV2) {
     const currentSeason = ViewUtils.enrichSeasonData(calendar.getCurrentSeason?.(viewedComponents));
     const currentEra = calendar.getCurrentEra?.();
     const monthWeekdays = calendar.getWeekdaysForMonth?.(month) ?? calendar.days?.values ?? [];
-    const headerComponents = { year, month, dayOfMonth: date.day };
+    const showSelectedInHeader = game.settings.get(MODULE.ID, SETTINGS.MINI_CAL_HEADER_SHOW_SELECTED);
+    const headerDate = showSelectedInHeader && this._selectedDate ? this._selectedDate : { year, month, day: date.day };
+    const headerComponents = { year: headerDate.year, month: headerDate.month, dayOfMonth: headerDate.day };
     const rawHeader = formatForLocation(calendar, headerComponents, 'miniCalHeader');
     const formattedHeader = hasMoonIconMarkers(rawHeader) ? renderMoonIcons(rawHeader) : rawHeader;
 
@@ -532,7 +534,7 @@ export class MiniCal extends HandlebarsApplicationMixin(ApplicationV2) {
       year,
       month,
       monthName: localize(monthData.name),
-      yearDisplay: calendar.formatYearWithEra?.(year) ?? String(year),
+      yearDisplay: String(year),
       formattedHeader,
       currentSeason,
       currentEra,
@@ -606,7 +608,7 @@ export class MiniCal extends HandlebarsApplicationMixin(ApplicationV2) {
     const currentEra = calendar.getCurrentEra?.();
     const weekdayData = calendar.days?.values ?? [];
     const displayWeek = weekNumber + 1;
-    const yearDisplay = calendar.formatYearWithEra?.(year) ?? String(year);
+    const yearDisplay = String(year);
     const formattedHeader = `${localize('CALENDARIA.Common.Week')} ${displayWeek}, ${yearDisplay}`;
     return {
       year,
@@ -746,7 +748,7 @@ export class MiniCal extends HandlebarsApplicationMixin(ApplicationV2) {
     const calendar = this.calendar;
     const monthData = calendar.months?.values?.[month];
     const monthName = monthData ? localize(monthData.name) : '';
-    const yearDisplay = calendar.formatYearWithEra?.(year) ?? String(year);
+    const yearDisplay = String(year);
     return `${monthName} ${day}, ${yearDisplay}`;
   }
 

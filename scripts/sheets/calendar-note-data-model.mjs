@@ -49,7 +49,8 @@ export class CalendarNoteDataModel extends foundry.abstract.TypeDataModel {
         new fields.SchemaField({
           moonIndex: new fields.NumberField({ required: true, integer: true, min: 0 }),
           phaseStart: new fields.NumberField({ required: true, min: 0, max: 1 }),
-          phaseEnd: new fields.NumberField({ required: true, min: 0, max: 1 })
+          phaseEnd: new fields.NumberField({ required: true, min: 0, max: 1 }),
+          modifier: new fields.StringField({ choices: ['any', 'rising', 'true', 'fading'], initial: 'any' })
         }),
         { initial: [] }
       ),

@@ -296,16 +296,11 @@ export class SetDateDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     const minute = parseInt(data.minute) || 0;
     const skipTriggers = data.skipTriggers ?? true;
     const isMonthless = calendar.isMonthless ?? false;
-    let dayOfYear;
     let month = 0;
-    if (isMonthless) {
-      dayOfYear = day - 1;
-    } else {
+    if (!isMonthless) {
       month = parseInt(data.month);
-      dayOfYear = day - 1;
-      for (let i = 0; i < month; i++) dayOfYear += calendar.months.values[i]?.days ?? 30;
     }
-    const newTimeComponents = { year, month, day: dayOfYear, hour, minute, second: 0 };
+    const newTimeComponents = { year, month, dayOfMonth: day - 1, hour, minute, second: 0 };
     const newTime = calendar.componentsToTime(newTimeComponents);
     const delta = newTime - game.time.worldTime;
     if (delta !== 0) {

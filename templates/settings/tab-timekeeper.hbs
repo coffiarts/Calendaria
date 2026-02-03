@@ -61,56 +61,7 @@
     </div>
   </fieldset>
 
-  <fieldset data-section="timekeeper-sticky">
-    <legend>{{localize "CALENDARIA.SettingsPanel.Section.StickyStates"}}
-      <button type="button" class="reset-section" data-action="resetSection" data-section="timekeeper-sticky" data-tooltip
-        aria-label="{{localize "CALENDARIA.SettingsPanel.ResetSection.Tooltip"}}"><i class="fas fa-undo"></i></button>
-    </legend>
-    <input type="hidden" name="timeKeeperStickySection" value="1">
-
-    <div class="form-group">
-      <label for="timeKeeperStickyPosition">{{localize "CALENDARIA.Common.LockPosition"}}</label>
-      <div class="form-fields">
-        <input type="checkbox" id="timeKeeperStickyPosition" name="timeKeeperStickyPosition"
-          {{#if timeKeeperStickyPosition}}checked{{/if}}>
-      </div>
-      <p class="hint">{{localize "CALENDARIA.SettingsPanel.Hint.StickyPosition"}}</p>
-    </div>
-  </fieldset>
-
   {{#if isGM}}
-    <fieldset data-section="timekeeper-time-jumps">
-      <legend>{{localize "CALENDARIA.SettingsPanel.Section.CustomTimeJumps"}}
-        <button type="button" class="reset-section" data-action="resetSection" data-section="timekeeper-time-jumps"
-          data-tooltip aria-label="{{localize "CALENDARIA.SettingsPanel.ResetSection.Tooltip"}}"><i
-            class="fas fa-undo"></i></button>
-      </legend>
-      <p class="hint section-hint">{{localize "CALENDARIA.SettingsPanel.Hint.CustomTimeJumps"}}</p>
-
-      <div class="time-jumps-grid timekeeper-jumps">
-        <div class="time-jumps-header">
-          <span></span>
-          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorDecrement"}}</span>
-          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorDecrement"}}</span>
-          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorIncrement"}}</span>
-          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorIncrement"}}</span>
-        </div>
-        {{#each timeKeeperTimeJumps}}
-          <div class="time-jumps-row">
-            <label>{{label}}</label>
-            <input type="number" name="timeKeeperTimeJumps.{{key}}.dec2" value="{{jumps.dec2}}"
-              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorDecrement"}}">
-            <input type="number" name="timeKeeperTimeJumps.{{key}}.dec1" value="{{jumps.dec1}}"
-              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorDecrement"}}">
-            <input type="number" name="timeKeeperTimeJumps.{{key}}.inc1" value="{{jumps.inc1}}"
-              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorIncrement"}}">
-            <input type="number" name="timeKeeperTimeJumps.{{key}}.inc2" value="{{jumps.inc2}}"
-              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorIncrement"}}">
-          </div>
-        {{/each}}
-      </div>
-    </fieldset>
-
     <fieldset data-section="display-formats">
       <legend>{{localize "CALENDARIA.SettingsPanel.Section.DisplayFormats"}}
         <button type="button" class="legend-help" data-action="showTokenReference" data-context-type="date" data-tooltip
@@ -156,6 +107,55 @@
         </div>
       {{/each}}
     </fieldset>
+
+    <fieldset data-section="timekeeper-time-jumps">
+      <legend>{{localize "CALENDARIA.SettingsPanel.Section.CustomTimeJumps"}}
+        <button type="button" class="reset-section" data-action="resetSection" data-section="timekeeper-time-jumps"
+          data-tooltip aria-label="{{localize "CALENDARIA.SettingsPanel.ResetSection.Tooltip"}}"><i
+            class="fas fa-undo"></i></button>
+      </legend>
+      <p class="hint section-hint">{{localize "CALENDARIA.SettingsPanel.Hint.CustomTimeJumps"}}</p>
+
+      <div class="time-jumps-grid timekeeper-jumps">
+        <div class="time-jumps-header">
+          <span></span>
+          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorDecrement"}}</span>
+          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorDecrement"}}</span>
+          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorIncrement"}}</span>
+          <span>{{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorIncrement"}}</span>
+        </div>
+        {{#each timeKeeperTimeJumps}}
+          <div class="time-jumps-row">
+            <label>{{label}}</label>
+            <input type="number" name="timeKeeperTimeJumps.{{key}}.dec2" value="{{jumps.dec2}}"
+              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorDecrement"}}">
+            <input type="number" name="timeKeeperTimeJumps.{{key}}.dec1" value="{{jumps.dec1}}"
+              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorDecrement"}}">
+            <input type="number" name="timeKeeperTimeJumps.{{key}}.inc1" value="{{jumps.inc1}}"
+              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MinorIncrement"}}">
+            <input type="number" name="timeKeeperTimeJumps.{{key}}.inc2" value="{{jumps.inc2}}"
+              aria-label="{{label}} {{localize "CALENDARIA.SettingsPanel.TimeJumps.MajorIncrement"}}">
+          </div>
+        {{/each}}
+      </div>
+    </fieldset>
   {{/if}}
+
+  <fieldset data-section="timekeeper-sticky">
+    <legend>{{localize "CALENDARIA.SettingsPanel.Section.StickyStates"}}
+      <button type="button" class="reset-section" data-action="resetSection" data-section="timekeeper-sticky" data-tooltip
+        aria-label="{{localize "CALENDARIA.SettingsPanel.ResetSection.Tooltip"}}"><i class="fas fa-undo"></i></button>
+    </legend>
+    <input type="hidden" name="timeKeeperStickySection" value="1">
+
+    <div class="form-group">
+      <label for="timeKeeperStickyPosition">{{localize "CALENDARIA.Common.LockPosition"}}</label>
+      <div class="form-fields">
+        <input type="checkbox" id="timeKeeperStickyPosition" name="timeKeeperStickyPosition"
+          {{#if timeKeeperStickyPosition}}checked{{/if}}>
+      </div>
+      <p class="hint">{{localize "CALENDARIA.SettingsPanel.Hint.StickyPosition"}}</p>
+    </div>
+  </fieldset>
 
 </section>

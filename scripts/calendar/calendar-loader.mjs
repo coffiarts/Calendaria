@@ -25,6 +25,7 @@ export const BUNDLED_CALENDARS = [
   'golarion',
   'gregorian',
   'greyhawk',
+  'greyhawk-364',
   'harptos',
   'khorvaire',
   'krynn-elven',

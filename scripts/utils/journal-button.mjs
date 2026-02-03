@@ -19,7 +19,7 @@ import { log } from './logger.mjs';
  * Replaces footer with Calendaria controls and hides calendar infrastructure.
  * @param {object} app - The document directory application
  */
-export function onActivateDocumentDirectory(app) {
+export function onRenderDocumentDirectory(app) {
   if (app.documentName !== 'JournalEntry') return;
   const element = app.element;
   if (!element) return;

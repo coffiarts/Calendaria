@@ -307,23 +307,8 @@ export default class CalendariumImporter extends BaseImporter {
       name: era.name || localize('CALENDARIA.Common.Era'),
       abbreviation: era.name?.substring(0, 3) || 'E',
       startYear: era.date?.year ?? 0,
-      endYear: era.end?.year ?? null,
-      format: this.#detectEraFormat(era.format),
-      template: era.format || null
+      endYear: era.end?.year ?? null
     }));
-  }
-
-  /**
-   * Detect era format (prefix or suffix) from template string.
-   * @param {string} formatString - Era format template
-   * @returns {string} - Era format type (prefix or suffix)
-   */
-  #detectEraFormat(formatString) {
-    if (!formatString) return 'suffix';
-    const abbrevIndex = formatString.indexOf('{{abbreviation}}') !== -1 ? formatString.indexOf('{{abbreviation}}') : formatString.indexOf('{{era_name}}');
-    const yearIndex = formatString.indexOf('{{year}}');
-    if (abbrevIndex === -1 || yearIndex === -1) return 'suffix';
-    return abbrevIndex < yearIndex ? 'prefix' : 'suffix';
   }
 
   /**

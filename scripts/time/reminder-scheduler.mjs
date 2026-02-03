@@ -87,7 +87,7 @@ export default class ReminderScheduler {
     log(3, `Checking ${allNotes.length} notes for reminders at ${currentDate.year}-${currentDate.month}-${currentDate.day} ${currentDate.hour}:${currentDate.minute}`);
     for (const note of allNotes) {
       if (note.calendarId && note.calendarId !== activeCalendarId) continue;
-      if (!note.flagData.reminderOffset || note.flagData.reminderOffset <= 0) continue;
+      if (note.flagData.reminderOffset == null || note.flagData.reminderOffset < 0) continue;
       if (note.flagData.silent) continue;
       const reminderKey = `${note.id}:${currentDate.year}-${currentDate.month}-${currentDate.day}`;
       if (this.#firedToday.has(reminderKey)) continue;
@@ -121,7 +121,7 @@ export default class ReminderScheduler {
     if (hasRecurrence || hasConditions) {
       const occursToday = isRecurringMatch(note.flagData, currentDate);
       let occursTomorrow = false;
-      if (note.flagData.allDay && offsetMinutes > 0) {
+      if (note.flagData.allDay) {
         const tomorrow = this.#getNextDay(currentDate, calendar);
         occursTomorrow = isRecurringMatch(note.flagData, tomorrow);
         log(3, `  Tomorrow check: ${tomorrow.year}-${tomorrow.month}-${tomorrow.day}, occursTomorrow=${occursTomorrow}`);
@@ -131,13 +131,26 @@ export default class ReminderScheduler {
       if (!occursToday && !occursTomorrow) return false;
 
       // For all-day events, check if we should fire reminder tonight for tomorrow's occurrence
-      if (occursTomorrow && note.flagData.allDay) {
+      if (occursTomorrow && note.flagData.allDay && offsetMinutes > 0) {
         const currentMinutes = currentDate.hour * minutesPerHour + currentDate.minute;
         const hoursPerDay = calendar?.days?.hoursPerDay ?? 24;
         const minutesInDay = hoursPerDay * minutesPerHour;
         const reminderMinutes = minutesInDay - offsetMinutes;
         log(3, `  Day-before check: currentMinutes=${currentMinutes}, reminderMinutes=${reminderMinutes}, shouldFire=${currentMinutes >= reminderMinutes}`);
         if (currentMinutes >= reminderMinutes) return true;
+      }
+
+      // For all-day events occurring today, fire reminder
+      // 0-offset: fire anytime during the day (firedToday prevents repeat)
+      // Non-zero offset: fire within early window (catch-up for missed evening reminder)
+      if (occursToday && note.flagData.allDay) {
+        if (offsetMinutes === 0) {
+          log(3, `  All-day today (0-offset): shouldFire=true`);
+          return true;
+        }
+        const currentMinutes = currentDate.hour * minutesPerHour + currentDate.minute;
+        log(3, `  All-day today check: currentMinutes=${currentMinutes}, offsetMinutes=${offsetMinutes}, shouldFire=${currentMinutes <= offsetMinutes}`);
+        if (currentMinutes <= offsetMinutes) return true;
       }
 
       // For timed events occurring today, check if we're in the reminder window
@@ -299,6 +312,7 @@ export default class ReminderScheduler {
    */
   static #formatReminderMessage(note) {
     const hours = note.flagData.reminderOffset;
+    if (hours === 0) return format('CALENDARIA.Reminder.StartsNow', { name: note.name });
     const timeStr = hours > 1 ? format('CALENDARIA.Reminder.HoursPlural', { hours }) : format('CALENDARIA.Reminder.Hours', { hours });
     return format('CALENDARIA.Reminder.StartsIn', { name: note.name, time: timeStr });
   }

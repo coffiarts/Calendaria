@@ -14,6 +14,7 @@ import { addDays, addMonths, addYears, compareDates, compareDays, dayOfWeek, day
 import SearchManager from './search/search-manager.mjs';
 import { DEFAULT_FORMAT_PRESETS, formatCustom, getAvailableTokens, PRESET_FORMATTERS, resolveFormatString, timeSince } from './utils/format-utils.mjs';
 import { log } from './utils/logger.mjs';
+import { diagnoseWeatherConfig } from './utils/migrations.mjs';
 import { canAddNotes, canChangeActiveCalendar, canChangeDateTime, canEditCalendars, canEditNotes } from './utils/permissions.mjs';
 import { CalendariaSocket } from './utils/socket.mjs';
 
@@ -342,7 +343,7 @@ export const CalendariaAPI = {
     const formatted = {
       ...raw,
       year: components ? raw.year : raw.year + (calendar.years?.yearZero ?? 0),
-      dayOfMonth: components ? (raw.day || 1) : (raw.dayOfMonth ?? 0) + 1
+      dayOfMonth: components ? raw.day || 1 : (raw.dayOfMonth ?? 0) + 1
     };
     if (PRESET_FORMATTERS[formatOrPreset]) return PRESET_FORMATTERS[formatOrPreset](calendar, formatted);
     const formatStr = resolveFormatString(formatOrPreset);
@@ -887,6 +888,33 @@ export const CalendariaAPI = {
    */
   async removeWeatherPreset(presetId) {
     return WeatherManager.removeCustomPreset(presetId);
+  },
+
+  /**
+   * Get available climate zone templates for creating new zones.
+   * @returns {object[]} Array of climate zone template objects
+   */
+  getClimateZoneTemplates() {
+    return WeatherManager.getClimateZoneTemplates();
+  },
+
+  /**
+   * Check if a calendar is a bundled (built-in) calendar.
+   * @param {string} calendarId - Calendar ID to check
+   * @returns {boolean} True if bundled calendar
+   */
+  isBundledCalendar(calendarId) {
+    return CalendarManager.isBundledCalendar(calendarId);
+  },
+
+  /**
+   * Diagnose weather configuration issues.
+   * Inspects raw settings to find weather data that may not be loading properly.
+   * @param {boolean} [showDialog] - Whether to show a dialog with results
+   * @returns {Promise<object>} Diagnostic results with settingsData and activeCalendar info
+   */
+  async diagnoseWeather(showDialog = true) {
+    return diagnoseWeatherConfig(showDialog);
   },
 
   /**

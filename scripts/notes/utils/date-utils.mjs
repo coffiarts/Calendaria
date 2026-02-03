@@ -63,12 +63,10 @@ export function daysBetween(startDate, endDate) {
     const yearZero = calendar.years?.yearZero ?? 0;
     const startInternalYear = startDate.year - yearZero;
     const endInternalYear = endDate.year - yearZero;
-    let startDayOfYear = (startDate.day ?? 1) - 1;
-    for (let i = 0; i < startDate.month; i++) startDayOfYear += calendar.getDaysInMonth(i, startInternalYear);
-    let endDayOfYear = (endDate.day ?? 1) - 1;
-    for (let i = 0; i < endDate.month; i++) endDayOfYear += calendar.getDaysInMonth(i, endInternalYear);
-    const startComponents = { year: startInternalYear, day: startDayOfYear, hour: 0, minute: 0, second: 0 };
-    const endComponents = { year: endInternalYear, day: endDayOfYear, hour: 0, minute: 0, second: 0 };
+    const startDayOfMonth = (startDate.day ?? 1) - 1;
+    const endDayOfMonth = (endDate.day ?? 1) - 1;
+    const startComponents = { year: startInternalYear, month: startDate.month, dayOfMonth: startDayOfMonth, hour: 0, minute: 0, second: 0 };
+    const endComponents = { year: endInternalYear, month: endDate.month, dayOfMonth: endDayOfMonth, hour: 0, minute: 0, second: 0 };
     const startTime = calendar.componentsToTime(startComponents);
     const endTime = calendar.componentsToTime(endComponents);
     const hoursPerDay = calendar.days?.hoursPerDay ?? 24;
@@ -107,39 +105,10 @@ export function monthsBetween(startDate, endDate) {
 export function dayOfWeek(date) {
   const calendar = CalendarManager.getActiveCalendar();
   if (!calendar) return 0;
-
   try {
-    const daysInWeek = calendar.days?.values?.length || 7;
-    const monthData = calendar.months?.values?.[date.month];
-    if (monthData?.startingWeekday != null) {
-      const dayIndex = (date.day ?? 1) - 1;
-      const components = { year: date.year - (calendar.years?.yearZero ?? 0), month: date.month, dayOfMonth: (date.day ?? 1) - 1 };
-      const nonCountingFestivals = calendar.countNonWeekdayFestivalsBefore?.(components) ?? 0;
-      const nonCountingIntercalary = calendar.countIntercalaryDaysBefore?.(components) ?? 0;
-      const nonCountingDays = nonCountingFestivals + nonCountingIntercalary;
-      return (monthData.startingWeekday + dayIndex - nonCountingDays + daysInWeek * 100) % daysInWeek;
-    }
-
     const yearZero = calendar.years?.yearZero ?? 0;
-    const internalYear = date.year - yearZero;
-    let dayOfYear = (date.day ?? 1) - 1;
-    for (let m = 0; m < date.month; m++) dayOfYear += calendar.getDaysInMonth(m, internalYear);
-    let totalDaysFromPriorYears = 0;
-    if (internalYear > 0) {
-      for (let y = 0; y < internalYear; y++) totalDaysFromPriorYears += calendar.getDaysInYear(y);
-    } else if (internalYear < 0) {
-      for (let y = -1; y >= internalYear; y--) totalDaysFromPriorYears -= calendar.getDaysInYear(y);
-    }
-    const totalDays = totalDaysFromPriorYears + dayOfYear;
-    const components = { year: internalYear, month: date.month, dayOfMonth: (date.day ?? 1) - 1 };
-    const nonCountingFestivalsInYear = calendar.countNonWeekdayFestivalsBefore?.(components) ?? 0;
-    const nonCountingFestivalsFromPriorYears = calendar.countNonWeekdayFestivalsBeforeYear?.(internalYear) ?? 0;
-    const intercalaryInYear = calendar.countIntercalaryDaysBefore?.(components) ?? 0;
-    const intercalaryFromPriorYears = calendar.countIntercalaryDaysBeforeYear?.(internalYear) ?? 0;
-    const totalNonCounting = nonCountingFestivalsFromPriorYears + nonCountingFestivalsInYear + intercalaryFromPriorYears + intercalaryInYear;
-    const firstWeekday = calendar.years?.firstWeekday ?? 0;
-    const countingDays = totalDays - totalNonCounting;
-    return (((countingDays + firstWeekday) % daysInWeek) + daysInWeek) % daysInWeek;
+    const components = { year: date.year - yearZero, month: date.month, dayOfMonth: (date.day ?? 1) - 1 };
+    return calendar._computeDayOfWeek(components);
   } catch (error) {
     log(1, 'Error calculating day of week:', error);
     return 0;
@@ -159,9 +128,8 @@ export function addDays(date, days) {
   try {
     const yearZero = calendar.years?.yearZero ?? 0;
     const internalYear = date.year - yearZero;
-    let dayOfYear = date.day - 1;
-    for (let i = 0; i < date.month; i++) dayOfYear += calendar.getDaysInMonth(i, internalYear);
-    const components = { year: internalYear, day: dayOfYear, hour: date.hour ?? 0, minute: date.minute ?? 0, second: 0 };
+    const dayOfMonth = (date.day ?? 1) - 1;
+    const components = { year: internalYear, month: date.month, dayOfMonth, hour: date.hour ?? 0, minute: date.minute ?? 0, second: 0 };
     const time = calendar.componentsToTime(components);
     const hoursPerDay = calendar.days?.hoursPerDay ?? 24;
     const minutesPerHour = calendar.days?.minutesPerHour ?? 60;

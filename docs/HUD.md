@@ -179,7 +179,8 @@ Configure sync behavior in Settings > Time tab.
 
 Both HUD modes include a search panel:
 
-- Type at least 2 characters to search note names and content
+- Type at least 2 characters to search note names and category names
+- Use `category:` prefix to filter by category (e.g., `category:holiday`)
 - Click a result to open the note
 - Press **Escape** to close
 
@@ -262,3 +263,11 @@ Players have limited HUD interaction:
 - **Cannot**: Open Set Date dialog, change time, change weather, access time controls
 
 The dome and all time-related controls are non-interactive for players.
+
+---
+
+## Per-Scene Visibility
+
+GMs can configure individual scenes to hide the HUD from players automatically. When a player navigates to a scene with "Hide HUD for Players" enabled, their HUD closes. When navigating to a non-hidden scene, the HUD is restored if they have "Show HUD on load" enabled.
+
+Configure via **Scene Configuration > Ambiance tab > Hide HUD for Players**.

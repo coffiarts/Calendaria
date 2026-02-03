@@ -30,11 +30,13 @@
     <fieldset>
       <legend>{{localize "CALENDARIA.Note.Visibility"}}</legend>
       <div class="checkbox-group">
+        {{#if isGM}}
         <label>
           <input type="checkbox" name="system.gmOnly" {{checked
             system.gmOnly}} data-tooltip aria-label="{{localize 'CALENDARIA.UI.GmOnlyTooltip'}}">
           {{localize "CALENDARIA.Common.GMOnly"}}
         </label>
+        {{/if}}
         <label>
           <input type="checkbox" name="system.silent" {{checked
             system.silent}} data-tooltip aria-label="{{localize 'CALENDARIA.UI.SilentTooltip'}}">
@@ -139,7 +141,7 @@
                   {{#each moonConditions}}
                     <div class="tag">
                       <span class="tag-label">{{moonName}}</span>
-                      <span class="tag-value">{{phaseName}}</span>
+                      <span class="tag-value">{{phaseName}}{{#if modifierLabel}} ({{modifierLabel}}){{/if}}</span>
                       <button type="button" class="remove-btn" data-action="removeMoonCondition" data-index="{{index}}"
                         data-tooltip aria-label="{{localize 'CALENDARIA.Note.Condition.RemoveCondition'}}">
                         <i class="fas fa-times"></i>
@@ -163,6 +165,12 @@
                       </option>
                     {{/each}}
                   {{/each}}
+                </select>
+                <select name="newMoonCondition.modifier">
+                  <option value="any">{{localize "CALENDARIA.Note.MoonModifier.Any"}}</option>
+                  <option value="rising">{{localize "CALENDARIA.Note.MoonModifier.Rising"}}</option>
+                  <option value="true">{{localize "CALENDARIA.Note.MoonModifier.True"}}</option>
+                  <option value="fading">{{localize "CALENDARIA.Note.MoonModifier.Fading"}}</option>
                 </select>
                 <button type="button" class="add-btn" data-action="addMoonCondition" data-tooltip
                   aria-label="{{localize 'CALENDARIA.UI.AddMoonCondition'}}">

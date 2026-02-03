@@ -1,24 +1,34 @@
 # Chat Commands
 
-Calendaria provides 11 slash commands for interacting with the calendar directly from chat.
+Calendaria provides 18 slash commands for interacting with the calendar directly from chat. All commands and aliases work natively without any additional modules.
+
+If the [Chat Commander](https://foundryvtt.com/packages/_chatcommands) module is installed, commands gain enhanced autocomplete with format presets and calendar suggestions.
 
 ---
 
 ## Available Commands
 
-| Command     | Description                   | Permission       |
-| ----------- | ----------------------------- | ---------------- |
-| `/date`     | Display current date          | Everyone         |
-| `/time`     | Display current time          | Everyone         |
-| `/today`    | Display full date and time    | Everyone         |
-| `/sunrise`  | Display today's sunrise time  | Everyone         |
-| `/sunset`   | Display today's sunset time   | Everyone         |
-| `/moon`     | Display current moon phase(s) | Everyone         |
-| `/season`   | Display current season        | Everyone         |
-| `/weather`  | Display current weather       | Everyone         |
-| `/note`     | Create a quick note           | Note permissions |
-| `/advance`  | Advance time                  | GM only          |
-| `/calendar` | Open the calendar             | Everyone         |
+| Command      | Alias     | Description                     | Permission       |
+| ------------ | --------- | ------------------------------- | ---------------- |
+| `/date`      | `/d`      | Display current date            | Everyone         |
+| `/time`      | `/t`      | Display current time            | Everyone         |
+| `/datetime`  | `/dt`     | Display current date and time   | Everyone         |
+| `/today`     |           | List today's notes              | Everyone         |
+| `/sunrise`   |           | Display today's sunrise time    | Everyone         |
+| `/sunset`    |           | Display today's sunset time     | Everyone         |
+| `/moon`      |           | Display current moon phase(s)   | Everyone         |
+| `/season`    |           | Display current season          | Everyone         |
+| `/weather`   | `/w`      | Display current weather         | Everyone         |
+| `/weekday`   |           | Display current weekday         | Everyone         |
+| `/festival`  |           | Display current festival        | Everyone         |
+| `/cycle`     | `/zodiac` | Display zodiac/cycle values     | Everyone         |
+| `/calendar`  | `/cal`    | Display full calendar summary   | Everyone         |
+| `/calendars` | `/cals`   | List all available calendars    | Everyone         |
+| `/note`      | `/n`      | Create a quick note             | Note permissions |
+| `/advance`   | `/adv`    | Advance time                    | GM only          |
+| `/setdate`   |           | Set date (year month day)       | GM only          |
+| `/settime`   |           | Set time (hour minute [second]) | GM only          |
+| `/switchcal` |           | Switch active calendar          | GM only          |
 
 ---
 
@@ -30,12 +40,13 @@ Display the current in-game date.
 
 ```text
 /date
+/date dateLong
 /date EEEE, MMMM Do
 ```
 
 **Arguments:**
 
-- Optional format string using [format tokens](Format-Tokens)
+- Optional format preset or custom format string using [format tokens](Format-Tokens)
 
 **Output:** Formatted date posted to chat.
 
@@ -47,26 +58,45 @@ Display the current in-game time.
 
 ```text
 /time
+/time time12
 /time HH:mm:ss
 ```
 
 **Arguments:**
 
-- Optional format string using [format tokens](Format-Tokens)
+- Optional format preset or custom format string using [format tokens](Format-Tokens)
 
 **Output:** Formatted time posted to chat.
 
 ---
 
+### /datetime
+
+Display the current in-game date and time.
+
+```text
+/datetime
+/datetime datetime12
+/datetime EEEE, D MMMM Y - h:mm A
+```
+
+**Arguments:**
+
+- Optional format preset or custom format string using [format tokens](Format-Tokens)
+
+**Output:** Formatted date and time posted to chat.
+
+---
+
 ### /today
 
-Display the complete current date and time.
+List all notes for the current day.
 
 ```text
 /today
 ```
 
-**Output:** Full date and time summary posted to chat.
+**Output:** List of today's calendar notes with times.
 
 ---
 
@@ -76,12 +106,13 @@ Display today's sunrise time.
 
 ```text
 /sunrise
+/sunrise time12
 /sunrise h:mm A
 ```
 
 **Arguments:**
 
-- Optional format string using [format tokens](Format-Tokens)
+- Optional format preset or custom format string using [format tokens](Format-Tokens)
 
 **Output:** Formatted sunrise time for the current day.
 
@@ -93,12 +124,13 @@ Display today's sunset time.
 
 ```text
 /sunset
+/sunset time12
 /sunset h:mm A
 ```
 
 **Arguments:**
 
-- Optional format string using [format tokens](Format-Tokens)
+- Optional format preset or custom format string using [format tokens](Format-Tokens)
 
 **Output:** Formatted sunset time for the current day.
 
@@ -110,9 +142,14 @@ Display current moon phase information.
 
 ```text
 /moon
+/moon 0
 ```
 
-**Output:** Moon name(s) and current phase(s) for all moons in the active calendar.
+**Arguments:**
+
+- Optional moon index (0-based) to display a specific moon
+
+**Output:** Moon name(s) and current phase(s) for all moons (or specified moon) in the active calendar.
 
 ---
 
@@ -140,6 +177,66 @@ Display the current weather conditions.
 
 ---
 
+### /weekday
+
+Display the current weekday.
+
+```text
+/weekday
+```
+
+**Output:** Current weekday name, with rest day indicator if applicable.
+
+---
+
+### /festival
+
+Display the current festival (if any).
+
+```text
+/festival
+```
+
+**Output:** Current festival name and icon, or "No festival today" message.
+
+---
+
+### /cycle
+
+Display current zodiac/cycle values.
+
+```text
+/cycle
+```
+
+**Output:** All active cycle values for the current date.
+
+---
+
+### /calendar
+
+Display a full calendar summary.
+
+```text
+/calendar
+```
+
+**Output:** Comprehensive summary including date, time, season, weather, moons, and daylight hours.
+
+---
+
+### /calendars
+
+List all available calendars.
+
+```text
+/calendars
+```
+
+**Output:** List of all configured calendars with the active one marked.
+
+---
+
 ### /note
 
 Create a quick calendar note for today.
@@ -154,7 +251,7 @@ Create a quick calendar note for today.
 1. Note title (required, in quotes)
 2. Note content (optional, in quotes)
 
-**Output:** Creates a calendar note and confirms in chat.
+**Output:** Creates a calendar note silently.
 
 ---
 
@@ -182,9 +279,9 @@ Advance the world time by a specified amount. GM only.
 | hour   | hours, hr, hrs, h     |
 | day    | days, d               |
 | week   | weeks, w              |
-| month  | months                |
-| year   | years, y              |
-| round  | rounds, r             |
+| month  | months, mo            |
+| year   | years, yr, yrs, y     |
+| round  | rounds, rd            |
 
 **Examples:**
 
@@ -195,19 +292,73 @@ Advance the world time by a specified amount. GM only.
 /advance 30 m          # Advance 30 minutes
 ```
 
-**Output:** Advances time and posts confirmation to chat.
+**Output:** Advances time silently.
 
 ---
 
-### /calendar
+### /setdate
 
-Open the BigCal application.
+Set the calendar to a specific date. GM only.
 
 ```text
-/calendar
+/setdate 1492 3 15
 ```
 
-**Output:** Opens the BigCal window.
+**Arguments:**
+
+- Year (number)
+- Month (number, 1-indexed)
+- Day (number)
+
+**Output:** Sets the date silently.
+
+---
+
+### /settime
+
+Set the calendar to a specific time. GM only.
+
+```text
+/settime 14 30
+/settime 14 30 0
+```
+
+**Arguments:**
+
+- Hour (number, 0-23)
+- Minute (number, 0-59)
+- Second (optional, number, 0-59)
+
+**Output:** Sets the time silently.
+
+---
+
+### /switchcal
+
+Switch to a different calendar. GM only.
+
+```text
+/switchcal forgotten-realms
+```
+
+**Arguments:**
+
+- Calendar ID
+
+With Chat Commander active, autocomplete shows available calendars.
+
+**Output:** Switches the active calendar silently.
+
+---
+
+## Chat Commander Integration
+
+When the [Chat Commander](https://foundryvtt.com/packages/_chatcommands) module is active, Calendaria commands gain:
+
+- **Autocomplete suggestions** for format presets on `/date`, `/time`, `/datetime`, `/sunrise`, `/sunset`
+- **Calendar list autocomplete** for `/switchcal`
+- **Hint text** linking to the Format Tokens wiki for custom formats
+- **Icons** for each command in the command menu
 
 ---
 

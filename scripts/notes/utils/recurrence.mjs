@@ -143,27 +143,28 @@ function getFieldValue(field, date, value2 = null) {
       const moons = calendar?.moons || [];
       const moonIndex = value2 ?? 0;
       if (moonIndex >= moons.length) return null;
-      return getMoonPhase(date, moons[moonIndex]);
+      const yearZero = calendar.years?.yearZero ?? 0;
+      const components = { year: date.year - yearZero, month: date.month, dayOfMonth: date.day - 1, hour: 12, minute: 0, second: 0 };
+      const moonPhaseInfo = calendar.getMoonPhase(moonIndex, components);
+      return moonPhaseInfo?.position ?? null;
     }
     case 'moonPhaseIndex': {
       const moons = calendar?.moons || [];
       const moonIndex = value2 ?? 0;
       if (moonIndex >= moons.length) return null;
-      const phase = getMoonPhase(date, moons[moonIndex]);
-      const phaseCount = moons[moonIndex].phases?.length || 8;
-      return Math.floor(phase * phaseCount);
+      return getCalendarMoonPhaseIndex(date, moonIndex);
     }
     case 'moonPhaseCountMonth': {
       const moons = calendar?.moons || [];
       const moonIndex = value2 ?? 0;
       if (moonIndex >= moons.length) return null;
-      return getMoonPhaseCountInMonth(date, moons[moonIndex]);
+      return getMoonPhaseCountInMonth(date, moons[moonIndex], moonIndex);
     }
     case 'moonPhaseCountYear': {
       const moons = calendar?.moons || [];
       const moonIndex = value2 ?? 0;
       if (moonIndex >= moons.length) return null;
-      return getMoonPhaseCountInYear(date, moons[moonIndex]);
+      return getMoonPhaseCountInYear(date, moons[moonIndex], moonIndex);
     }
     case 'cycle': {
       const cycles = calendar?.cycles || [];
@@ -243,9 +244,8 @@ function getTotalDaysSinceEpoch(date) {
   if (!calendar) return 0;
   const yearZero = calendar.years?.yearZero ?? 0;
   const internalYear = date.year - yearZero;
-  let dayOfYear = date.day - 1;
-  for (let m = 0; m < date.month; m++) dayOfYear += calendar.getDaysInMonth(m, internalYear);
-  const components = { year: internalYear, day: dayOfYear, hour: 0, minute: 0, second: 0 };
+  const dayOfMonth = date.day - 1;
+  const components = { year: internalYear, month: date.month, dayOfMonth, hour: 0, minute: 0, second: 0 };
   const time = calendar.componentsToTime(components);
   const hoursPerDay = calendar.days?.hoursPerDay ?? 24;
   const minutesPerHour = calendar.days?.minutesPerHour ?? 60;
@@ -370,57 +370,69 @@ function getMidpoint(start, end, totalDays) {
 }
 
 /**
- * Get moon phase (0-1) for a date.
- * @param {object} date - Date to check
- * @param {object} moon - Moon configuration
- * @returns {number} Phase 0-1
+ * Get moon phase index using the calendar's method for accurate phase matching.
+ * @param {object} date - Date to check (year, month, day)
+ * @param {number} moonIndex - Index of the moon
+ * @returns {number|null} Phase index or null
  */
-function getMoonPhase(date, moon) {
-  if (!moon?.cycleLength) return 0;
-  const refDate = moon.referenceDate || { year: 1, month: 0, day: 1 };
-  const totalDays = daysBetween(refDate, date);
-  const adjustedDays = totalDays + (moon.cycleDayAdjust || 0);
-  const cyclePosition = ((adjustedDays % moon.cycleLength) + moon.cycleLength) % moon.cycleLength;
-  return cyclePosition / moon.cycleLength;
+function getCalendarMoonPhaseIndex(date, moonIndex) {
+  const calendar = CalendarManager.getActiveCalendar();
+  if (!calendar) return null;
+  const yearZero = calendar.years?.yearZero ?? 0;
+  const components = { year: date.year - yearZero, month: date.month, dayOfMonth: date.day - 1, hour: 12, minute: 0, second: 0 };
+  const moonPhaseInfo = calendar.getMoonPhase(moonIndex, components);
+  return moonPhaseInfo?.phaseIndex ?? null;
 }
 
 /**
  * Get count of current moon phase occurrences in the month.
+ * Counts phase transitions (entering the phase), not individual days.
  * @param {object} date - Date to check
- * @param {object} moon - Moon configuration
+ * @param {object} _moon - Moon configuration
+ * @param {number} moonIndex - Index of this moon in calendar.moons
  * @returns {number} Count (1 = first occurrence)
  */
-function getMoonPhaseCountInMonth(date, moon) {
-  const currentPhaseIndex = Math.floor(getMoonPhase(date, moon) * (moon.phases?.length || 8));
+function getMoonPhaseCountInMonth(date, _moon, moonIndex = 0) {
+  const currentPhaseIndex = getCalendarMoonPhaseIndex(date, moonIndex);
+  if (currentPhaseIndex === null) return 0;
   let count = 0;
+  let wasInPhase = false;
   for (let day = 1; day <= date.day; day++) {
     const checkDate = { ...date, day };
-    const phaseIndex = Math.floor(getMoonPhase(checkDate, moon) * (moon.phases?.length || 8));
-    if (phaseIndex === currentPhaseIndex) count++;
+    const phaseIndex = getCalendarMoonPhaseIndex(checkDate, moonIndex);
+    const isInPhase = phaseIndex === currentPhaseIndex;
+    if (isInPhase && !wasInPhase) count++;
+    wasInPhase = isInPhase;
   }
   return count;
 }
 
 /**
  * Get count of current moon phase occurrences in the year.
+ * Counts phase transitions (entering the phase), not individual days.
  * @param {object} date - Date to check
- * @param {object} moon - Moon configuration
+ * @param {object} _moon - Moon configuration
+ * @param {number} moonIndex - Index of this moon in calendar.moons
  * @returns {number} Count (1 = first occurrence)
  */
-function getMoonPhaseCountInYear(date, moon) {
+function getMoonPhaseCountInYear(date, _moon, moonIndex = 0) {
   const calendar = CalendarManager.getActiveCalendar();
-  const currentPhaseIndex = Math.floor(getMoonPhase(date, moon) * (moon.phases?.length || 8));
+  const currentPhaseIndex = getCalendarMoonPhaseIndex(date, moonIndex);
+  if (currentPhaseIndex === null) return 0;
   const targetDayOfYear = getDayOfYear(date);
   let count = 0;
   let dayCounter = 0;
+  let wasInPhase = false;
   const months = calendar?.months?.values || [];
   for (let m = 0; m < months.length && dayCounter < targetDayOfYear; m++) {
     const daysInMonth = months[m]?.days || 30;
     for (let d = 1; d <= daysInMonth && dayCounter < targetDayOfYear; d++) {
       dayCounter++;
       const checkDate = { year: date.year, month: m, day: d };
-      const phaseIndex = Math.floor(getMoonPhase(checkDate, moon) * (moon.phases?.length || 8));
-      if (phaseIndex === currentPhaseIndex) count++;
+      const phaseIndex = getCalendarMoonPhaseIndex(checkDate, moonIndex);
+      const isInPhase = phaseIndex === currentPhaseIndex;
+      if (isInPhase && !wasInPhase) count++;
+      wasInPhase = isInPhase;
     }
   }
   return count;
@@ -620,9 +632,8 @@ function resolveFirstAfter(startDate, condition, params, calendar) {
         const targetPhase = params?.phase ?? 'full';
         if (moonIndex >= moons.length) return null;
         const moon = moons[moonIndex];
-        const phaseValue = getMoonPhase(currentDate, moon);
-        const phaseCount = moon.phases?.length || 8;
-        const phaseIndex = Math.floor(phaseValue * phaseCount);
+        const phaseIndex = getCalendarMoonPhaseIndex(currentDate, moonIndex);
+        if (phaseIndex === null) break;
         const phaseName = moon.phases?.[phaseIndex]?.name?.toLowerCase() || '';
         if (phaseName.includes(targetPhase.toLowerCase())) return currentDate;
         break;
@@ -760,6 +771,7 @@ export function isRecurringMatch(noteData, targetDate) {
       const occurrenceNum = countOccurrencesUpTo(noteData, targetDate);
       if (occurrenceNum > maxOccurrences) return false;
     }
+    if (matches && noteData.conditions?.length > 0) if (!evaluateConditions(noteData.conditions, targetDate)) return false;
     return matches;
   }
 
@@ -772,6 +784,7 @@ export function isRecurringMatch(noteData, targetDate) {
       const occurrenceNum = countOccurrencesUpTo(noteData, targetDate);
       if (occurrenceNum > maxOccurrences) return false;
     }
+    if (matches && noteData.conditions?.length > 0) if (!evaluateConditions(noteData.conditions, targetDate)) return false;
     return matches;
   }
 
@@ -910,6 +923,8 @@ function countOccurrencesUpTo(noteData, targetDate) {
 
 /**
  * Check if target date matches any moon condition.
+ * Supports modifiers: 'any' (default), 'rising' (first third), 'true' (middle third), 'fading' (last third).
+ * Uses the calendar's getMoonPhase directly to ensure alignment with display.
  * @param {object[]} moonConditions  Array of moon condition objects
  * @param {object} targetDate  Date to check
  * @returns {boolean}  True if any moon condition matches
@@ -917,18 +932,29 @@ function countOccurrencesUpTo(noteData, targetDate) {
 function matchesMoonConditions(moonConditions, targetDate) {
   const calendar = CalendarManager.getActiveCalendar();
   if (!calendar?.moons?.length) return false;
-  const components = { year: targetDate.year, month: targetDate.month, dayOfMonth: targetDate.day - 1, hour: 12, minute: 0, second: 0 };
+  const yearZero = calendar.years?.yearZero ?? 0;
+  const components = { year: targetDate.year - yearZero, month: targetDate.month, dayOfMonth: targetDate.day - 1, hour: 12, minute: 0, second: 0 };
   for (const cond of moonConditions) {
-    const moonPhase = calendar.getMoonPhase(cond.moonIndex, components);
-    if (!moonPhase) continue;
-    const position = moonPhase.position;
-    if (cond.phaseStart <= cond.phaseEnd) {
-      if (position >= cond.phaseStart && position <= cond.phaseEnd) return true;
-    } else {
-      if (position >= cond.phaseStart || position <= cond.phaseEnd) return true;
+    const moonPhaseInfo = calendar.getMoonPhase(cond.moonIndex, components);
+    if (!moonPhaseInfo) continue;
+    const modifier = cond.modifier || 'any';
+    if (modifier === 'any') {
+      if (moonPhaseInfo.phaseIndex !== undefined) {
+        const moon = calendar.moons[cond.moonIndex];
+        const phase = moon?.phases?.[moonPhaseInfo.phaseIndex];
+        if (phase && Math.abs(phase.start - cond.phaseStart) < 0.01 && Math.abs(phase.end - cond.phaseEnd) < 0.01) return true;
+      }
+      continue;
     }
+    const moon = calendar.moons[cond.moonIndex];
+    const phase = moon?.phases?.[moonPhaseInfo.phaseIndex];
+    if (!phase || Math.abs(phase.start - cond.phaseStart) >= 0.01 || Math.abs(phase.end - cond.phaseEnd) >= 0.01) continue;
+    const { dayWithinPhase, phaseDuration } = moonPhaseInfo;
+    const third = phaseDuration / 3;
+    if (modifier === 'rising' && dayWithinPhase < third) return true;
+    if (modifier === 'true' && dayWithinPhase >= third && dayWithinPhase < phaseDuration - third) return true;
+    if (modifier === 'fading' && dayWithinPhase >= phaseDuration - third) return true;
   }
-
   return false;
 }
 
@@ -1665,10 +1691,17 @@ function getComputedDescription(computedConfig) {
 function getMoonConditionsDescription(moonConditions) {
   if (!moonConditions?.length) return 'Moon phase event';
   const calendar = CalendarManager.getActiveCalendar();
+  const modifierLabels = {
+    any: '',
+    rising: ` (${localize('CALENDARIA.Note.MoonModifier.Rising')})`,
+    true: ` (${localize('CALENDARIA.Note.MoonModifier.True')})`,
+    fading: ` (${localize('CALENDARIA.Note.MoonModifier.Fading')})`
+  };
   const descriptions = [];
   for (const cond of moonConditions) {
     const moon = calendar?.moons?.[cond.moonIndex];
     const moonName = moon?.name ? localize(moon.name) : `Moon ${cond.moonIndex + 1}`;
+    const modifierSuffix = modifierLabels[cond.modifier] || '';
 
     const matchingPhases = moon?.phases?.filter((p) => {
       if (cond.phaseStart <= cond.phaseEnd) return p.start < cond.phaseEnd && p.end > cond.phaseStart;
@@ -1677,12 +1710,12 @@ function getMoonConditionsDescription(moonConditions) {
 
     if (matchingPhases?.length === 1) {
       const phaseName = localize(matchingPhases[0].name);
-      descriptions.push(`${moonName}: ${phaseName}`);
+      descriptions.push(`${moonName}: ${phaseName}${modifierSuffix}`);
     } else if (matchingPhases?.length > 1) {
       const phaseNames = matchingPhases.map((p) => localize(p.name)).join(', ');
-      descriptions.push(`${moonName}: ${phaseNames}`);
+      descriptions.push(`${moonName}: ${phaseNames}${modifierSuffix}`);
     } else {
-      descriptions.push(`${moonName}: custom phase`);
+      descriptions.push(`${moonName}: custom phase${modifierSuffix}`);
     }
   }
 

@@ -33,10 +33,12 @@ A global brightness multiplier applied to all scenes unless overridden. Configur
 
 Override settings for individual scenes via **Scene Configuration > Ambiance tab**:
 
-| Setting               | Options                         |
-| --------------------- | ------------------------------- |
-| Darkness Sync         | Use Global / Enabled / Disabled |
-| Brightness Multiplier | 0.5x - 1.5x slider              |
+| Setting               | Options                                                          |
+| --------------------- | ---------------------------------------------------------------- |
+| Darkness Sync         | Use Global / Enabled / Disabled                                  |
+| Brightness Multiplier | 0.5x - 1.5x slider                                               |
+| Hide HUD for Players  | Automatically hide the HUD for players when this scene is active |
+| Climate Zone Override | Use a different climate zone than the calendar's default         |
 
 ---
 

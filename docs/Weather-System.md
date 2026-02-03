@@ -234,8 +234,20 @@ GMs can manually set weather by clicking the weather indicator on the HUD or Min
 
 - All weather presets grouped by category (Standard, Severe, Fantasy, Environmental, Custom)
 - Climate zone selector with "None" option (always visible)
+- **Set as Active** checkbox: When checked, selecting a zone also updates the calendar's default climate zone
 - Random generation button to roll new weather based on current zone/season probabilities
 - **Clear Weather** button to remove the current weather condition
+
+### Custom Weather
+
+The Weather Picker includes a "Custom Weather" section for one-time weather overrides:
+
+- **Weather Name**: Custom label for the condition
+- **Temperature**: Numeric temperature value
+- **Icon**: FontAwesome icon class
+- **Color**: Hex color for the icon
+
+Custom weather updates live as you type. This is a one-time override, not a saved preset. Selecting a weather preset resets the custom weather.
 
 ### Preset Filtering
 

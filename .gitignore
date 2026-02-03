@@ -1,9 +1,6 @@
 calendaria.lock
 /todo
 README.html
-
-# Testing
-/dev/
 /coverage/
 /node_modules/
-vitest.config.mjs
+/foundry/

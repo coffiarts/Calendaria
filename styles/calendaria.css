@@ -1,9 +1,3 @@
-/* stylelint-disable max-nesting-depth */
-/* stylelint-disable selector-max-compound-selectors */
-/* stylelint-disable property-no-vendor-prefix */
-/* stylelint-disable comment-empty-line-before */
-/* stylelint-disable custom-property-pattern */
-
 /* ======================================== */
 /* Theme System - CSS Custom Properties     */
 /* ======================================== */
@@ -2590,11 +2584,6 @@ span.calendaria-moon-icon {
       width: 4.375rem;
     }
 
-    .col-format {
-      flex: none;
-      width: 8.4375rem;
-    }
-
     .col-controls {
       flex: none;
       width: 3.125rem;
@@ -2610,33 +2599,6 @@ span.calendaria-moon-icon {
       gap: 0.5rem;
       display: flex;
       align-items: center;
-    }
-
-    .era-template {
-      gap: 0.5rem;
-      display: flex;
-      align-items: center;
-
-      .col-template-label {
-        flex: 0.5;
-        color: var(--color-text-secondary);
-        font-weight: 600;
-        white-space: nowrap;
-      }
-
-      .col-template {
-        flex: 3;
-      }
-
-      .era-preview {
-        flex: 3;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.1875rem;
-        color: var(--color-text-secondary);
-        font-style: italic;
-        white-space: nowrap;
-        background: var(--color-cool-5);
-      }
     }
   }
 
@@ -2775,7 +2737,7 @@ span.calendaria-moon-icon {
 
         .col-phase-name {
           flex: 2;
-          min-width: 5rem;
+          min-width: 4.7rem;
         }
 
         .col-rising,
@@ -2787,7 +2749,7 @@ span.calendaria-moon-icon {
         .col-start,
         .col-end {
           flex: none;
-          width: 3.4375rem;
+          width: 3.5rem;
         }
 
         .col-controls {
@@ -5484,6 +5446,10 @@ span.calendaria-moon-icon {
 /* ======================================== */
 
 .weather-picker-app {
+  &.standard-form {
+    gap: 0;
+  }
+
   .window-content {
     padding: 0.75rem;
     background: var(--calendaria-bg);
@@ -5496,32 +5462,19 @@ span.calendaria-moon-icon {
   }
 
   .zone-selector {
-    gap: 0.5rem;
-    display: flex;
-    align-items: center;
     padding-bottom: 0.75rem;
     border-bottom: 0.0625rem solid var(--calendaria-border);
-
-    label {
-      color: var(--calendaria-text-dim);
-      font-weight: 600;
-      font-size: 0.85rem;
-      white-space: nowrap;
-    }
-
-    select {
-      flex: 1;
-    }
   }
 
   .weather-category {
     .category-header {
+      display: block;
       margin: 0 0 0.5rem;
       padding-bottom: 0.25rem;
       border-bottom: 0.0625rem solid var(--calendaria-border);
       color: var(--calendaria-text-dim);
       font-weight: 600;
-      font-size: 0.85rem;
+      font-size: var(--font-size-15);
     }
 
     .weather-buttons {
@@ -5573,7 +5526,6 @@ span.calendaria-moon-icon {
   .weather-picker-footer {
     gap: 0.5rem;
     display: flex;
-    justify-content: center;
     padding-top: 0.5rem;
     border-top: 0.0625rem solid var(--calendaria-border);
 
@@ -5581,6 +5533,7 @@ span.calendaria-moon-icon {
       gap: 0.5rem;
       display: flex;
       align-items: center;
+      justify-content: center;
       padding: 0.5rem 1.5rem;
       border: none;
       border-radius: 0.25rem;
@@ -5599,12 +5552,14 @@ span.calendaria-moon-icon {
       }
     }
 
-    .random-btn {
-      background: var(--calendaria-primary);
+    .clear-btn {
+      flex-shrink: 0;
+      background: var(--calendaria-error);
     }
 
-    .clear-btn {
-      background: var(--calendaria-error);
+    .random-btn {
+      flex: 1;
+      background: var(--calendaria-primary);
     }
   }
 }
@@ -5854,14 +5809,14 @@ span.calendaria-moon-icon {
 /* Main Bar                                 */
 /* ======================================== */
 .calendaria-hud-bar {
-  gap: 0.625rem;
   grid-template-columns: 1fr auto 1fr;
   display: inline-grid;
   z-index: 10;
   position: relative;
   align-items: center;
   align-content: center;
-  height: 2.25rem;
+  min-height: 2.25rem;
+  max-height: 3rem;
   padding: 0 0.625rem;
   border: 0.0625rem solid var(--calendaria-border);
   border-radius: 0.375rem;
@@ -6008,10 +5963,12 @@ span.calendaria-moon-icon {
 
 .calendaria-hud-section.left {
   justify-content: flex-start;
+  padding-right: 0.3125rem;
 }
 
 .calendaria-hud-section.right {
   justify-content: flex-end;
+  padding-left: 0.3125rem;
 }
 
 /* ======================================== */
@@ -6205,6 +6162,7 @@ span.calendaria-moon-icon {
   position: relative;
   justify-content: center;
   align-items: center;
+  padding: 0 0.3125rem;
 }
 
 .calendaria-hud-time {
@@ -6214,6 +6172,7 @@ span.calendaria-moon-icon {
   font-family: Consolas, Monaco, monospace;
   text-align: center;
   letter-spacing: 0.0313rem;
+  white-space: nowrap;
 }
 
 .calendaria-hud-play-btn {
@@ -6282,7 +6241,7 @@ span.calendaria-moon-icon {
 .calendaria-hud-indicators .season-indicator,
 .calendaria-hud-indicators .era-indicator,
 .calendaria-hud-indicators .cycle-indicator {
-  font-size: var(--font-size-12, 0.75rem);
+  font-size: clamp(var(--font-size-10, 0.625rem), calc(var(--font-size-12, 0.75rem) * var(--hud-width-scale, 1)), var(--font-size-12, 0.75rem));
   cursor: default;
 }
 
@@ -6693,9 +6652,11 @@ span.calendaria-moon-icon {
 }
 
 .calendaria-hud-slice {
+  display: grid;
   position: relative;
-  width: 7.5rem;
-  height: 1.5rem;
+  align-items: center;
+  min-width: 7.5rem;
+  min-height: 1.5rem;
   border: 0.0625rem solid rgb(0 0 0 / 30%);
   border-radius: 0.25rem;
   overflow: hidden;
@@ -6749,10 +6710,9 @@ span.calendaria-moon-icon {
 }
 
 .calendaria-slice-time-overlay {
-  inset: 0;
   display: flex;
   z-index: 2;
-  position: absolute;
+  position: relative;
   justify-content: center;
   align-items: center;
   pointer-events: none;
@@ -6762,7 +6722,7 @@ span.calendaria-moon-icon {
   padding: 0 0.25rem;
   color: rgb(255 255 255);
   font-weight: 600;
-  font-size: var(--font-size-12, 0.75rem);
+  font-size: clamp(var(--font-size-10, 0.625rem), calc(var(--font-size-12, 0.75rem) * var(--hud-width-scale, 1)), var(--font-size-12, 0.75rem));
   text-shadow:
     0 0 0.125rem rgb(0 0 0),
     0 0 0.25rem rgb(0 0 0),
@@ -6813,8 +6773,8 @@ span.calendaria-moon-icon {
 
 /* Compact slice adjustments */
 .calendaria-hud.compact .calendaria-hud-slice {
-  width: 6.25rem;
-  height: 1.25rem;
+  min-width: 6.25rem;
+  min-height: 1.25rem;
 }
 
 .calendaria-hud.compact .calendaria-slice-sun {
@@ -7677,7 +7637,7 @@ span.calendaria-moon-icon {
       padding: 0 0.5rem;
 
       span {
-        width: 1px;
+        width: 0.0625rem;
         height: 0.375rem;
         background: var(--color-border-light-tertiary);
       }
@@ -8124,7 +8084,7 @@ span.calendaria-moon-icon {
 
       &.invalid {
         border-color: var(--calendaria-error);
-        outline: 1px solid var(--calendaria-error);
+        outline: 0.0625rem solid var(--calendaria-error);
       }
     }
 

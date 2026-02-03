@@ -1340,6 +1340,43 @@ const templates = CALENDARIA.api.getClimateZoneTemplates();
 
 ---
 
+### diagnoseWeather(showDialog)
+
+Diagnose weather configuration issues. Useful for troubleshooting when weather isn't loading properly.
+
+```javascript
+const results = await CALENDARIA.api.diagnoseWeather();
+// Or silently get results:
+const results = await CALENDARIA.api.diagnoseWeather(false);
+```
+
+| Parameter    | Type      | Description                              |
+| ------------ | --------- | ---------------------------------------- |
+| `showDialog` | `boolean` | Show results in a dialog (default: true) |
+
+**Returns:** `Promise<object>` - Diagnostic results with settingsData and activeCalendar info.
+
+---
+
+### isBundledCalendar(calendarId)
+
+Check if a calendar is a bundled (built-in) calendar.
+
+```javascript
+const isBundled = CALENDARIA.api.isBundledCalendar('harptos');
+// Returns: true
+const isBundled = CALENDARIA.api.isBundledCalendar('custom-mycal');
+// Returns: false
+```
+
+| Parameter    | Type     | Description          |
+| ------------ | -------- | -------------------- |
+| `calendarId` | `string` | Calendar ID to check |
+
+**Returns:** `boolean` - True if bundled calendar.
+
+---
+
 ## Multiplayer & Permissions
 
 ### isPrimaryGM()
