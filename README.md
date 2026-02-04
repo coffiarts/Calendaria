@@ -10,6 +10,10 @@ Your campaign's time deserves more than a number in the corner. Calendaria bring
 ![Foundry Version](https://img.shields.io/endpoint?url=https%3A%2F%2Ffoundryshields.com%2Fversion%3Fstyle%3Dfor-the-badge%26url%3Dhttps%3A%2F%2Fgithub.com%2FSayshal%2Fcalendaria%2Freleases%2Flatest%2Fdownload%2Fmodule.json)
 [![Discord](https://dcbadge.limes.pink/api/server/PzzUwU9gdz)](https://discord.gg/PzzUwU9gdz)
 
+<a href="https://hosted.weblate.org/engage/calendaria/">
+<img src="https://hosted.weblate.org/widget/calendaria/287x66-grey.png" alt="Translation status" />
+</a>
+
 **[Read the Wiki](https://github.com/Sayshal/calendaria/wiki)** for guides, API docs, and tips.
 
 ---
