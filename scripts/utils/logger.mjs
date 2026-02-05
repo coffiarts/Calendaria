@@ -7,19 +7,11 @@
 import { MODULE, SETTINGS } from '../constants.mjs';
 
 /**
- * Array to store Calendaria logs only.
- * @type {Array<{timestamp: string, type: string, level: number, content: Array}>}
- */
-const calendariaLogHistory = [];
-
-/**
  * Simple logging function with module ID prefix and colored styling.
  * @param {number} level - Log level (1=error, 2=warning, 3=verbose)
  * @param {...*} args - Content to log to console (any number of arguments)
  */
 export function log(level, ...args) {
-  calendariaLogHistory.push({ timestamp: new Date().toISOString(), type: level === 1 ? 'error' : level === 2 ? 'warn' : 'debug', level, content: args });
-  if (calendariaLogHistory.length > 2000) calendariaLogHistory.shift();
   const configuredLogLevel = MODULE.LOG_LEVEL;
   if (configuredLogLevel > 0 && level <= configuredLogLevel) {
     switch (level) {
