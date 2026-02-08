@@ -5,28 +5,12 @@
  */
 
 import { MODULE, SCENE_FLAGS, SETTINGS, SOCKET_TYPES, TEMPLATES } from './constants.mjs';
-import TimeClock from './time/time-clock.mjs';
 import { log } from './utils/logger.mjs';
 import { CalendariaSocket } from './utils/socket.mjs';
 import WeatherManager from './weather/weather-manager.mjs';
 
 /** @type {number|null} Last hour we calculated darkness for */
 let lastHour = null;
-
-/** @type {number|null} Target darkness we're transitioning to */
-let targetDarkness = null;
-
-/** @type {number|null} Starting darkness for transition */
-let startDarkness = null;
-
-/** @type {number} Transition start timestamp */
-let transitionStart = 0;
-
-/** @type {number} Current transition duration in ms */
-let transitionDuration = 2500;
-
-/** @type {number|null} Animation frame ID */
-let animationFrameId = null;
 
 /**
  * Calculate darkness level based on time of day.
@@ -136,25 +120,6 @@ async function applyEnvironmentLighting(scene, lighting) {
 }
 
 /**
- * Update a scene's darkness level based on current time.
- * @param {object} scene - The scene to update
- * @returns {Promise<void>}
- */
-export async function updateSceneDarkness(scene) {
-  if (!CalendariaSocket.isPrimaryGM()) return;
-  if (!scene) return;
-  const baseDarkness = getCurrentDarkness();
-  const darkness = calculateAdjustedDarkness(baseDarkness, scene);
-
-  try {
-    await scene.update({ 'environment.darknessLevel': darkness });
-    log(3, `Updated scene "${scene.name}" darkness to ${darkness.toFixed(3)}`);
-  } catch (error) {
-    log(1, `Error updating darkness for scene "${scene.name}":`, error);
-  }
-}
-
-/**
  * Inject the darkness sync override setting into the scene configuration sheet.
  * @param {object} app - The scene configuration application
  * @param {HTMLElement} html - The rendered HTML element
@@ -200,9 +165,6 @@ export async function onRenderSceneConfig(app, html, _data) {
  */
 export async function updateDarknessFromWorldTime(worldTime, _dt) {
   if (!CalendariaSocket.isPrimaryGM()) return;
-  const activeScene = game.scenes.active;
-  if (!activeScene) return;
-  if (!shouldSyncSceneDarkness(activeScene)) return;
   const components = game.time.components ?? game.time.calendar?.timeToComponents(worldTime);
   const currentHour = components?.hour ?? 0;
   if (lastHour !== null && lastHour === currentHour) return;
@@ -210,47 +172,11 @@ export async function updateDarknessFromWorldTime(worldTime, _dt) {
   const hoursPerDay = game.time.calendar?.days?.hoursPerDay ?? 24;
   const minutesPerHour = game.time.calendar?.days?.minutesPerHour ?? 60;
   const baseDarkness = calculateDarknessFromTime(currentHour, 0, hoursPerDay, minutesPerHour);
-  const newTargetDarkness = calculateAdjustedDarkness(baseDarkness, activeScene);
-  startDarknessTransition(activeScene, newTargetDarkness);
-  log(3, `Hour changed: ${lastHour} → ${currentHour}`);
-}
-
-/**
- * Start a smooth darkness transition to the target value.
- * @param {object} scene - The scene to update
- * @param {number} target - Target darkness value
- */
-function startDarknessTransition(scene, target) {
-  if (animationFrameId) {
-    cancelAnimationFrame(animationFrameId);
-    animationFrameId = null;
+  for (const scene of getDarknessScenes()) {
+    const darkness = calculateAdjustedDarkness(baseDarkness, scene);
+    scene.update({ 'environment.darknessLevel': darkness }, { animateDarkness: true });
   }
-
-  startDarkness = scene.environment.darknessLevel;
-  targetDarkness = target;
-  transitionStart = performance.now();
-  const gameSecondsPerRealSecond = TimeClock.increment * TimeClock.multiplier;
-  const minutesPerHour = game.time.calendar?.days?.minutesPerHour ?? 60;
-  const secondsPerMinute = game.time.calendar?.days?.secondsPerMinute ?? 60;
-  const secondsPerHour = minutesPerHour * secondsPerMinute;
-  if (gameSecondsPerRealSecond > 0) transitionDuration = Math.max(500, Math.min(3000, (secondsPerHour / gameSecondsPerRealSecond) * 800));
-  else transitionDuration = 2500;
-  log(3, `Starting darkness transition: ${startDarkness.toFixed(3)} → ${targetDarkness.toFixed(3)} (${transitionDuration.toFixed(0)}ms)`);
-  animateDarknessTransition(scene);
-}
-
-/**
- * Animate the darkness transition using requestAnimationFrame.
- * @param {object} scene - The scene to update
- */
-function animateDarknessTransition(scene) {
-  const elapsed = performance.now() - transitionStart;
-  const progress = Math.min(1, elapsed / transitionDuration);
-  const eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-  const currentDarkness = startDarkness + (targetDarkness - startDarkness) * eased;
-  scene.update({ 'environment.darknessLevel': currentDarkness }, { diff: false });
-  if (progress < 1) animationFrameId = requestAnimationFrame(() => animateDarknessTransition(scene));
-  else animationFrameId = null;
+  log(3, `Hour changed: ${lastHour} → ${currentHour}`);
 }
 
 /**
@@ -258,12 +184,6 @@ function animateDarknessTransition(scene) {
  */
 export function resetDarknessState() {
   lastHour = null;
-  targetDarkness = null;
-  startDarkness = null;
-  if (animationFrameId) {
-    cancelAnimationFrame(animationFrameId);
-    animationFrameId = null;
-  }
 }
 
 /**
@@ -280,23 +200,37 @@ function shouldSyncSceneDarkness(scene) {
 }
 
 /**
+ * Get all scenes that should receive darkness updates.
+ * When "all scenes" setting is enabled, returns every scene with sync enabled.
+ * Otherwise, returns only the active scene.
+ * @returns {object[]} Array of scene documents with darkness sync enabled
+ */
+function getDarknessScenes() {
+  if (game.settings.get(MODULE.ID, SETTINGS.DARKNESS_SYNC_ALL_SCENES)) {
+    return game.scenes.filter((scene) => shouldSyncSceneDarkness(scene));
+  }
+  const activeScene = game.scenes.active;
+  if (!activeScene || !shouldSyncSceneDarkness(activeScene)) return [];
+  return [activeScene];
+}
+
+/**
  * Handle weather change to update scene darkness and environment lighting.
  */
 export async function onWeatherChange() {
   if (!CalendariaSocket.isPrimaryGM()) return;
-  const activeScene = game.scenes.active;
-  if (!activeScene) return;
-  if (!shouldSyncSceneDarkness(activeScene)) return;
   const components = game.time.components;
   const currentHour = components?.hour ?? 0;
   const hoursPerDay = game.time.calendar?.days?.hoursPerDay ?? 24;
   const minutesPerHour = game.time.calendar?.days?.minutesPerHour ?? 60;
   const baseDarkness = calculateDarknessFromTime(currentHour, 0, hoursPerDay, minutesPerHour);
-  const newTargetDarkness = calculateAdjustedDarkness(baseDarkness, activeScene);
-  startDarknessTransition(activeScene, newTargetDarkness);
-  const lighting = calculateEnvironmentLighting(activeScene);
-  await applyEnvironmentLighting(activeScene, lighting);
-  log(3, `Weather changed, updating darkness to ${newTargetDarkness.toFixed(3)}`);
+  for (const scene of getDarknessScenes()) {
+    const darkness = calculateAdjustedDarkness(baseDarkness, scene);
+    scene.update({ 'environment.darknessLevel': darkness }, { animateDarkness: true });
+    const lighting = calculateEnvironmentLighting(scene);
+    await applyEnvironmentLighting(scene, lighting);
+  }
+  log(3, 'Weather changed, updating darkness across viewed scenes');
 }
 
 /**
@@ -324,9 +258,9 @@ export async function onUpdateScene(scene, change) {
   const hoursPerDay = game.time.calendar?.days?.hoursPerDay ?? 24;
   const minutesPerHour = game.time.calendar?.days?.minutesPerHour ?? 60;
   const baseDarkness = calculateDarknessFromTime(currentHour, 0, hoursPerDay, minutesPerHour);
-  const newDarkness = calculateAdjustedDarkness(baseDarkness, scene);
-  startDarknessTransition(scene, newDarkness);
+  const darkness = calculateAdjustedDarkness(baseDarkness, scene);
+  scene.update({ 'environment.darknessLevel': darkness }, { animateDarkness: true });
   const lighting = calculateEnvironmentLighting(scene);
   await applyEnvironmentLighting(scene, lighting);
-  log(3, `Scene activated, transitioning darkness to ${newDarkness.toFixed(3)}`);
+  log(3, `Scene activated, transitioning darkness to ${darkness.toFixed(3)}`);
 }

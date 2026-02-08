@@ -447,6 +447,15 @@ export function registerSettings() {
     type: new BooleanField({ initial: true })
   });
 
+  /** Sync darkness across all scenes, not just the active one */
+  game.settings.register(MODULE.ID, SETTINGS.DARKNESS_SYNC_ALL_SCENES, {
+    name: 'CALENDARIA.Settings.DarknessSyncAllScenes.Name',
+    hint: 'CALENDARIA.Settings.DarknessSyncAllScenes.Hint',
+    scope: 'world',
+    config: false,
+    type: new BooleanField({ initial: false })
+  });
+
   /** Allow weather to affect scene darkness (via darknessPenalty) */
   game.settings.register(MODULE.ID, SETTINGS.DARKNESS_WEATHER_SYNC, {
     name: 'CALENDARIA.Settings.DarknessWeatherSync.Name',
@@ -1056,7 +1065,7 @@ export function registerSettings() {
     hint: 'CALENDARIA.Settings.TimeSpeedMultiplier.Hint',
     scope: 'world',
     config: false,
-    type: new NumberField({ initial: 1, min: 1, integer: true })
+    type: new NumberField({ initial: 1, min: 0.01 })
   });
 
   /** Real-time clock speed increment unit */

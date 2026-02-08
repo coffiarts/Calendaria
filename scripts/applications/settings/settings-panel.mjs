@@ -551,6 +551,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     [SETTINGS.HUD_STICKY_ZONES_ENABLED]: { tab: 'canvas', label: 'CALENDARIA.Settings.StickyZones.Name' },
     [SETTINGS.ALLOW_SIDEBAR_OVERLAP]: { tab: 'canvas', label: 'CALENDARIA.Settings.AllowSidebarOverlap.Name' },
     [SETTINGS.DARKNESS_SYNC]: { tab: 'canvas', label: 'CALENDARIA.Settings.DarknessSync.Name' },
+    [SETTINGS.DARKNESS_SYNC_ALL_SCENES]: { tab: 'canvas', label: 'CALENDARIA.Settings.DarknessSyncAllScenes.Name' },
     [SETTINGS.DARKNESS_WEATHER_SYNC]: { tab: 'canvas', label: 'CALENDARIA.Settings.DarknessWeatherSync.Name' },
     [SETTINGS.AMBIENCE_SYNC]: { tab: 'canvas', label: 'CALENDARIA.Settings.AmbienceSync.Name' },
     [SETTINGS.DEFAULT_BRIGHTNESS_MULTIPLIER]: { tab: 'canvas', label: 'CALENDARIA.Settings.DefaultBrightnessMultiplier.Name' },
@@ -1306,6 +1307,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     context.stickyZonesEnabled = game.settings.get(MODULE.ID, SETTINGS.HUD_STICKY_ZONES_ENABLED);
     context.allowSidebarOverlap = game.settings.get(MODULE.ID, SETTINGS.ALLOW_SIDEBAR_OVERLAP);
     context.darknessSync = game.settings.get(MODULE.ID, SETTINGS.DARKNESS_SYNC);
+    context.darknessSyncAllScenes = game.settings.get(MODULE.ID, SETTINGS.DARKNESS_SYNC_ALL_SCENES);
     context.darknessWeatherSync = game.settings.get(MODULE.ID, SETTINGS.DARKNESS_WEATHER_SYNC);
     context.ambienceSync = game.settings.get(MODULE.ID, SETTINGS.AMBIENCE_SYNC);
     context.defaultBrightnessMultiplier = game.settings.get(MODULE.ID, SETTINGS.DEFAULT_BRIGHTNESS_MULTIPLIER) ?? 1.0;
@@ -1454,7 +1456,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
     if ('timeKeeperIdleOpacity' in data) await game.settings.set(MODULE.ID, SETTINGS.TIMEKEEPER_IDLE_OPACITY, Number(data.timeKeeperIdleOpacity));
     if ('stopwatchAutoStartTime' in data) await game.settings.set(MODULE.ID, SETTINGS.STOPWATCH_AUTO_START_TIME, data.stopwatchAutoStartTime);
     if ('timeSpeedMultiplier' in data || 'timeSpeedIncrement' in data) {
-      if ('timeSpeedMultiplier' in data) await game.settings.set(MODULE.ID, SETTINGS.TIME_SPEED_MULTIPLIER, Math.max(1, Number(data.timeSpeedMultiplier) || 1));
+      if ('timeSpeedMultiplier' in data) await game.settings.set(MODULE.ID, SETTINGS.TIME_SPEED_MULTIPLIER, Math.max(0.01, Number(data.timeSpeedMultiplier) || 1));
       if ('timeSpeedIncrement' in data) await game.settings.set(MODULE.ID, SETTINGS.TIME_SPEED_INCREMENT, data.timeSpeedIncrement);
       TimeClock.loadSpeedFromSettings();
     }
@@ -1498,6 +1500,7 @@ export class SettingsPanel extends HandlebarsApplicationMixin(ApplicationV2) {
       }
     }
 
+    if ('darknessSyncAllScenes' in data) await game.settings.set(MODULE.ID, SETTINGS.DARKNESS_SYNC_ALL_SCENES, data.darknessSyncAllScenes);
     if ('darknessWeatherSync' in data) await game.settings.set(MODULE.ID, SETTINGS.DARKNESS_WEATHER_SYNC, data.darknessWeatherSync);
     if ('ambienceSync' in data) await game.settings.set(MODULE.ID, SETTINGS.AMBIENCE_SYNC, data.ambienceSync);
     if ('advanceTimeOnRest' in data) await game.settings.set(MODULE.ID, SETTINGS.ADVANCE_TIME_ON_REST, data.advanceTimeOnRest);

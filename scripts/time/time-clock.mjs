@@ -164,9 +164,7 @@ export default class TimeClock {
    * @param {object} _combat - The combat that started
    */
   static #onCombatStart(_combat) {
-    if (!game.settings.get(MODULE.ID, SETTINGS.SYNC_CLOCK_PAUSE)) return;
     if (!CalendariaSocket.isPrimaryGM()) return;
-
     if (this.#running) {
       this.stop();
       log(3, 'Clock stopped (combat started)');
@@ -175,14 +173,14 @@ export default class TimeClock {
 
   /**
    * Handle combat end to resume clock.
+   * Only auto-resumes if sync-with-pause is enabled.
    * @param {object} _combat - The combat that ended
    */
   static #onCombatEnd(_combat) {
-    if (!game.settings.get(MODULE.ID, SETTINGS.SYNC_CLOCK_PAUSE)) return;
     if (!CalendariaSocket.isPrimaryGM()) return;
-
-    if (!game.paused) {
-      if (!this.#running) this.start();
+    if (!game.settings.get(MODULE.ID, SETTINGS.SYNC_CLOCK_PAUSE)) return;
+    if (!game.paused && !this.#running) {
+      this.start();
       log(3, 'Clock started at configured speed (combat ended)');
     }
   }
@@ -199,14 +197,20 @@ export default class TimeClock {
       return;
     }
 
-    // When sync is enabled, prevent start if game is paused or combat is active
-    if (game.settings.get(MODULE.ID, SETTINGS.SYNC_CLOCK_PAUSE)) {
-      if (game.paused || game.combat?.started) {
-        log(3, 'Clock start blocked (sync active, game paused or in combat)');
-        ui.notifications.clear();
-        ui.notifications.warn('CALENDARIA.TimeClock.ClockBlocked', { localize: true });
-        return;
-      }
+    // Always prevent start during combat
+    if (game.combat?.started) {
+      log(3, 'Clock start blocked (combat active)');
+      ui.notifications.clear();
+      ui.notifications.warn('CALENDARIA.TimeClock.ClockBlocked', { localize: true });
+      return;
+    }
+
+    // When sync is enabled, prevent start if game is paused
+    if (game.settings.get(MODULE.ID, SETTINGS.SYNC_CLOCK_PAUSE) && game.paused) {
+      log(3, 'Clock start blocked (sync active, game paused)');
+      ui.notifications.clear();
+      ui.notifications.warn('CALENDARIA.TimeClock.ClockBlocked', { localize: true });
+      return;
     }
 
     this.#running = true;
@@ -383,14 +387,14 @@ export default class TimeClock {
 
     // Visual tick — fires every 1 real second, accumulates and fires hook for UI
     this.#visualIntervalId = setInterval(() => {
-      if (!this.#running) return;
+      if (!this.#running || game.combat?.started) return;
       this.#accumulatedSeconds += speed;
       Hooks.callAll(HOOKS.VISUAL_TICK, { predictedWorldTime: this.predictedWorldTime });
     }, 1000);
 
     // Advance tick — fires every 60 real seconds, calls game.time.advance() once (GM only)
     this.#advanceIntervalId = setInterval(async () => {
-      if (!this.#running) return;
+      if (!this.#running || game.combat?.started) return;
       if (!CalendariaSocket.isPrimaryGM()) return;
       const toAdvance = this.#accumulatedSeconds;
       if (toAdvance <= 0) return;

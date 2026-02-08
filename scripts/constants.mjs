@@ -31,6 +31,7 @@ export const SETTINGS = {
   CUSTOM_TIME_JUMPS: 'customTimeJumps',
   CUSTOM_WEATHER_PRESETS: 'customWeatherPresets',
   DARKNESS_SYNC: 'darknessSync',
+  DARKNESS_SYNC_ALL_SCENES: 'darknessSyncAllScenes',
   DARKNESS_WEATHER_SYNC: 'darknessWeatherSync',
   DEFAULT_BRIGHTNESS_MULTIPLIER: 'defaultBrightnessMultiplier',
   DEFAULT_OVERRIDES: 'defaultOverrides',

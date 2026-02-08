@@ -1310,6 +1310,8 @@
   "CALENDARIA.Settings.ConfirmSetDate.Name": "Confirm Set Current Date",
   "CALENDARIA.Settings.DarknessSync.Hint": "Automatically sync scene darkness levels with the position of the sun based on the current time. This is the default for new scenes.",
   "CALENDARIA.Settings.DarknessSync.Name": "Sync Scene Darkness with Time",
+  "CALENDARIA.Settings.DarknessSyncAllScenes.Hint": "Sync darkness across all scenes, not just the active one.",
+  "CALENDARIA.Settings.DarknessSyncAllScenes.Name": "Sync All Scenes",
   "CALENDARIA.Settings.DarknessWeatherSync.Hint": "Allow weather conditions to affect scene darkness (e.g., overcast skies making scenes dimmer). Disable to prevent weather from changing lighting.",
   "CALENDARIA.Settings.DarknessWeatherSync.Name": "Weather Affects Darkness",
   "CALENDARIA.Settings.DefaultBrightnessMultiplier.Hint": "Default brightness for all scenes. Lower = dimmer sunlight (e.g., 0.7 for polar regions), higher = brighter. Scenes can override this individually.",

@@ -11,7 +11,7 @@
         <label for="timeSpeedMultiplier">{{localize "CALENDARIA.Settings.TimeSpeedMultiplier.Name"}}</label>
         <div class="form-fields time-speed-fields">
           <input type="number" id="timeSpeedMultiplier" name="timeSpeedMultiplier" value="{{timeSpeedMultiplier}}"
-            min="1" step="1">
+            min="0.01" step="any">
           <select id="timeSpeedIncrement" name="timeSpeedIncrement">
             {{#each timeSpeedIncrements}}
               <option value="{{key}}" {{#if selected}}selected{{/if}}>{{label}}</option>

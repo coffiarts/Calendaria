@@ -43,6 +43,15 @@
       </div>
 
       <div class="form-group">
+        <label for="darknessSyncAllScenes">{{localize "CALENDARIA.Settings.DarknessSyncAllScenes.Name"}}</label>
+        <div class="form-fields">
+          <input type="checkbox" id="darknessSyncAllScenes" name="darknessSyncAllScenes"
+            {{#if darknessSyncAllScenes}}checked{{/if}}>
+        </div>
+        <p class="hint">{{localize "CALENDARIA.Settings.DarknessSyncAllScenes.Hint"}}</p>
+      </div>
+
+      <div class="form-group">
         <label for="darknessWeatherSync">{{localize "CALENDARIA.Settings.DarknessWeatherSync.Name"}}</label>
         <div class="form-fields">
           <input type="checkbox" id="darknessWeatherSync" name="darknessWeatherSync"
