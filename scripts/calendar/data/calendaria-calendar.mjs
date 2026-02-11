@@ -11,7 +11,7 @@ import { format, localize } from '../../utils/localization.mjs';
 import CalendarRegistry from '../calendar-registry.mjs';
 import * as LeapYearUtils from '../leap-year-utils.mjs';
 
-const { BooleanField, NumberField, SchemaField, StringField, TypedObjectField } = foundry.data.fields;
+const { ArrayField, BooleanField, NumberField, SchemaField, StringField, TypedObjectField } = foundry.data.fields;
 
 /**
  * Calendar data model with extended features for fantasy calendars.
@@ -434,6 +434,24 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
   /** @override */
   static defineSchema() {
     const schema = super.defineSchema();
+    const extendedYearsSchema = new SchemaField({
+      yearZero: new NumberField({ required: true, nullable: false, integer: true, initial: 0 }),
+      firstWeekday: new NumberField({ required: true, nullable: false, min: 0, integer: true }),
+      leapYear: new SchemaField(
+        {
+          leapStart: new NumberField({ required: true, nullable: false, integer: true }),
+          leapInterval: new NumberField({ required: true, nullable: false, min: 2, integer: true })
+        },
+        { required: true, nullable: true, initial: null }
+      ),
+      names: new ArrayField(
+        new SchemaField({
+          year: new NumberField({ required: true, integer: true }),
+          name: new StringField({ required: true })
+        }),
+        { required: false, initial: [] }
+      )
+    });
     const extendedMonthSchema = new SchemaField(
       {
         values: new TypedObjectField(
@@ -506,6 +524,7 @@ export default class CalendariaCalendar extends foundry.data.CalendarData {
     );
     return {
       ...schema,
+      years: extendedYearsSchema,
       months: extendedMonthSchema,
       seasons: extendedSeasonSchema,
       days: extendedDaysSchema,
