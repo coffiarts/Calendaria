@@ -1286,6 +1286,18 @@ export class HUD extends HandlebarsApplicationMixin(ApplicationV2) {
   #onVisualTick() {
     if (!this.rendered) return;
     const components = this.#getPredictedComponents();
+
+    // Detect day boundary crossings from predicted time (before 60s batch advance)
+    const predictedDay = `${components.year}-${components.month}-${components.dayOfMonth}`;
+    if (this.#lastDay !== null && predictedDay !== this.#lastDay) {
+      this.#lastDay = predictedDay;
+      if (this.#barRenderDebounce) clearTimeout(this.#barRenderDebounce);
+      this.#barRenderDebounce = setTimeout(() => {
+        this.#barRenderDebounce = null;
+        this.render({ parts: ['bar'] });
+      }, 200);
+    }
+
     const timeEl = this.element.querySelector('.calendaria-hud-time');
     if (timeEl) {
       const timeFormatted = this.#formatTime(components);

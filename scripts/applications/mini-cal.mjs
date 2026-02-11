@@ -1262,10 +1262,19 @@ export class MiniCal extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   #onVisualTick() {
     if (!this.rendered) return;
+    const components = this.#getPredictedComponents();
+
+    // Detect day boundary crossings from predicted time (before 60s batch advance)
+    const predictedDay = `${components.year}-${components.month}-${components.dayOfMonth}`;
+    if (predictedDay !== this.#lastDay) {
+      this.#lastDay = predictedDay;
+      this.render();
+      return;
+    }
+
     const timeEl = this.element.querySelector('.time-value');
     const dateEl = this.element.querySelector('.date-value');
     const calendar = this.calendar;
-    const components = this.#getPredictedComponents();
     if (timeEl && calendar) {
       const yearZero = calendar.years?.yearZero ?? 0;
       const timeFormatted = formatForLocation(calendar, { ...components, year: components.year + yearZero, dayOfMonth: (components.dayOfMonth ?? 0) + 1 }, 'miniCalTime');

@@ -6,6 +6,7 @@
 
 import CalendarManager from '../calendar/calendar-manager.mjs';
 import { HOOKS, MODULE, REPLACEABLE_ELEMENTS, SETTINGS, TEMPLATES, WIDGET_POINTS } from '../constants.mjs';
+import TimeClock from '../time/time-clock.mjs';
 import NoteManager from '../notes/note-manager.mjs';
 import { addDays, dayOfWeek, daysBetween } from '../notes/utils/date-utils.mjs';
 import { isRecurringMatch } from '../notes/utils/recurrence.mjs';
@@ -1366,6 +1367,22 @@ export class BigCal extends HandlebarsApplicationMixin(ApplicationV2) {
     this._hooks.push({ name: HOOKS.WIDGETS_REFRESH, id: Hooks.on(HOOKS.WIDGETS_REFRESH, () => debouncedRender()) });
     this._hooks.push({ name: 'calendaria.displayFormatsChanged', id: Hooks.on('calendaria.displayFormatsChanged', () => debouncedRender()) });
     this._hooks.push({ name: HOOKS.WORLD_TIME_UPDATED, id: Hooks.on(HOOKS.WORLD_TIME_UPDATED, this._onUpdateWorldTime.bind(this)) });
+    this._hooks.push({ name: HOOKS.VISUAL_TICK, id: Hooks.on(HOOKS.VISUAL_TICK, this._onVisualTick.bind(this)) });
+  }
+
+  /**
+   * Handle visual tick — detect day boundary crossings from predicted time.
+   */
+  _onVisualTick() {
+    if (!this.rendered || !TimeClock.running) return;
+    const cal = game.time?.calendar;
+    if (!cal) return;
+    const components = cal.timeToComponents(TimeClock.predictedWorldTime);
+    const predictedDay = `${components.year}-${components.month}-${components.dayOfMonth}`;
+    if (predictedDay !== this._lastDay) {
+      this._lastDay = predictedDay;
+      this.render();
+    }
   }
 
   /**
